@@ -46,11 +46,11 @@ class DictionaryComparison {
 
         // Log added terms
         foreach($this->added_terms as $term) {
-            $this->log_term_change($term, "term added", "", null, $this->new_dict);
+            $this->log_term_change($term, "term added", "", null, $this->new_dict[$term]);
         }
         // Log removed terms
         foreach($this->removed_terms as $term) {
-            $this->log_term_change($term, "term removed", "", $this->old_dict, null);
+            $this->log_term_change($term, "term removed", "", $this->old_dict[$term], null);
         }
         // Compare same terms for changes, & log
         foreach($this->same_terms as $term) {
@@ -71,7 +71,7 @@ class DictionaryComparison {
 
                 // Find missing fields for each term
                 else if (!array_key_exists($field, $this->new_dict[$term2])) {
-                    $this->log_term_change($term1, "field removed", $field, $this->old_dict, null);
+                    $this->log_term_change($term1, "field removed", $field, $this->old_dict[$term1][$field], null);
                 }
             }
 
@@ -82,7 +82,7 @@ class DictionaryComparison {
             
             foreach($new_keys as $field=>$in_new_dictionary) {
                 if ($in_new_dictionary) {
-                    $this->log_term_change($term2, "field added", $field, null, $this->new_dict[$term2]);
+                    $this->log_term_change($term2, "field added", $field, null, $this->new_dict[$term2][$field]);
                 }
             }
         }
@@ -97,26 +97,26 @@ class DictionaryComparison {
             
             'field updated' =>
                 "&lsquo;".$field."&rsquo; updated from &lsquo;".
-                $old_data."&rsquo; to &lsquo;".$new_data."&rsquo;",
+                "{$old_data}&rsquo; to &lsquo;{$new_data}&rsquo;",
 
             'field removed' =>
-                "&lsquo;".$field."&rsquo; field removed, was &lsquo;".
-                $old_data[$term][$field]."&rsquo;",
+                "&lsquo;{$field}&rsquo; field removed, was &lsquo;".
+                "{$old_data}&rsquo;",
 
             'field added' =>
-                "&lsquo;".$field."&rsquo; field added with value ".
-                "&lsquo;".$new_data[$term][$field]."&rsquo;",
+                "&lsquo;{$field}&rsquo; field added with value ".
+                "&lsquo;{$new_data}&rsquo;",
 
-            'field renamed' => "&lsquo;".$field."&rsquo; field renamed to ?",
+            'field renamed' => "&lsquo;".$field."&rsquo; field renamed to {$new_data}",
 
             'term removed' =>
-                "Old term removed: ". implode(',', $old_data[$term]),
+                "Old term removed: ". implode(',', $old_data),
 
             'term added' =>
-                "New term added: ". implode(',', $new_data[$term]),
+                "New term added: ". implode(',', $new_data),
             
             'term renamed' =>
-                "Term renamed from &lsquo;".$old_data."&rsquo; to &lsquo;".$new_data."&rsquo;",
+                "Term renamed from &lsquo;{$old_data}&rsquo; to &lsquo;{$new_data}&rsquo;",
         };
         $this->changes[] = $log;
     }
