@@ -1,6 +1,6 @@
 <?php
 namespace globasa_api;
-//use globasa_api\DictionaryComparison;
+
 require_once("init.php");
 
 $jan1 = "2023/00/word-list-official-2023-00-00.csv";
@@ -81,10 +81,3 @@ function log_changes($new_filename, $old_filename, $c) {
     $log = new DictionaryLog($c);
     $log->add($comparison->changes);
 }
-
-
-
-
-
-
-
