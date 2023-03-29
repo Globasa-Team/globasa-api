@@ -10,17 +10,17 @@ $march23 = "2023/03/2023-03-23T09:35:54-04:00-words-official.csv";
 $march27 = "2023/03/2023-03-27T15:23:05-04:00-words-official.csv";
 $march28 = "2023/03/2023-03-28T08:36:50-04:00-words-official.csv";
 
-$recent_files = update_source_files($c);
-$r = log_changes($c['api_path'].OFFICIAL_WORDS_CSV_FILENAME, $data['backup_official'], $c);
-// $r = log_changes($c['backup_path'].$march28, $c['backup_path'].$march27, $c);
-// $r = log_changes($c['backup_path'].$march28, $c['backup_path'].$jan1, $c);
-
-
+// $recent_files = update_source_files($c);
 // Save current filename for comparison next time
 // yaml_emit_file(
 //     DATA_FILENAME,
 //     $recent_files
 // );
+// $r = log_changes($c['api_path'].OFFICIAL_WORDS_CSV_FILENAME, $data['backup_official'], $c);
+// $r = log_changes($c['backup_path'].$march28, $c['backup_path'].$march27, $c);
+// $r = log_changes($c['backup_path'].$march28, $c['backup_path'].$jan1, $c);
+
+$r = log_changes($c['api_path'].OFFICIAL_WORDS_CSV_FILENAME, $c['backup_path'].$jan1, $c); // Current to Jan1 backup
 
 
 function update_source_files($c) {
