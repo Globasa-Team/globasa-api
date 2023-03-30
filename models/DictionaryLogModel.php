@@ -12,6 +12,8 @@ class DictionaryLog {
     }
 
     public function add ($changes) {
+
+        if ($changes == null) return;
         $q = $this->db->prepare("INSERT INTO `{$this->db_prefix}term_log` (`type`, `term`, `field`, `message`, `timestamp`) values (:change_type, :term, :field, :msg, :change_date);");
         $midnight = (new \DateTime('midnight -1 µs'))->format("Y-m-d H:i:s");
 
