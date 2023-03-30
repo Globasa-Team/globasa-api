@@ -10,8 +10,8 @@ define("I18N_CSV_FILENAME", "i18n.csv");
 define("I18N_CSV_BACKUP_FILENAME", "-i18n.csv");
 define("DATA_FILENAME", "data.yaml");
 
-$c = yaml_parse_file(CONFIG_FILENAME);
-$data = yaml_parse_file(DATA_FILENAME);
+$c = yaml_parse_file($app_path.CONFIG_FILENAME);
+$data = yaml_parse_file($app_path.DATA_FILENAME);
 
 if (strcmp($c['env'],"dev")==0) {
     ini_set('display_errors', '1');
@@ -20,8 +20,8 @@ if (strcmp($c['env'],"dev")==0) {
     echo("\nDevelopment Environment\n");
 }
 
-require_once("vendor/parsedown-1.7.4/Parsedown.php");
-require_once("helpers/fetch_files.php");
-require_once("helpers/load_csv.php");
-require_once("models/DictionaryLogModel.php");
-require_once("models/DictionaryComparisonModel.php");
+require_once("{$app_path}vendor/parsedown-1.7.4/Parsedown.php");
+require_once("{$app_path}helpers/fetch_files.php");
+require_once("{$app_path}helpers/load_csv.php");
+require_once("{$app_path}models/DictionaryLogModel.php");
+require_once("{$app_path}models/DictionaryComparisonModel.php");

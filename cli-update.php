@@ -1,7 +1,7 @@
 <?php
 namespace globasa_api;
-
-require_once("init.php");
+$app_path = dirname(__FILE__).'/';
+require_once("{$app_path}/init.php");
 
 $jan1 = "2023/00/word-list-official-2023-00-00.csv";
 $march4 = "2023/03/2023-03-04T23:31:58-05:00-words-official.csv";
@@ -13,7 +13,7 @@ $march28 = "2023/03/2023-03-28T08:36:50-04:00-words-official.csv";
 $recent_files = update_source_files($c);
 // Save current filename for comparison next time
 yaml_emit_file(
-    DATA_FILENAME,
+    $app_path.DATA_FILENAME,
     $recent_files
 );
 // $r = log_changes($c['api_path'].OFFICIAL_WORDS_CSV_FILENAME, $data['backup_official'], $c);
