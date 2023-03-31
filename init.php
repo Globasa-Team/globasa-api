@@ -3,9 +3,13 @@ namespace globasa_api;
 
 define("CONFIG_FILENAME", "config.yaml");
 define("OFFICIAL_WORDS_CSV_FILENAME", "words-official.csv");
+define("OFFICIAL_WORDS_TSV_FILENAME", "words-official.tsv");
 define("OFFICIAL_WORDS_CSV_BACKUP_FILENAME", "-words-official.csv");
+define("OFFICIAL_WORDS_TSV_BACKUP_FILENAME", "-words-official.tsv");
 define("UNOFFICIAL_WORDS_CSV_FILENAME", "words-unofficial.csv");
+define("UNOFFICIAL_WORDS_TSV_FILENAME", "words-unofficial.tsv");
 define("UNOFFICIAL_WORDS_CSV_BACKUP_FILENAME", "-words-unofficial.csv");
+define("UNOFFICIAL_WORDS_TSV_BACKUP_FILENAME", "-words-unofficial.tsv");
 define("I18N_CSV_FILENAME", "i18n.csv");
 define("I18N_CSV_BACKUP_FILENAME", "-i18n.csv");
 define("DATA_FILENAME", "data.yaml");

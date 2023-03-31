@@ -2,6 +2,7 @@
 namespace globasa_api;
 $app_path = dirname(__FILE__).'/';
 require_once("{$app_path}/init.php");
+$c['app_path'] = $app_path;
 
 $jan1 = "2023/00/word-list-official-2023-00-00.csv";
 $march4 = "2023/03/2023-03-04T23:31:58-05:00-words-official.csv";
@@ -16,7 +17,7 @@ yaml_emit_file(
     $app_path.DATA_FILENAME,
     $recent_files
 );
-// $r = log_changes($c['api_path'].OFFICIAL_WORDS_CSV_FILENAME, $data['backup_official'], $c);
+// $r = log_changes($c['api_path'].OFFICIAL_WORDS_CSV_FILENAME, $data['backup_official_csv'], $c);
 // $r = log_changes($c['backup_path'].$march28, $c['backup_path'].$march27, $c);
 // $r = log_changes($c['backup_path'].$march28, $c['backup_path'].$jan1, $c);
 
@@ -31,23 +32,32 @@ function update_source_files($c) {
     $year = date('Y');
 
     // Check backup folder exists
-    $backup_path = $c['backup_path']."{$year}/{$month}";
+    $backup_path = $c['app_path'] .".backup/{$year}/{$month}";
     if(!is_dir($backup_path)) {
         mkdir($backup_path, 0700, true);
     }
     
     $backup_files = [];
-    $backup_files['backup_official'] = $backup_path . "/{$datetime}".OFFICIAL_WORDS_CSV_BACKUP_FILENAME;
+    $backup_files['backup_official_csv'] = $backup_path . "/{$datetime}".OFFICIAL_WORDS_CSV_BACKUP_FILENAME;
+    $backup_files['backup_official_tsv'] = $backup_path . "/{$datetime}".OFFICIAL_WORDS_TSV_BACKUP_FILENAME;
     $backup_files['backup_unofficial'] = $backup_path . "/{$datetime}".UNOFFICIAL_WORDS_CSV_BACKUP_FILENAME;
     $backup_files['backup_i18n'] = $backup_path . "/{$datetime}".I18N_CSV_BACKUP_FILENAME;
 
     // Fetch files
     fetch_files([
         'official_words_url' => [
-            'url' => $c['official_words_url'],
+            'url' => $c['official_words_csv_url'],
             'filenames' => [
                 $c['api_path'].OFFICIAL_WORDS_CSV_FILENAME,
-                $backup_files['backup_official']
+                $backup_files['backup_official_csv']
+            ],
+        ],
+
+        'official_words_tsv_url' => [
+            'url' => $c['official_words_tsv_url'],
+            'filenames' => [
+                $c['api_path'].OFFICIAL_WORDS_TSV_FILENAME,
+                $backup_files['backup_official_tsv']
             ],
         ],
 
@@ -60,7 +70,7 @@ function update_source_files($c) {
         // ],
 
         'i18n_url' => [
-            'url' => $c['official_words_url'],
+            'url' => $c['i18n_url'],
             'filenames' => [
                 $c['api_path'].I18N_CSV_FILENAME,
                 $backup_files['backup_i18n']
