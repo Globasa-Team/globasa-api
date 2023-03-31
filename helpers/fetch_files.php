@@ -44,7 +44,7 @@ function fetch_files($file_list) {
             $result = false;
             throw new Exception("curl failed.");
         }
-
+        sleep(2);
         
     }
     
