@@ -25,6 +25,9 @@ if (strcmp($c['env'],"dev")==0) {
 }
 
 require_once("{$app_path}vendor/parsedown-1.7.4/Parsedown.php");
+require_once("{$app_path}vendor/phpmailer-6.8.0/src/Exception.php");
+require_once("{$app_path}vendor/phpmailer-6.8.0/src/PHPMailer.php");
+require_once("{$app_path}vendor/phpmailer-6.8.0/src/SMTP.php");
 require_once("{$app_path}helpers/fetch_files.php");
 require_once("{$app_path}helpers/load_csv.php");
 require_once("{$app_path}models/DictionaryLogModel.php");
