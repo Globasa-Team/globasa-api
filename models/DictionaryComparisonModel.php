@@ -13,6 +13,7 @@ class DictionaryComparison {
         $this->c = $config;
         $this->old_dict = $old;
         $this->new_dict = $new;
+        $this->changes = [];
         $this->compare_dictionaries();
     }
 
@@ -119,5 +120,6 @@ class DictionaryComparison {
                 "Term renamed from &lsquo;{$old_data}&rsquo; to &lsquo;{$new_data}&rsquo;",
         };
         $this->changes[] = $log;
+        $this->c['log']->add($log['message']);
     }
 }

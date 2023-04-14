@@ -2,36 +2,42 @@
 namespace globasa_api;
 $app_path = dirname(__FILE__).'/';
 require_once("{$app_path}/init.php");
-$c['app_path'] = $app_path;
 
 
-$recent_files = update_source_files($c);
-// Save current filename for comparison next time
-yaml_emit_file(
-    $app_path.DATA_FILENAME,
-    $recent_files
-);
+// Download from update sources & save filename for comparison next time
+if(!$c['dev'] || $c['dev_update_sources']) {
+    $recent_files = update_source_files($c);
+    yaml_emit_file(
+        $app_path.DATA_FILENAME,
+        $recent_files
+    );
+}
+else $c['log']->add("Skipped source update");
 
-$r = log_changes($c['api_path'].OFFICIAL_WORDS_CSV_FILENAME, $data['backup_official_csv'], $c);
+if(!$c['dev'] || $c['dev_process_changes']) {
+    $r = log_changes($c['api_path'].OFFICIAL_WORDS_CSV_FILENAME, $data['backup_official_csv'], $c);
+}
+else $c['log']->add("Skipped logging changes");
+
+if(!$c['dev'] || $c['dev_email_log']) {
+    $c['log']->email_log($c);
+}
+else $c['log']->add("Skipped emailing log");
+
 
 function update_source_files($c) {
-
-    // Get formatted date
-    $datetime = date(DATE_ATOM);
-    $month = date('m');
-    $year = date('Y');
-
     // Check backup folder exists
-    $backup_path = $c['app_path'] .".backup/{$year}/{$month}";
+    $backup_path = $c['app_path'] . ".backup/" . date('Y/m');
+    $backup_prepend = $backup_path . DIRECTORY_SEPARATOR . date(DATE_ATOM);
     if(!is_dir($backup_path)) {
         mkdir($backup_path, 0700, true);
     }
     
     $backup_files = [];
-    $backup_files['backup_official_csv'] = $backup_path . "/{$datetime}".OFFICIAL_WORDS_CSV_BACKUP_FILENAME;
-    $backup_files['backup_official_tsv'] = $backup_path . "/{$datetime}".OFFICIAL_WORDS_TSV_BACKUP_FILENAME;
-    $backup_files['backup_unofficial'] = $backup_path . "/{$datetime}".UNOFFICIAL_WORDS_CSV_BACKUP_FILENAME;
-    $backup_files['backup_i18n'] = $backup_path . "/{$datetime}".I18N_CSV_BACKUP_FILENAME;
+    $backup_files['backup_official_csv'] = $backup_prepend.OFFICIAL_WORDS_CSV_BACKUP_FILENAME;
+    $backup_files['backup_official_tsv'] = $backup_prepend.OFFICIAL_WORDS_TSV_BACKUP_FILENAME;
+    $backup_files['backup_unofficial'] = $backup_prepend.UNOFFICIAL_WORDS_CSV_BACKUP_FILENAME;
+    $backup_files['backup_i18n'] = $backup_prepend.I18N_CSV_BACKUP_FILENAME;
 
     // Fetch files
     fetch_files([
@@ -81,4 +87,5 @@ function log_changes($new_filename, $old_filename, $c) {
     // Log changes
     $log = new DictionaryLog($c);
     $log->add($comparison->changes);
+    $c['log']->add("Changes logged: ".count($comparison->changes));
 }
