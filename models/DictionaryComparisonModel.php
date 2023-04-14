@@ -120,6 +120,6 @@ class DictionaryComparison {
                 "Term renamed from &lsquo;{$old_data}&rsquo; to &lsquo;{$new_data}&rsquo;",
         };
         $this->changes[] = $log;
-        $this->c['log']->add($log['message']);
+        $this->c['log']->add($term."\n\t".$log['message']);
     }
 }
