@@ -32,7 +32,7 @@ class App_log {
         $this->log[] = $msg;
         if ($this->debug) {
             echo("App Log added:".PHP_EOL);
-            echo($msg.PHP_EOL);
+            echo(html_entity_decode($msg).PHP_EOL);
         }
     }
 
