@@ -1,7 +1,7 @@
 <?php
 namespace globasa_api;
 
-class DictionaryLog {
+class Dictionary_log {
 
     private $db;
     private $db_prefix;

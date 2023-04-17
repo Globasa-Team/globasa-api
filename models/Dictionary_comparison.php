@@ -1,7 +1,7 @@
 <?php
 namespace globasa_api;
 
-class DictionaryComparison {
+class Dictionary_comparison {
 
     private $c;
     private $new_dict, $old_dict;
