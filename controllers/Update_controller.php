@@ -10,7 +10,9 @@ class Update_controller {
      */
     public static function update_terms($c, $data) {
 
+        //
         // Download from update sources & save filename for comparison next time
+        //
         if(!$c['dev'] || $c['dev_update_sources']) {
             $recent_files = Update_controller::update_source_files($c);
             yaml_emit_file(
@@ -20,13 +22,29 @@ class Update_controller {
         }
         else $c['log']->add("Skipped source update");
 
+        
+        //
         // Log changes
+        //
         if(!$c['dev'] || $c['dev_process_changes']) {
             $r = Update_controller::log_changes($c['api_path'] . DIRECTORY_SEPARATOR . OFFICIAL_WORDS_CSV_FILENAME, $data['backup_official_csv'], $c);
         }
         else $c['log']->add("Skipped logging changes");
 
+
+        //
+        // Create API files
+        //
+        // if(!$c['dev'] && $c['dev_generate_files']) {
+        // DEBUG DON'T DO IF NOT IN DEV
+        if($c['dev'] && $c['dev_create_files']) {
+            File_controller::create_api2_files(null, $r)
+        }
+
+
+        //
         // Email log
+        //
         if(!$c['dev'] || $c['dev_email_log']) {
             $c['log']->email_log($c);
         }
