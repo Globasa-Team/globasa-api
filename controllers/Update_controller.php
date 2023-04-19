@@ -38,7 +38,7 @@ class Update_controller {
         // if(!$c['dev'] && $c['dev_generate_files']) {
         // DEBUG DON'T DO IF NOT IN DEV
         if($c['dev'] && $c['dev_create_files']) {
-            File_controller::create_api2_files(null, $r)
+            // File_controller::create_api2_files(null, $r);
         }
 
 
