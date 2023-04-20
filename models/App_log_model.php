@@ -8,19 +8,18 @@ use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
 class App_log {
-    private $log;
+    private $log = [];
     private $emails;
-    private $debug;
+    private $debug = false;
+    private $start_usage;
 
     /**
      * Creates log manager.
      * 
      * @param $d    Debug mode
      */
-    public function __construct($emails=null, $debug=false) {
-        $this->log = array();
-        $this->emails = $emails;
-        $this->debug = $debug;
+    public function __construct() {
+        $this->start_usage = getrusage();
     }
 
     /**
@@ -31,8 +30,7 @@ class App_log {
     public function add($msg) {
         $this->log[] = $msg;
         if ($this->debug) {
-            echo("App Log added:".PHP_EOL);
-            echo(html_entity_decode($msg).PHP_EOL);
+            echo("Logged >\t".html_entity_decode($msg).PHP_EOL);
         }
     }
 
@@ -42,12 +40,29 @@ class App_log {
     public function email_log($c) {
         $mail = new PHPMailer(true); //Create an instance; passing `true` enables exceptions
     
-
         $message = "Log from nightly update. (This is API2 work-in-progress and currently the globasa-dictionary website uses API1 to collect data. So there may be discrepencies between this and actual data on the website.)".PHP_EOL.PHP_EOL;
         foreach($this->log as $item) {
             $message .= "- ".html_entity_decode($item).PHP_EOL.PHP_EOL;
         }
+
+
+        //
+        // Time Stuff
+        //
         
+        $human_time = "This script executed in " . number_format(microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'], 4) . " seconds.";
+        $usage = getrusage();
+        $udelta =
+            ($usage["ru_utime.tv_sec"] - $this->start_usage["ru_utime.tv_sec"]) +
+            (($usage["ru_utime.tv_usec"] - $this->start_usage["ru_utime.tv_usec"])/1000);
+        $sdelta =
+            ($usage["ru_stime.tv_sec"] - $this->start_usage["ru_stime.tv_sec"]) +
+            (($usage["ru_stime.tv_usec"] - $this->start_usage["ru_stime.tv_usec"])/1000);
+            
+            $computer_time = "Also, this script's CPU execution time was system: {$sdelta} / user: {$udelta}.";
+        echo("Time >\t{$human_time}\nTime >\t{$computer_time}\n");
+        $message .= "- ".$human_time.PHP_EOL.PHP_EOL."- ".$computer_time.PHP_EOL.PHP_EOL;
+
         try {
             //Server settings
             $mail->SMTPDebug = SMTP::DEBUG_OFF;                         //Enable verbose debug output SMTP::DEBUG_CLIENT
@@ -69,13 +84,23 @@ class App_log {
             //Content
             $mail->isHTML(false);                                  //Set email format to HTML
             $mail->Subject = 'Today\'s update';     
+            if ($c['dev']) $mail->Subject = "Dev update";
             $mail->Body    = $message;
     
             $mail->send();
-            echo 'Message has been sent to '.$email."\n";
+            echo "Mail >\tMessage has been sent to ".implode(", ", $this->emails)."\n";
         } catch (Exception $e) {
             echo "Message could not be sent to ".$email."\n";
             echo "Mailer Error: {$mail->ErrorInfo}\n\n";
         }
+    }
+
+
+    public function setDebug() {
+        $this->debug = true;
+    }
+
+    public function setEmails($emails) {
+        $this->emails = $emails;
     }
 }

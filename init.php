@@ -1,5 +1,7 @@
 <?php
 namespace globasa_api;
+require_once("{$app_path}/models/App_log_model.php");
+$log = new App_log();
 
 define("CONFIG_FILENAME", "config.yaml");
 define("OFFICIAL_WORDS_CSV_FILENAME", "words-official.csv");
@@ -22,25 +24,24 @@ require_once("{$app_path}/helpers/fetch_files.php");
 require_once("{$app_path}/helpers/load_csv.php");
 require_once("{$app_path}/models/Dictionary_log.php");
 require_once("{$app_path}/models/Dictionary_comparison.php");
-require_once("{$app_path}/models/App_log_model.php");
 require_once("{$app_path}/controllers/Update_controller.php");
-
 
 $data = yaml_parse_file($app_path . DIRECTORY_SEPARATOR . DATA_FILENAME);
 $c = yaml_parse_file($app_path . DIRECTORY_SEPARATOR . CONFIG_FILENAME);
+$c['log'] = $log;
+$c['log']->setEmails($c["app_log_emails"]);
 $c['app_path'] = $app_path;
 
 if ($c['dev']) {
+    $c['log']->setDebug();
+    $c['log']->add("Development Environment");
     ini_set('display_errors', '1');
     ini_set('display_startup_errors', '1');
     error_reporting(E_ALL);
-    $c['log'] = new App_log($c["app_log_emails"], true);
-    $c['log']->add("Development Environment");
 
 }
 else {
     ini_set('display_errors', '0');
     ini_set('display_startup_errors', '0');
     error_reporting(E_ALL);
-    $c['log'] = new App_log(["app_log_emails"], false);
 }
