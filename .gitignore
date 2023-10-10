@@ -1,6 +1,12 @@
 notes.md
+todo.md
+spreadsheet-format.md
 config.php
 config.yaml
 data.yaml
 .backup/
 *.backup
+
+# PHPUnit
+/.phpunit.cache
+.phpunit.result.cache

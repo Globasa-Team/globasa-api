@@ -1,131 +1,135 @@
 <?php
 namespace globasa_api;
+use Exception;
+use Throwable;
 
 class Update_controller {
 
-
-
-    /**
-     * Download source files, log changes & email log.
-     */
-    public static function update_terms($c, $data) {
-
-        //
-        // Download from update sources & save filename for comparison next time
-        //
-        if(!$c['dev'] || $c['dev_update_sources']) {
-            $recent_files = Update_controller::update_source_files($c);
-            yaml_emit_file(
-                $c['app_path'] . DIRECTORY_SEPARATOR . DATA_FILENAME,
-                $recent_files
-            );
-        }
-        else $c['log']->add("Skipped source update");
-
-        
-        //
-        // Log changes
-        //
-        if(!$c['dev'] || $c['dev_process_changes']) {
-            $r = Update_controller::log_changes($c['api_path'] . DIRECTORY_SEPARATOR . OFFICIAL_WORDS_CSV_FILENAME, $data['backup_official_csv'], $c);
-        }
-        else $c['log']->add("Skipped logging changes");
-
-
-        //
-        // Create API files
-        //
-        // if(!$c['dev'] && $c['dev_generate_files']) {
-        // DEBUG DON'T DO IF NOT IN DEV
-        if($c['dev'] && $c['dev_create_files']) {
-            // File_controller::create_api2_files(null, $r);
-        }
-
-
-        //
-        // Email log
-        //
-        if(!$c['dev'] || $c['dev_email_log']) {
-            $c['log']->email_log($c);
-        }
-        else $c['log']->add("Skipped emailing log");
-        
-    }
-
-
-
-
-    /**
-     * Downloads word list data files, and saves backups.
-     */
-    static function update_source_files($c) {
-        // Check backup folder exists
-        $backup_path = $c['app_path'] . '/.backup/' . date('Y/m');
-        $backup_prepend = $backup_path . DIRECTORY_SEPARATOR . date(DATE_ATOM);
-        if(!is_dir($backup_path)) {
-            mkdir($backup_path, 0700, true);
-        }
-        
-        $backup_files = [];
-        $backup_files['backup_official_csv'] = $backup_prepend.OFFICIAL_WORDS_CSV_BACKUP_FILENAME;
-        $backup_files['backup_official_tsv'] = $backup_prepend.OFFICIAL_WORDS_TSV_BACKUP_FILENAME;
-        $backup_files['backup_unofficial'] = $backup_prepend.UNOFFICIAL_WORDS_CSV_BACKUP_FILENAME;
-        $backup_files['backup_i18n'] = $backup_prepend.I18N_CSV_BACKUP_FILENAME;
-    
-        // Fetch files
-        fetch_files([
-            'official_words_url' => [
-                'url' => $c['official_words_csv_url'],
-                'filenames' => [
-                    $c['api_path'] . DIRECTORY_SEPARATOR . OFFICIAL_WORDS_CSV_FILENAME,
-                    $backup_files['backup_official_csv']
-                ],
-            ],
-    
-            'official_words_tsv_url' => [
-                'url' => $c['official_words_tsv_url'],
-                'filenames' => [
-                    $c['api_path'] . DIRECTORY_SEPARATOR . OFFICIAL_WORDS_TSV_FILENAME,
-                    $backup_files['backup_official_tsv']
-                ],
-            ],
-    
-            // 'unofficial_words_url' => [
-            //     'url' => $c['unofficial_words_url'],
-            //     'filenames' => [
-            //         $c['api_path'] . DIRECTORY_SEPARATOR . UNOFFICIAL_WORDS_CSV_FILENAME,
-            //         $backup_files['backup_unofficial'] . DIRECTORY_SEPARATOR . OFFICIAL_WORDS_CSV_BACKUP_FILENAME
-            //     ],
-            // ],
-    
-            'i18n_url' => [
-                'url' => $c['i18n_url'],
-                'filenames' => [
-                    $c['api_path'] . DIRECTORY_SEPARATOR . I18N_CSV_FILENAME,
-                    $backup_files['backup_i18n']
-                ],
-            ]
-        ]);
-    
-        return ($backup_files);
-    }
-
-
-
+    const IO_DELAY = 10000;
 
     /**
      * Compare the new and old word list and log any changes.
      */
-    static function log_changes($new_filename, $old_filename, $c) {
-        $new = loadCsv($new_filename);
-        $old = loadCsv($old_filename);
+    static function log_changes(array $current_data, string $old_csv_filename, array $c) {
+        $old_data = loadCsv($old_csv_filename);
         
         // Find changes
-        $comparison = new Dictionary_comparison($old, $new, $c);
+        $comparison = new Dictionary_comparison($old_data, $current_data, $c);
         // Log changes
         $log = new Dictionary_log($c);
         $log->add($comparison->changes);
         $c['log']->add("Changes logged: ".count($comparison->changes));
     }
+
+
+
+    public static function update_i18n(array $c) {
+        $lang_resource = [];
+        $lang_resource_csv = fopen($c['api_path'] . DIRECTORY_SEPARATOR . I18N_CSV_FILENAME, 'r');
+        // $lang_resource_csv = fopen($c['i18n_url'], 'r');
+        if ($lang_resource_csv === false) {
+            die("Failed to open lang CSV");
+        }
+        //What does this do on failure? Empty file? No file found?
+
+        $columnNames = fgetcsv($lang_resource_csv);
+        $label_id = ''; // Should be set on first loop
+        while (($text_data = fgetcsv($lang_resource_csv)) !== false) {
+            foreach ($text_data as $key=>$datum) {
+                // Key is label id when in first position.
+                if ($key == 0) {
+                    $label_id = $datum;
+                    continue;
+                }
+                // key is language otherwise.
+                $lang_resource[$columnNames[$key]][$label_id] = $datum;
+            }
+        }
+        yaml_emit_file($c['api_path'] . DIRECTORY_SEPARATOR . I18N_YAML_FILENAME, $lang_resource);
+    }
+
+
+    /**
+     * Open current CSV, reading line by line, and processing the words
+     * individually and writing out dictionary files. This is to reduce max
+     * load on the server. A usleep() delay between each term is used.
+     */
+    public static function load_current_terms(array $c, string $current_csv_filename) {
+        $index = [];
+        $lang_count = [];
+        $category_count = [];
+        $tags = [];
+
+        // Download the official term list, processing each term.
+        $term_stream = fopen($current_csv_filename, "r")
+        or throw \Exception("Failed to open ".$current_csv_filename);
+        $tp = new Term_parser(fgetcsv($term_stream), null, $c['log']);
+        while(($data = fgetcsv($term_stream)) !== false) {
+            if (empty($data) || empty($data[0])) {
+                continue;
+            }
+            [$raw, $parsed, $csv_row] = $tp->parse($data);
+            $csv[$parsed['slug']] = $csv_row;
+
+            // Next: save entry to file
+            $entry_file_data = $parsed;
+            $entry_file_data['raw data'] = $raw;
+            if (isset($parsed['etymology'][')'])) unset($parsed['etymology'][')']);
+            yaml_emit_file($c['api_path'] . '/terms/' . $parsed['slug'].".yaml", $entry_file_data,  YAML_UTF8_ENCODING);
+            
+            // $index['eng'][$parsed['search terms']['eng']] = $parsed['slug'];
+            foreach ($parsed['search terms'] as $lang => $terms) {
+                foreach ($terms as $term) {
+                    $index[$lang][$term][] = $parsed['slug'];
+                }
+            }
+
+            // calc etymology
+            if (!empty($parsed['etymology natlang'])) {
+                foreach($parsed['etymology natlang'] as $lang => $term_data) {
+                    if (!array_key_exists($lang, $lang_count)) $lang_count[$lang] = 1;
+                    else $lang_count[$lang] += 1;
+                }
+            }
+
+            // tag index
+            if (array_key_exists('tags', $parsed)) {
+                foreach ($parsed['tags'] as $tag) {
+                    // if (array_key_exists($lang, $tags)) 
+                    $tags[$tag][] = $parsed['slug'];
+                }
+            }
+
+            // calc categories
+            if (!isset($category_count[$parsed['category']]))
+                $category_count[$parsed['category']] = 1;
+            else
+                $category_count[$parsed['category']] += 1;
+            
+            // Pause before next entry read and `yaml_file_emit`
+            usleep(SELF::IO_DELAY);
+        }
+        if (!feof($term_stream)) {
+            $c['log']->add("Unexpected fgetcsv() fail");
+        }
+        fclose($term_stream);
+
+        $index_list = "";
+        foreach($index as $lang=>$data) {
+            yaml_emit_file($c['api_path'] . "/index_{$lang}.yaml", $data);
+            $index_list .= $lang . ' ';
+            usleep(SELF::IO_DELAY);
+        }
+        $c['log']->add("Indexes created: " . $index_list);
+
+        yaml_emit_file($c['api_path'] . "/tags.yaml", $tags);
+        $fp = fopen($c['api_path'] . '/terms/' . "tags.json", "w");
+        fputs($fp, json_encode($tags));
+        usleep(SELF::IO_DELAY);
+        yaml_emit_file($c['api_path'] . "/stats.yaml", ["source langs"=> $lang_count, "category count"=>$category_count]);
+
+        return $csv;
+    }
+
 
 }

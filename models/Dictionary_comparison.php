@@ -29,6 +29,7 @@ class Dictionary_comparison {
         foreach($this->added_terms as $new_key => $new_term) {
             foreach($this->removed_terms as $old_key => $old_term) {
                 foreach($this->c['translated_languages'] as $lang) {
+
                     // If this has any translation field the same, log as a renamed term
                     if (strcmp($this->old_dict[$old_term][$lang], $this->new_dict[$new_term][$lang]) == 0) {
                         // Save log to both terms
@@ -50,7 +51,9 @@ class Dictionary_comparison {
             $this->log_term_change($term, "term added", "", null, $this->new_dict[$term]);
         }
         // Log removed terms
+        $i = 0;
         foreach($this->removed_terms as $term) {
+            if ($i++ % 200 == 0 && $i != 1) { echo("\n\n\n\n*\tpress enter\n\n"); readline();}
             $this->log_term_change($term, "term removed", "", $this->old_dict[$term], null);
         }
         // Compare same terms for changes, & log
@@ -62,6 +65,7 @@ class Dictionary_comparison {
     function compare_terms($term1, $term2 = null) {
 
         if ($term2 == null) $term2 = $term1;
+        
         // Compare new and old for each term
         if (array_key_exists($term1, $this->old_dict) && array_key_exists($term2, $this->new_dict)) {
             foreach($this->old_dict[$term1] as $field=>$datum) {
@@ -69,7 +73,7 @@ class Dictionary_comparison {
                 if (array_key_exists($field, $this->new_dict[$term2]) && strcmp($this->old_dict[$term1][$field], $this->new_dict[$term2][$field]) != 0) {
                     $this->log_term_change($term2, "field updated", $field, $this->old_dict[$term1][$field], $this->new_dict[$term2][$field]);
                 }
-
+                
                 // Find missing fields for each term
                 else if (!array_key_exists($field, $this->new_dict[$term2])) {
                     $this->log_term_change($term1, "field removed", $field, $this->old_dict[$term1][$field], null);
@@ -79,12 +83,13 @@ class Dictionary_comparison {
             // Find new fields for this term
             $example_old_entry = $this->old_dict[array_key_first($this->old_dict)];
             $example_new_entry = $this->new_dict[array_key_first($this->new_dict)];
-            $new_keys = array_diff_key($example_old_entry, $example_new_entry);
+            $new_keys = array_diff_key($example_new_entry, $example_old_entry);
             
-            foreach($new_keys as $field=>$in_new_dictionary) {
-                if ($in_new_dictionary) {
+            foreach($new_keys as $field=>$value) {
+                // 
+                // if ($value) {
                     $this->log_term_change($term2, "field added", $field, null, $this->new_dict[$term2][$field]);
-                }
+                // }
             }
         }
     }

@@ -30,17 +30,19 @@ class App_log {
     public function add($msg) {
         $this->log[] = $msg;
         if ($this->debug) {
-            echo("Logged >\t".html_entity_decode($msg).PHP_EOL);
+            echo("> ".html_entity_decode($msg).PHP_EOL);
         }
     }
 
     /**
      * Emails log to configured email addresses.
+     * 
+     * param array $c   Config for username/password
      */
-    public function email_log($c) {
+    public function email_log(array $c) {
         $mail = new PHPMailer(true); //Create an instance; passing `true` enables exceptions
     
-        $message = "Log from nightly update. (This is API2 work-in-progress and currently the globasa-dictionary website uses API1 to collect data. So there may be discrepencies between this and actual data on the website.)".PHP_EOL.PHP_EOL;
+        $message = "Dev Log from nightly update. (This is API2 work-in-progress and currently the globasa-dictionary website uses API1 to collect data. So there may be discrepencies between this and actual data on the website.)".PHP_EOL.PHP_EOL;
         foreach($this->log as $item) {
             $message .= "- ".html_entity_decode($item).PHP_EOL.PHP_EOL;
         }
@@ -93,6 +95,14 @@ class App_log {
             echo "Message could not be sent to ".$email."\n";
             echo "Mailer Error: {$mail->ErrorInfo}\n\n";
         }
+    }
+
+
+    /**
+     * Returns the most recently added message. Used for testing.
+     */
+    public function get_last_message() {
+        return $this->log[array_key_last($this->log)];
     }
 
 
