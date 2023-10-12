@@ -114,19 +114,32 @@ class Update_controller {
         }
         fclose($term_stream);
 
+        //
+        // Indexes
+        //
         $index_list = "";
         foreach($index as $lang=>$data) {
+            ksort($data);
             yaml_emit_file($c['api_path'] . "/index_{$lang}.yaml", $data);
             $index_list .= $lang . ' ';
             usleep(SELF::IO_DELAY);
         }
         $c['log']->add("Indexes created: " . $index_list);
 
+        //
+        // Tags
+        //
+        ksort($tags);
         yaml_emit_file($c['api_path'] . "/tags.yaml", $tags);
         $fp = fopen($c['api_path'] . "/tags.json", "w");
         fputs($fp, json_encode($tags));
         fclose($fp);
         usleep(SELF::IO_DELAY);
+
+        //
+        // Statistics
+        //
+        array_multisort($lang_count);
         yaml_emit_file($c['api_path'] . "/stats.yaml", ["source langs"=> $lang_count, "category count"=>$category_count]);
 
         return $csv;
