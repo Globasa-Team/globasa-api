@@ -123,8 +123,9 @@ class Update_controller {
         $c['log']->add("Indexes created: " . $index_list);
 
         yaml_emit_file($c['api_path'] . "/tags.yaml", $tags);
-        $fp = fopen($c['api_path'] . '/terms/' . "tags.json", "w");
+        $fp = fopen($c['api_path'] . "/tags.json", "w");
         fputs($fp, json_encode($tags));
+        fclose($fp);
         usleep(SELF::IO_DELAY);
         yaml_emit_file($c['api_path'] . "/stats.yaml", ["source langs"=> $lang_count, "category count"=>$category_count]);
 
