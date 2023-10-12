@@ -85,8 +85,8 @@ class Update_controller {
             }
 
             // calc etymology
-            if (!empty($parsed['etymology natlang'])) {
-                foreach($parsed['etymology natlang'] as $lang => $term_data) {
+            if (!empty($parsed['etymology']['natlang'])) {
+                foreach($parsed['etymology']['natlang'] as $lang => $term_data) {
                     if (!array_key_exists($lang, $lang_count)) $lang_count[$lang] = 1;
                     else $lang_count[$lang] += 1;
                 }
