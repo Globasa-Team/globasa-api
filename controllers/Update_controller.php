@@ -60,6 +60,7 @@ class Update_controller {
         $category_count = [];
         $class_count = [];
         $tags = [];
+        $word_count = 0;
 
         // Download the official term list, processing each term.
         $term_stream = fopen($current_csv_filename, "r")
@@ -114,6 +115,8 @@ class Update_controller {
                 $class_count[$parsed['word class']] += 1;
 
 
+            $word_count += 1;
+
             // Pause before next entry read and `yaml_file_emit`
             usleep(SELF::IO_DELAY);
         }
@@ -148,7 +151,12 @@ class Update_controller {
         // Statistics
         //
         array_multisort($lang_count, SORT_DESC);
-        yaml_emit_file($c['api_path'] . "/stats.yaml", ["source langs"=> $lang_count, "categories"=>$category_count, "classes"=>$classes_count]);
+        yaml_emit_file($c['api_path'] . "/stats.yaml", [
+                        "terms count"=>$word_count,
+                        "source langs"=>$lang_count,
+                        "categories"=>$category_count,
+                        "classes"=>$class_count
+                    ]);
 
         return $csv;
     }
