@@ -139,7 +139,7 @@ class Update_controller {
         //
         // Statistics
         //
-        array_multisort($lang_count);
+        array_multisort($lang_count, SORT_DESC);
         yaml_emit_file($c['api_path'] . "/stats.yaml", ["source langs"=> $lang_count, "category count"=>$category_count]);
 
         return $csv;
