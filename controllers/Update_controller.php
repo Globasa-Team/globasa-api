@@ -58,6 +58,7 @@ class Update_controller {
         $index = [];
         $lang_count = [];
         $category_count = [];
+        $class_count = [];
         $tags = [];
 
         // Download the official term list, processing each term.
@@ -106,6 +107,13 @@ class Update_controller {
             else
                 $category_count[$parsed['category']] += 1;
             
+            // calc classes
+            if (!isset($category_count[$parsed['word class']]))
+                $class_count[$parsed['word class']] = 1;
+            else
+                $class_count[$parsed['word class']] += 1;
+
+
             // Pause before next entry read and `yaml_file_emit`
             usleep(SELF::IO_DELAY);
         }
@@ -140,7 +148,7 @@ class Update_controller {
         // Statistics
         //
         array_multisort($lang_count, SORT_DESC);
-        yaml_emit_file($c['api_path'] . "/stats.yaml", ["source langs"=> $lang_count, "category count"=>$category_count]);
+        yaml_emit_file($c['api_path'] . "/stats.yaml", ["source langs"=> $lang_count, "categories"=>$category_count, "classes"=>$classes_count]);
 
         return $csv;
     }
