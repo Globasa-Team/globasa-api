@@ -109,7 +109,7 @@ class Update_controller {
                 $category_count[$parsed['category']] += 1;
             
             // calc classes
-            if (!isset($category_count[$parsed['word class']]))
+            if (!isset($class_count[$parsed['word class']]))
                 $class_count[$parsed['word class']] = 1;
             else
                 $class_count[$parsed['word class']] += 1;
