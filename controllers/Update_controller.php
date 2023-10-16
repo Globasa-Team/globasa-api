@@ -7,6 +7,54 @@ class Update_controller {
 
     const IO_DELAY = 10000;
 
+    const VALID_WORD_CLASSES = array (
+
+        // Content Words
+        'f',
+            'f.lin',
+            'f.oj',
+            'f.nenoj',
+            'f.oro',
+                'f.oro.a',
+                'f.oro.b',
+            'f.sah',
+        'm',
+        'n',
+            'pn',
+                'su pn',
+            'su n',
+        's',
+            'su s',
+        't',
+        // Function Words
+        'd',
+        'il',
+        'l',
+        'num',
+        'par',
+        'p',
+            'lp',
+            'xp',
+        // Affixes
+        'fik',
+            'lfik',
+            'xfik',
+        // Phrases
+        'jm',
+            'p jm',
+            'jm p',
+            'f jm'
+    );
+
+
+
+    const VALID_WORD_CATEGORIES = array(
+        'root', 'proper noun', 'derived', 'phrase', 'affix'
+    );
+
+
+
+
     /**
      * Compare the new and old word list and log any changes.
      */
@@ -102,17 +150,20 @@ class Update_controller {
                 }
             }
 
+            Update_controller::validate_and_count_class($c, $parsed['word class'], $class_count, $parsed['term']);
+            Update_controller::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
+
             // calc categories
-            if (!isset($category_count[$parsed['category']]))
-                $category_count[$parsed['category']] = 1;
-            else
-                $category_count[$parsed['category']] += 1;
+            // if (!isset($category_count[$parsed['category']]))
+            //     $category_count[$parsed['category']] = 1;
+            // else
+            //     $category_count[$parsed['category']] += 1;
             
             // calc classes
-            if (!isset($class_count[$parsed['word class']]))
-                $class_count[$parsed['word class']] = 1;
-            else
-                $class_count[$parsed['word class']] += 1;
+            // if (!isset($class_count[$parsed['word class']]))
+            //     $class_count[$parsed['word class']] = 1;
+            // else
+            //     $class_count[$parsed['word class']] += 1;
 
 
             $word_count += 1;
@@ -161,5 +212,33 @@ class Update_controller {
         return $csv;
     }
 
+    private static function validate_and_count(string $cat, array &$count_arr) {
 
+        if (!isset($count_arr[$cat]))
+            $count_arr[$cat] = 1;
+        else
+            $count_arr[$cat] += 1;
+
+    }
+
+    static function validate_and_count_class(array $c, string $class, &$count_arr, string $word) {
+
+        // validate
+        if (!in_array($class, self::VALID_WORD_CLASSES)) {
+            $c['log']->add("Word List Error: Invalid class `$class` on term `$word`");
+        }
+
+        // count
+        Update_controller::validate_and_count($class, $count_arr);
+
+    }
+
+    static function validate_and_count_category(array $c, string $cat, &$count_arr, string $word) {
+
+        if (!in_array($cat, self::VALID_WORD_CATEGORIES)) {
+            $c['log']->add("Word List Error: Invalid ctegory `$cat` on term `$word`");
+        }
+
+        Update_controller::validate_and_count($cat, $count_arr);
+    }
 }
