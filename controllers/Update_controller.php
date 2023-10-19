@@ -153,18 +153,6 @@ class Update_controller {
             Update_controller::validate_and_count_class($c, $parsed['word class'], $class_count, $parsed['term']);
             Update_controller::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
 
-            // calc categories
-            // if (!isset($category_count[$parsed['category']]))
-            //     $category_count[$parsed['category']] = 1;
-            // else
-            //     $category_count[$parsed['category']] += 1;
-            
-            // calc classes
-            // if (!isset($class_count[$parsed['word class']]))
-            //     $class_count[$parsed['word class']] = 1;
-            // else
-            //     $class_count[$parsed['word class']] += 1;
-
 
             $word_count += 1;
 
