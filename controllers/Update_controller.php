@@ -115,10 +115,12 @@ class Update_controller {
         or throw \Exception("Failed to open ".$current_csv_filename);
         $tp = new Term_parser(fgetcsv($term_stream), null, $c['log']);
         while(($data = fgetcsv($term_stream)) !== false) {
+
+            // Parse term if it exists
             if (empty($data) || empty($data[0])) {
                 continue;
             }
-            [$raw, $parsed, $csv_row] = $tp->parse($data);
+            [$raw, $parsed, $csv_row] = $tp->parse_term($data);
             $csv[$parsed['slug']] = $csv_row;
 
             // Next: save entry to file
@@ -132,6 +134,11 @@ class Update_controller {
                 foreach ($terms as $term) {
                     $index[$lang][$term][] = $parsed['slug'];
                 }
+            }
+
+            //min definition
+            foreach($raw['trans'] as $lang=>$trans) {
+                $min[$lang][$parsed['slug']] = $trans;
             }
 
             // calc etymology
@@ -176,7 +183,20 @@ class Update_controller {
         }
         $c['log']->add("Indexes created: " . $index_list);
 
+
         //
+        // Min
+        //
+        $min_list = "";
+        foreach ($min as $lang=>$data) {
+            ksort($data);
+            yaml_emit_file($c['api_path'] . "/min_{$lang}.yaml", $data);
+            $min_list .= $lang . ' ';
+            usleep(SELF::IO_DELAY);
+        }
+        $c['log']->add("Minimum translation files created: " . $index_list);
+
+
         // Tags
         //
         ksort($tags);
@@ -199,6 +219,11 @@ class Update_controller {
 
         return $csv;
     }
+
+
+
+
+
 
     private static function validate_and_count(string $cat, array &$count_arr) {
 

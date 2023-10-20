@@ -81,11 +81,12 @@ class Term_parser
 
 
     /**
-     * Parses entry array from Google Sheets CSV, returns term data array.
+     * Parses an entry array from Google Sheets CSV, returns term data array.
      * 
-     * @param array  @data  CSV row as array
+     * @param array  $data  CSV row as array
+     * @return array [$raw, $parsed, $csv]
      */
-    public function parse(array $data)
+    public function parse_term(array $data)
     {
         $raw = [];
         $parsed = [];
@@ -107,17 +108,21 @@ class Term_parser
             }
             $csv[$this->csv_columns[$field]] = $datum;
         }
-
+        
+        
+        
         if (empty($raw['term'])) return;
 
-        // TODO: slug/id remove brackets
-        $this->parse_term($raw, $parsed);  // TODO: alt forms
+        $this->set_globasa_terms($raw, $parsed);
         $this->create_ipa($raw, $parsed);
+        
         $this->parse_basic_field('status', $raw, $parsed);
         $this->parse_basic_field('category', $raw, $parsed, true);
         $this->parse_basic_field('word class', $raw, $parsed, true);
+        
         $this->parse_translations($raw, $parsed);
-        $this->create_search_terms($parsed);
+        $this->set_natlang_terms($parsed);
+        
         $this->parse_etymology($raw, $parsed);
         $this->parse_list_field('tags', $raw, $parsed);
         $this->parse_list_field('synonyms', $raw, $parsed);
@@ -544,38 +549,12 @@ class Term_parser
 
 
 
-    /**
-     * Parse term.
-     * 
-     * @param array $raw     raw entry data
-     * @param array $parsed  current parsed entry to save data to
-     */
-    private function parse_term(array $raw, array &$entry)
-    {
-        $term = strtolower(trim($raw['term']));
-        $entry['term'] = $term;
-        $entry['slug'] = $term;
-
-        // if (!isset($entry['search terms'])) {
-        //     $entry['search terms'] = [];
-        //     $entry['search terms']['glb'] = [];
-        // } else if (!isset($entry['search terms']['glb'])) {
-        //     $entry['search terms']['glb'] = [];
-        // }
-
-
-        // TODO: alt forms!
-        // $entry['search terms']['glb'][] = $term;
-    }
-
-
-
 
     /**
      * Parse language translation from Google Docs CSV.
      * 
-     * @param array  $translations  the list of natlang terms
-     * @param array  $parsed        the parsed entry being built
+     * @param array  $raw      $raw['trans'] the list of natlang terms
+     * @param array  $parsed   the parsed entry being built
      */
     private function parse_translations(array $raw, array &$parsed)
     {
@@ -583,13 +562,6 @@ class Term_parser
             if (empty($translations)) {
                 continue;
             }
-
-            // if (!isset($parsed['search terms'])) {
-            //     $parsed['search terms'] = [];
-            //     $parsed['search terms'][$lang] = [];
-            // } else if (!isset($parsed['search terms'][$lang])) {
-            //     $parsed['search terms'][$lang] = [];
-            // }
 
             foreach (explode(";", $translations) as $cur_group) {
                 $group_terms = [];
@@ -624,7 +596,7 @@ class Term_parser
         }
 
         foreach ($data as $key => $datum) {
-            if (empty($datum) || strcmp($key, "term") == 0) continue;
+            if (empty($datum) || strcmp($key, 'term') == 0) continue;
             if (!is_array($datum)) {
                 echo ($indent . $key . ":" . $datum . PHP_EOL);
             } else {
@@ -638,36 +610,10 @@ class Term_parser
 
 
 
-
-
-
-
     /**
-     * Parse search terms and translation fields from Google Docs CSV.
-     * 
-     * @param array $parsed  current parsed entry to save data to
+     * Parse natlang terms and render them for search terms.
      */
-    private function create_search_terms(array &$parsed)
-    {
-        $this->create_globasa_terms($parsed);
-        $this->create_natlang_terms($parsed);
-
-        // if (!empty($searchTerms)) {
-        //     $searchTerms = explode(',', $searchTerms);
-        //     foreach ($searchTerms as $term) {
-        //         $term = trim($term);
-        //         $d->index['eng'][$term][$this->termIndex] = $this->termIndex;
-        //     }
-        // }
-    }
-
-
-
-
-    /**
-     * Parse natlang terms.
-     */
-    private function create_natlang_terms(array &$parsed)
+    private function set_natlang_terms(array &$parsed)
     {
         if(!isset($parsed['trans'])) return;
         foreach ($parsed['trans'] as $lang => $lang_trans) {
@@ -706,9 +652,11 @@ class Term_parser
 
 
     /**
-     * Creates terms for Globasa search index. This will add to the index:
+     * Renders term variation for Globasa search index, and
+     * a smaller set for the mini def. This will add to the index:
      * the term as-is, the full term without brackets, the shortened term
-     * without bracketted text, and all term fragments.
+     * without bracketted text, and all term fragments. Mini def will
+     * not include fragments.
      * 
      * Eg: `(foo) bar grill` would add:
      *  (foo) bar grill
@@ -717,22 +665,26 @@ class Term_parser
      *  bar
      *  grill
      */
-    private function create_globasa_terms(&$parsed)
+    private function set_globasa_terms($raw, &$parsed)
     {
         $search_terms = [];
 
+        $parsed['term'] = trim($raw['term']);
+        $parsed['slug'] = strtolower($parsed['term']);
+
         // Add full term to search terms
-        $search_terms[] = $parsed['term'];
+        $search_terms[] = $parsed['slug'];
         // If has optional part, remove and add to index
-        if (strpos($parsed['term'], "(") !== false) {
+        if (strpos($parsed['slug'], "(") !== false) {
             // Add to index the full term without brackets
-            $search_terms[] = trim(preg_replace(WORD_CHARS_REGEX, '', $parsed['term']));
+            $search_terms[] = trim(preg_replace(WORD_CHARS_REGEX, '', $parsed['slug']));
             // Adds shortened term, removing bracketted text
-            $search_terms[] = trim(preg_replace(PAREN_UNDERSCORE_MARKDOWN_REGEX, '', $parsed['term']));
+            $search_terms[] = trim(preg_replace(PAREN_UNDERSCORE_MARKDOWN_REGEX, '', $parsed['slug']));
         }
+        $parsed['minimum index'] = $search_terms;
 
         // Add all term fragments not in brackets
-        $terms = explode(' ', preg_replace(PAREN_UNDERSCORE_MARKDOWN_REGEX, '', $parsed['term']));
+        $terms = explode(' ', preg_replace(PAREN_UNDERSCORE_MARKDOWN_REGEX, '', $parsed['slug']));
         foreach ($terms as $cur) {
             $term = trim($cur);
             if (empty($term)) continue;

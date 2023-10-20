@@ -66,6 +66,9 @@ class Dictionary_comparison {
 
         if ($term2 == null) $term2 = $term1;
         
+        $term1 = trim($term1);
+        $term2 = trim($term2);
+
         // Compare new and old for each term
         if (array_key_exists($term1, $this->old_dict) && array_key_exists($term2, $this->new_dict)) {
             foreach($this->old_dict[$term1] as $field=>$datum) {
