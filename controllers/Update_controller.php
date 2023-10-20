@@ -7,47 +7,6 @@ class Update_controller {
 
     const IO_DELAY = 10000;
 
-    const VALID_WORD_CLASSES = array (
-
-        // Content Words
-        'f',
-            'f.lin',
-            'f.oj',
-            'f.nenoj',
-            'f.oro',
-                'f.oro.a',
-                'f.oro.b',
-            'f.sah',
-        'm',
-        'n',
-            'pn',
-                'su pn',
-            'su n',
-        's',
-            'su s',
-        't',
-        // Function Words
-        'd',
-        'il',
-        'l',
-        'num',
-        'par',
-        'p',
-            'lp',
-            'xp',
-        // Affixes
-        'fik',
-            'lfik',
-            'xfik',
-        // Phrases
-        'jm',
-            'p jm',
-            'jm p',
-            'f jm'
-    );
-
-
-
     const VALID_WORD_CATEGORIES = array(
         'root', 'proper noun', 'derived', 'phrase', 'affix'
     );
@@ -213,8 +172,7 @@ class Update_controller {
         yaml_emit_file($c['api_path'] . "/stats.yaml", [
                         "terms count"=>$word_count,
                         "source langs"=>$lang_count,
-                        "categories"=>$category_count,
-                        "classes"=>$class_count
+                        "categories"=>$category_count
                     ]);
 
         return $csv;
@@ -234,17 +192,7 @@ class Update_controller {
 
     }
 
-    static function validate_and_count_class(array $c, string $class, &$count_arr, string $word) {
 
-        // validate
-        if (!in_array($class, self::VALID_WORD_CLASSES)) {
-            $c['log']->add("Word List Error: Invalid class `$class` on term `$word`");
-        }
-
-        // count
-        Update_controller::validate_and_count($class, $count_arr);
-
-    }
 
     static function validate_and_count_category(array $c, string $cat, &$count_arr, string $word) {
 
