@@ -96,8 +96,10 @@ class Update_controller {
             }
 
             //min definition
-            foreach($raw['trans'] as $lang=>$trans) {
-                $min[$lang][$parsed['slug']] = $trans;
+            foreach($parsed['minimum definitions'] as $term) {
+                foreach($raw['trans'] as $lang=>$trans) {
+                    $min[$lang][$term] = '_' . $raw['word class'] . '_ ' . $trans;
+                }
             }
 
             // calc etymology
@@ -116,7 +118,6 @@ class Update_controller {
                 }
             }
 
-            Update_controller::validate_and_count_class($c, $parsed['word class'], $class_count, $parsed['term']);
             Update_controller::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
 
 

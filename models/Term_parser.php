@@ -216,11 +216,10 @@ class Term_parser
                     $this->log->add("Error: Etymology starts with 'am ' but isn't.".$cur);
                 }
             } else if (str_starts_with($cur, "kwasilexi - ")) {
-                if (!empty($parsed['etymology']['natlang'])) {
-                    $this->log->add("ERROR: Term `".$raw['term']."` has duplicate natlang etymology.");
-                }
-                $parsed['etymology']['natlang'] = $this->parse_etymology_natlang_freeform(substr($cur, 12), $parsed['slug']);
-                $parsed['etymology']['kwasilexi'] = true;
+                // if (!empty($parsed['etymology']['natlang'])) {
+                //     $this->log->add("ERROR: Term `".$raw['term']."` has duplicate natlang etymology.");
+                // }
+                $parsed['etymology']['kwasilexi'] = $this->parse_etymology_natlang_freeform(substr($cur, 12), $parsed['slug']);
             } else if (str_contains($cur, "(")) {
                 if (!empty($parsed['etymology']['natlang'])) {
                     $this->log->add("ERROR: Term `".$raw['term']."` has duplicate natlang etymology.");
@@ -409,8 +408,9 @@ class Term_parser
 
             if ($at_seperator || $len <= $pos) {
 
-                if ($len >= $pos && $enclosure_level > 0) {
+                if ($len > $pos && $enclosure_level > 0) {
                     $this->log->add("Error: Term `{$term}` has malformed etymology, missing `)`");
+                    echo "len $len pos $pos level $enclosure_level \n$natlang_etymology\n";
                     $enclosure_end = $pos;
                 }
 
@@ -424,7 +424,7 @@ class Term_parser
                     $lang = trim(substr($natlang_etymology, $lang_start, $pos-$lang_start));
                     $result[$lang] = "";
                 }
-                
+
                 if (   str_contains($lang, '(') || str_contains($lang, ')') ||
                         str_contains($lang, ':') || str_contains($lang, ';') ||
                         str_contains($lang, '-') || str_contains($lang, '+') ||
@@ -664,6 +664,18 @@ class Term_parser
      *  bar grill
      *  bar
      *  grill
+     * 
+     * Eg. `(fe) ban leli watu` would add
+     * 
+     * min & index:
+     *   (fe) ban leli watu
+     *   fe ban leli watu
+     *   ban leli watu
+     * index for search only:
+     *   ban
+     *   leli
+     *   watu
+     * 
      */
     private function set_globasa_terms($raw, &$parsed)
     {
@@ -681,7 +693,7 @@ class Term_parser
             // Adds shortened term, removing bracketted text
             $search_terms[] = trim(preg_replace(PAREN_UNDERSCORE_MARKDOWN_REGEX, '', $parsed['slug']));
         }
-        $parsed['minimum index'] = $search_terms;
+        $parsed['minimum definitions'] = $search_terms;
 
         // Add all term fragments not in brackets
         $terms = explode(' ', preg_replace(PAREN_UNDERSCORE_MARKDOWN_REGEX, '', $parsed['slug']));
@@ -692,5 +704,6 @@ class Term_parser
         }
 
         $parsed['search terms']['glb'] = array_unique($search_terms);
+
     }
 }
