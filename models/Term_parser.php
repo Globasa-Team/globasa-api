@@ -410,7 +410,6 @@ class Term_parser
 
                 if ($len > $pos && $enclosure_level > 0) {
                     $this->log->add("Error: Term `{$term}` has malformed etymology, missing `)`");
-                    echo "len $len pos $pos level $enclosure_level \n$natlang_etymology\n";
                     $enclosure_end = $pos;
                 }
 
