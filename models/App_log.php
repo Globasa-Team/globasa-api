@@ -42,7 +42,7 @@ class App_log {
     public function email_log(array $c) {
         $mail = new PHPMailer(true); //Create an instance; passing `true` enables exceptions
     
-        $message = "Dev Log from nightly update. (This is API2 work-in-progress and currently the globasa-dictionary website uses API1 to collect data. So there may be discrepencies between this and actual data on the website.)".PHP_EOL.PHP_EOL;
+        $message = "Log from nightly update. (This is API2 work-in-progress and currently the globasa-dictionary website uses API1 to collect data. So there may be discrepencies between this and actual data on the website.)".PHP_EOL.PHP_EOL;
         foreach($this->log as $item) {
             $message .= "- ".html_entity_decode($item).PHP_EOL.PHP_EOL;
         }

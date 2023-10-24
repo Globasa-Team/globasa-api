@@ -13,6 +13,23 @@ class Update_controller {
 
 
 
+                
+    /**
+     * Count natlang sources.
+     * 
+     */
+    private static function count_languages($parsed) {
+        $lang_count = array();
+        if (!empty($parsed['etymology']['natlang'])) {
+            foreach($parsed['etymology']['natlang'] as $lang => $term_data) {
+                if (!array_key_exists($lang, $lang_count)) $lang_count[$lang] = 1;
+                else $lang_count[$lang] += 1;
+            }
+        }
+        return $lang_count;
+    }
+
+
 
     /**
      * Compare the new and old word list and log any changes.
@@ -65,14 +82,15 @@ class Update_controller {
         $index = [];
         $lang_count = [];
         $category_count = [];
-        $class_count = [];
         $tags = [];
+        $min = [];
         $word_count = 0;
 
         // Download the official term list, processing each term.
         $term_stream = fopen($current_csv_filename, "r")
-        or throw \Exception("Failed to open ".$current_csv_filename);
+            or throw \Exception("Failed to open ".$current_csv_filename);
         $tp = new Term_parser(fgetcsv($term_stream), null, $c['log']);
+
         while(($data = fgetcsv($term_stream)) !== false) {
 
             // Parse term if it exists
@@ -81,45 +99,14 @@ class Update_controller {
             }
             [$raw, $parsed, $csv_row] = $tp->parse_term($data);
             $csv[$parsed['slug']] = $csv_row;
-
-            // Next: save entry to file
-            $entry_file_data = $parsed;
-            $entry_file_data['raw data'] = $raw;
             if (isset($parsed['etymology'][')'])) unset($parsed['etymology'][')']);
-            yaml_emit_file($c['api_path'] . '/terms/' . $parsed['slug'].".yaml", $entry_file_data,  YAML_UTF8_ENCODING);
-            
-            // $index['eng'][$parsed['search terms']['eng']] = $parsed['slug'];
-            foreach ($parsed['search terms'] as $lang => $terms) {
-                foreach ($terms as $term) {
-                    $index[$lang][$term][] = $parsed['slug'];
-                }
-            }
 
-            //min definition
-            foreach($parsed['minimum definitions'] as $term) {
-                foreach($raw['trans'] as $lang=>$trans) {
-                    $min[$lang][$term] = '_' . $raw['word class'] . '_ ' . $trans;
-                }
-            }
-
-            // calc etymology
-            if (!empty($parsed['etymology']['natlang'])) {
-                foreach($parsed['etymology']['natlang'] as $lang => $term_data) {
-                    if (!array_key_exists($lang, $lang_count)) $lang_count[$lang] = 1;
-                    else $lang_count[$lang] += 1;
-                }
-            }
-
-            // tag index
-            if (array_key_exists('tags', $parsed)) {
-                foreach ($parsed['tags'] as $tag) {
-                    // if (array_key_exists($lang, $tags)) 
-                    $tags[$tag][] = $parsed['slug'];
-                }
-            }
-
-            Update_controller::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
-
+            self::save_entry_file(parsed:$parsed, raw:$raw, config:$c);
+            self::render_indexes(parsed:$parsed, index:$index);
+            self::render_minimum_definitions(parsed:$parsed, raw:$raw, min:$min);
+            self::render_tags(parsed:$parsed, tags:$tags);
+            $lang_count = self::count_languages($parsed);
+            self::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
 
             $word_count += 1;
 
@@ -131,55 +118,128 @@ class Update_controller {
         }
         fclose($term_stream);
 
-        //
-        // Indexes
-        //
-        $index_list = "";
-        foreach($index as $lang=>$data) {
-            ksort($data);
-            yaml_emit_file($c['api_path'] . "/index_{$lang}.yaml", $data);
-            $index_list .= $lang . ' ';
-            usleep(SELF::IO_DELAY);
-        }
-        $c['log']->add("Indexes created: " . $index_list);
-
-
-        //
-        // Min
-        //
-        $min_list = "";
-        foreach ($min as $lang=>$data) {
-            ksort($data);
-            yaml_emit_file($c['api_path'] . "/min_{$lang}.yaml", $data);
-            $min_list .= $lang . ' ';
-            usleep(SELF::IO_DELAY);
-        }
-        $c['log']->add("Minimum translation files created: " . $index_list);
-
-
-        // Tags
-        //
-        ksort($tags);
-        yaml_emit_file($c['api_path'] . "/tags.yaml", $tags);
-        $fp = fopen($c['api_path'] . "/tags.json", "w");
-        fputs($fp, json_encode($tags));
-        fclose($fp);
-        usleep(SELF::IO_DELAY);
-
-        //
-        // Statistics
-        //
-        array_multisort($lang_count, SORT_DESC);
-        yaml_emit_file($c['api_path'] . "/stats.yaml", [
-                        "terms count"=>$word_count,
-                        "source langs"=>$lang_count,
-                        "categories"=>$category_count
-                    ]);
+        self::save_index_files(index:$index, config:$c);
+        self::save_min_files(min:$min, config:$c);
+        self::save_tag_file(tags:$tags, config:$c);
+        self::save_stats_file(word_count:$word_count, lang_count:$lang_count, category_count:$category_count, config:$c);
 
         return $csv;
     }
 
 
+    /**
+     * Renders indexes for this term and adds them to the array of indexes.
+     */
+    private static function render_indexes(array $parsed, &$index ) {
+        foreach ($parsed['search terms'] as $lang => $terms) {
+            foreach ($terms as $term) {
+                $index[$lang][$term][] = $parsed['slug'];
+            }
+        }
+    }
+
+    /**
+     * Renders minimum definitions and adds them to the array of mini defs.
+     */
+    private static function render_minimum_definitions(array $parsed, array $raw, array &$min) {
+        $min = array();
+        foreach($parsed['minimum definitions'] as $term) {
+            foreach($raw['trans'] as $lang=>$trans) {
+                $min[$lang][$term] = '(_' . $raw['word class'] . '_) ' . $trans;
+            }
+        }
+    }
+
+    /**
+     * Renders tags and adds them to the array of tags.
+     */
+    private static function render_tags(array $parsed, array &$tags) {
+        if (array_key_exists('tags', $parsed)) {
+            foreach ($parsed['tags'] as $tag) {
+                $tags[$tag][] = $parsed['slug'];
+            }
+        }
+    }
+    
+
+
+    private static function save_entry_file(array $config, array $parsed, array $raw) {
+        $entry_file_data = $parsed;
+        $entry_file_data['raw data'] = $raw;
+        yaml_emit_file($config['api_path'] . '/terms/' . $parsed['slug'].".yaml", $entry_file_data,  YAML_UTF8_ENCODING);
+
+    }
+
+
+
+    /**
+    * Indexes
+    */
+    private static function save_index_files(array $index, array $config) {
+
+        $index_list = "";
+        foreach($index as $lang=>$data) {
+            ksort($data);
+            yaml_emit_file($config['api_path'] . "/index_{$lang}.yaml", $data);
+            $index_list .= $lang . ' ';
+            usleep(SELF::IO_DELAY);
+        }
+        $config['log']->add("Indexes created: " . $index_list);
+    }
+
+
+
+
+
+    /**
+     * Min
+     */
+    private static function save_min_files(array $config, array $min) {
+
+        $min_list = "";
+        foreach ($min as $lang=>$data) {
+            ksort($data);
+            yaml_emit_file($config['api_path'] . "/min_{$lang}.yaml", $data);
+            $min_list .= $lang . ' ';
+            usleep(SELF::IO_DELAY);
+        }
+        $config['log']->add("Minimum translation files created: " . $min_list);
+    }
+
+
+
+
+
+
+    /**
+     * Statistics
+     * 
+     */
+    private static function save_stats_file(int $word_count, array $lang_count, array $category_count, array $config) {
+
+        array_multisort($lang_count, SORT_DESC);
+        yaml_emit_file($config['api_path'] . "/stats.yaml", [
+                        "terms count"=>$word_count,
+                        "source langs"=>$lang_count,
+                        "categories"=>$category_count
+                    ]);
+    }
+
+
+                
+
+    /**
+     * Tags
+     */
+    private static function save_tag_file(array $config, array $tags) {
+
+        ksort($tags);
+        yaml_emit_file($config['api_path'] . "/tags.yaml", $tags);
+        $fp = fopen($config['api_path'] . "/tags.json", "w");
+        fputs($fp, json_encode($tags));
+        fclose($fp);
+        usleep(SELF::IO_DELAY);
+    }
 
 
 
@@ -195,6 +255,9 @@ class Update_controller {
 
 
 
+    /**
+     * Counts the category
+     */
     static function validate_and_count_category(array $c, string $cat, &$count_arr, string $word) {
 
         if (!in_array($cat, self::VALID_WORD_CATEGORIES)) {
