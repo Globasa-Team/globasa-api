@@ -48,6 +48,7 @@ try {
     $c['log'] = $log;
     $c['log']->setEmails($c["app_log_emails"]);
     $c['app_path'] = $app_path;
+    $c['parsedown'] = new \Parsedown();
     
     if ($c['dev']) {
         $c['log']->setDebug();

@@ -103,7 +103,7 @@ class Update_controller {
 
             self::save_entry_file(parsed:$parsed, raw:$raw, config:$c);
             self::render_indexes(parsed:$parsed, index:$index);
-            self::render_minimum_definitions(parsed:$parsed, raw:$raw, min:$min);
+            self::render_minimum_definitions(parsed:$parsed, raw:$raw, min:$min, config:$c);
             self::render_tags(parsed:$parsed, tags:$tags);
             $lang_count = self::count_languages($parsed);
             self::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
@@ -141,11 +141,10 @@ class Update_controller {
     /**
      * Renders minimum definitions and adds them to the array of mini defs.
      */
-    private static function render_minimum_definitions(array $parsed, array $raw, array &$min) {
-        $min = array();
+    private static function render_minimum_definitions(array $parsed, array $raw, array &$min, array $config) {
         foreach($parsed['minimum definitions'] as $term) {
             foreach($raw['trans'] as $lang=>$trans) {
-                $min[$lang][$term] = '(_' . $raw['word class'] . '_) ' . $trans;
+                $min[$lang][$term] = $config['parsedown']->line('(_' . $raw['word class'] . '_) ' . $trans);
             }
         }
     }
