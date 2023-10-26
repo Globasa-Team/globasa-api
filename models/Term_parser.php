@@ -93,19 +93,17 @@ class Term_parser
         $csv = [];
 
         foreach ($data as $field => $datum) {
-            $datum = htmlentities($datum);
-
             if ($this->map[$field] == null) {
                 echo ("\nSkipped field {$field}: {$this->map[$field]}\n");
                 continue;
             }
             if (str_starts_with($this->map[$field], 'trans')) {
                 $lang = explode(" ", $this->map[$field])[1];
-                $raw['trans'][$lang] = $datum;
+                $raw['trans'][$lang] = htmlentities($datum);
             } else if (strcmp($this->map[$field], "status") == 0) {
                 $raw['status'] = filter_var($datum, FILTER_VALIDATE_BOOLEAN);
             } else {
-                $raw[$this->map[$field]] = $datum;
+                $raw[$this->map[$field]] = htmlentities($datum);
             }
             $csv[$this->csv_columns[$field]] = $datum;
         }
@@ -684,8 +682,6 @@ class Term_parser
         $parsed['term'] = trim($raw['term']);
         $parsed['slug'] = strtolower($parsed['term']);
 
-        // Add full term to search terms
-        $search_terms[] = $parsed['slug'];
         // If has optional part, remove and add to index
         if (strpos($parsed['slug'], "(") !== false) {
             // Add to index the full term without brackets
@@ -693,7 +689,12 @@ class Term_parser
             // Adds shortened term, removing bracketted text
             $search_terms[] = trim(preg_replace(PAREN_UNDERSCORE_MARKDOWN_REGEX, '', $parsed['slug']));
         }
-        $parsed['minimum definitions'] = $search_terms;
+        
+        // Add these alt forms to the alt form list
+        $parsed['alt forms'] = $search_terms;
+
+        // Add full term to search terms
+        $search_terms[] = $parsed['slug'];
 
         // Add all term fragments not in brackets
         $terms = explode(' ', preg_replace(PAREN_UNDERSCORE_MARKDOWN_REGEX, '', $parsed['slug']));
