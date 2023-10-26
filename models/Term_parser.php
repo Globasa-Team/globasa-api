@@ -376,20 +376,9 @@ class Term_parser
         $enclosure_level = 0;
         $enclosure_start = 0;
         $enclosure_end = 0;
-
-
-/***
- * 
- * 
- * BUG TESTING
- * 
- * 
- * 
- */
-if (strcmp($term, "protesta") === 0) $debug = true;
+        $result = array();
 
         for ($pos = 0; $pos <= $len; $pos++) {
-            if ($debug) echo "{$pos} ";
             if ($enclosure_level > 0 && $pos < $len) {
                 switch ($natlang_etymology[$pos]) {
                     case '(':
@@ -429,18 +418,16 @@ if (strcmp($term, "protesta") === 0) $debug = true;
                     $lang = trim(substr($natlang_etymology, $lang_start,  $enclosure_start - $lang_start));
                     $example = trim(substr($natlang_etymology, $enclosure_start + 1, $enclosure_end - $enclosure_start - 1));
                     $result[$lang] = $example;
-                    if ($debug) echo("\n $lang->$example\n");
                 }
                 else {
                     $lang = trim(substr($natlang_etymology, $lang_start, $pos-$lang_start));
                     $result[$lang] = "";
-                    if ($debug) echo ("\n $lang->null\n");
                 }
 
                 if (   str_contains($lang, '(') || str_contains($lang, ')') ||
-                        str_contains($lang, ':') || str_contains($lang, ';') ||
-                        str_contains($lang, '-') || str_contains($lang, '+') ||
-                        str_contains($lang, ',') || str_contains($lang, '?')
+                       str_contains($lang, ':') || str_contains($lang, ';') ||
+                       str_contains($lang, '-') || str_contains($lang, '+') ||
+                       str_contains($lang, ',') || str_contains($lang, '?')
                     ) {
                     $this->log->add("Etymology Error: Term `{$term}` has one of ():;-+,? in language name `$lang`. (Missing period from previous language?)");
                 }
@@ -448,7 +435,6 @@ if (strcmp($term, "protesta") === 0) $debug = true;
 
                 if (empty($lang)) {
                     $this->log->add("Etymology Error: Term `{$term}` has blank language name in it's natlang etymology.");
-                    die();
                 }
 
                 $at_seperator = false;
@@ -459,7 +445,6 @@ if (strcmp($term, "protesta") === 0) $debug = true;
             
         }
 
-        // var_dump($result);
         return $result;
     }
 
