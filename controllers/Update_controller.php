@@ -105,7 +105,7 @@ class Update_controller {
             $csv[$parsed['slug']] = $csv_row;
             if (isset($parsed['etymology'][')'])) unset($parsed['etymology'][')']);
 
-            // self::save_entry_file(parsed:$parsed, raw:$raw, config:$c);
+            self::save_entry_file(parsed:$parsed, raw:$raw, config:$c);
             self::render_term_index(parsed:$parsed, index:$term_indexes);
             self::render_search_terms(parsed:$parsed, index:$search_terms);
             self::render_basic_entry(parsed:$parsed, raw:$raw, basic_entries:$basic_entries);
