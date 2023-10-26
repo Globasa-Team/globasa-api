@@ -93,6 +93,7 @@ class Term_parser
         $csv = [];
 
         foreach ($data as $field => $datum) {
+            $datum = htmlentities($datum);
 
             if ($this->map[$field] == null) {
                 echo ("\nSkipped field {$field}: {$this->map[$field]}\n");
