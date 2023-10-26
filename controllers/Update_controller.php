@@ -145,10 +145,8 @@ class Update_controller {
      * and adds them to the array of mini defs.
      */
     private static function render_minimum_definitions(array $parsed, array $raw, array &$min, array $config) {
-        foreach($parsed['minimum definitions'] as $term) {
-            foreach($raw['trans'] as $lang=>$trans) {
-                $min[$lang][$term] = $config['parsedown']->line('(_' . $raw['word class'] . '_) ' . $trans);
-            }
+        foreach($raw['trans'] as $lang=>$trans) {
+            $min[$lang][$parsed['slug']] = $config['parsedown']->line('(_' . $raw['word class'] . '_) ' . $trans);
         }
     }
 
