@@ -5,7 +5,9 @@ use Throwable;
 
 class Update_controller {
 
-    const IO_DELAY = 10000;
+    // Microseconds (1 millions of a second)
+    const SMALL_IO_DELAY = 50000; // 50k microseconds = a twentieth of a second
+    const FULL_FILE_DELAY = 500000; // 500k microseconds = half second
 
     const VALID_WORD_CATEGORIES = array(
         'root', 'proper noun', 'derived', 'phrase', 'affix'
@@ -84,6 +86,7 @@ class Update_controller {
         $category_count = [];
         $tags = [];
         $min = [];
+        $basic_entries = [];
         $word_count = 0;
 
         // Download the official term list, processing each term.
@@ -101,25 +104,24 @@ class Update_controller {
             $csv[$parsed['slug']] = $csv_row;
             if (isset($parsed['etymology'][')'])) unset($parsed['etymology'][')']);
 
-            self::save_entry_file(parsed:$parsed, raw:$raw, config:$c);
+            //self::save_entry_file(parsed:$parsed, raw:$raw, config:$c);
             self::render_indexes(parsed:$parsed, index:$index);
+            self::render_basic_entry(parsed:$parsed, raw:$raw, basic_entries:$basic_entries);
             self::render_minimum_definitions(parsed:$parsed, raw:$raw, min:$min, config:$c);
             self::render_tags(parsed:$parsed, tags:$tags);
             $lang_count = self::count_languages($parsed);
             self::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
 
             $word_count += 1;
-
-            // Pause before next entry read and `yaml_file_emit`
-            usleep(SELF::IO_DELAY);
         }
         if (!feof($term_stream)) {
             $c['log']->add("Unexpected fgetcsv() fail");
         }
         fclose($term_stream);
 
-        self::save_index_files(index:$index, config:$c);
-        self::save_min_files(min:$min, config:$c);
+        // self::save_index_files(index:$index, config:$c);
+        // self::save_min_files(min:$min, config:$c);
+        self::save_basic_files(data:$basic_entries, config:$c);
         self::save_tag_file(tags:$tags, config:$c);
         self::save_stats_file(word_count:$word_count, lang_count:$lang_count, category_count:$category_count, config:$c);
 
@@ -139,7 +141,8 @@ class Update_controller {
     }
 
     /**
-     * Renders minimum definitions and adds them to the array of mini defs.
+     * Renders minimum definitions for the current term
+     * and adds them to the array of mini defs.
      */
     private static function render_minimum_definitions(array $parsed, array $raw, array &$min, array $config) {
         foreach($parsed['minimum definitions'] as $term) {
@@ -150,7 +153,8 @@ class Update_controller {
     }
 
     /**
-     * Renders tags and adds them to the array of tags.
+     * Renders tags for the current term
+     * and adds them to the array of tags.
      */
     private static function render_tags(array $parsed, array &$tags) {
         if (array_key_exists('tags', $parsed)) {
@@ -159,14 +163,51 @@ class Update_controller {
             }
         }
     }
+
+
+    /**
+     * Renders the basic entry for each language. Includes:
+     *  term, class, category, translations.
+     */
+    private static function render_basic_entry(array $parsed, array $raw, array &$basic_entries) {
+        foreach($raw['trans'] as $lang=>$translation) {
+            $basic_entries[$lang][$parsed['slug']] = array();
+            $basic_entries[$lang][$parsed['slug']]['class'] = $parsed['word class'];
+            $basic_entries[$lang][$parsed['slug']]['category'] = $parsed['category'];
+            $basic_entries[$lang][$parsed['slug']]['translation'] = $translation;
+        }
+    }
     
 
+
+
+    private static function save_basic_files(array $data, array $config) {
+        foreach($data as $lang=>$dict) {
+            ksort($dict);
+
+            yaml_emit_file($config['api_path'] . "/basic_{$lang}.yaml", $dict);
+            usleep(SELF::FULL_FILE_DELAY);
+
+            $fp = fopen($config['api_path'] . "/basic_{$lang}.json", "w");
+            fputs($fp, json_encode($dict));
+            fclose($fp);
+            usleep(SELF::FULL_FILE_DELAY);
+        }
+    }
 
     private static function save_entry_file(array $config, array $parsed, array $raw) {
         $entry_file_data = $parsed;
         $entry_file_data['raw data'] = $raw;
-        yaml_emit_file($config['api_path'] . '/terms/' . $parsed['slug'].".yaml", $entry_file_data,  YAML_UTF8_ENCODING);
 
+        yaml_emit_file($config['api_path'] . '/terms/' . $parsed['slug'].".yaml", $entry_file_data,  YAML_UTF8_ENCODING);
+        usleep(SELF::SMALL_IO_DELAY);
+
+        $fp = fopen($config['api_path'] . '/terms/' . $parsed['slug'].".json", "w");
+        fputs($fp, json_encode($entry_file_data));
+        fclose($fp);
+        usleep(SELF::SMALL_IO_DELAY);
+
+        return;
     }
 
 
@@ -179,9 +220,15 @@ class Update_controller {
         $index_list = "";
         foreach($index as $lang=>$data) {
             ksort($data);
+
             yaml_emit_file($config['api_path'] . "/index_{$lang}.yaml", $data);
             $index_list .= $lang . ' ';
-            usleep(SELF::IO_DELAY);
+            usleep(SELF::FULL_FILE_DELAY);
+
+            $fp = fopen($config['api_path'] . "/index_{$lang}.json", "w");
+            fputs($fp, json_encode($data));
+            fclose($fp);
+            usleep(SELF::FULL_FILE_DELAY);
         }
         $config['log']->add("Indexes created: " . $index_list);
     }
@@ -198,9 +245,16 @@ class Update_controller {
         $min_list = "";
         foreach ($min as $lang=>$data) {
             ksort($data);
+
             yaml_emit_file($config['api_path'] . "/min_{$lang}.yaml", $data);
             $min_list .= $lang . ' ';
-            usleep(SELF::IO_DELAY);
+            usleep(SELF::FULL_FILE_DELAY);
+
+            $fp = fopen($config['api_path'] . "/min_{$lang}.json", "w");
+            fputs($fp, json_encode($data));
+            fclose($fp);
+            usleep(SELF::FULL_FILE_DELAY);
+            
         }
         $config['log']->add("Minimum translation files created: " . $min_list);
     }
@@ -222,6 +276,8 @@ class Update_controller {
                         "source langs"=>$lang_count,
                         "categories"=>$category_count
                     ]);
+        usleep(SELF::SMALL_IO_DELAY);
+
     }
 
 
@@ -231,13 +287,16 @@ class Update_controller {
      * Tags
      */
     private static function save_tag_file(array $config, array $tags) {
-
         ksort($tags);
+
         yaml_emit_file($config['api_path'] . "/tags.yaml", $tags);
+        usleep(SELF::FULL_FILE_DELAY);
+
         $fp = fopen($config['api_path'] . "/tags.json", "w");
         fputs($fp, json_encode($tags));
         fclose($fp);
-        usleep(SELF::IO_DELAY);
+
+        usleep(SELF::FULL_FILE_DELAY);
     }
 
 
