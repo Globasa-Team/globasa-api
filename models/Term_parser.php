@@ -428,12 +428,12 @@ class Term_parser
                         str_contains($lang, '-') || str_contains($lang, '+') ||
                         str_contains($lang, ',') || str_contains($lang, '?')
                     ) {
-                    $this->log->add("Etymology Error: Term `{$term}` has non-letter character in language name `$lang`. (Missing period?)");
+                    $this->log->add("Etymology Error: Term `{$term}` has one of ():;-+,? in language name `$lang`. (Missing period from previous language?)");
                 }
 
 
                 if (empty($lang)) {
-                    $this->log->add("Etymology Error: Term `{$term}` has blank language name in it's natlang etymology");
+                    $this->log->add("Etymology Error: Term `{$term}` has blank language name in it's natlang etymology.");
                 }
 
                 $at_seperator = false;

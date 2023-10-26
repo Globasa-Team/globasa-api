@@ -81,7 +81,8 @@ class Update_controller {
      * load on the server. A usleep() delay between each term is used.
      */
     public static function load_current_terms(array $c, string $current_csv_filename) {
-        $index = [];
+        $search_terms = [];
+        $term_indexes = [];
         $lang_count = [];
         $category_count = [];
         $tags = [];
@@ -104,8 +105,9 @@ class Update_controller {
             $csv[$parsed['slug']] = $csv_row;
             if (isset($parsed['etymology'][')'])) unset($parsed['etymology'][')']);
 
-            //self::save_entry_file(parsed:$parsed, raw:$raw, config:$c);
-            self::render_indexes(parsed:$parsed, index:$index);
+            // self::save_entry_file(parsed:$parsed, raw:$raw, config:$c);
+            self::render_term_index(parsed:$parsed, index:$term_indexes);
+            self::render_search_terms(parsed:$parsed, index:$search_terms);
             self::render_basic_entry(parsed:$parsed, raw:$raw, basic_entries:$basic_entries);
             self::render_minimum_definitions(parsed:$parsed, raw:$raw, min:$min, config:$c);
             self::render_tags(parsed:$parsed, tags:$tags);
@@ -119,8 +121,9 @@ class Update_controller {
         }
         fclose($term_stream);
 
-        // self::save_index_files(index:$index, config:$c);
-        // self::save_min_files(min:$min, config:$c);
+        self::save_search_term_files(index:$search_terms, config:$c);
+        self::save_min_files(min:$min, config:$c);
+        self::save_term_index_file(data:$term_indexes, config:$c);
         self::save_basic_files(data:$basic_entries, config:$c);
         self::save_tag_file(tags:$tags, config:$c);
         self::save_stats_file(word_count:$word_count, lang_count:$lang_count, category_count:$category_count, config:$c);
@@ -130,13 +133,27 @@ class Update_controller {
 
 
     /**
-     * Renders indexes for this term and adds them to the array of indexes.
+     * For each languages, add that languages search terms to the
+     * search term array for that languages.
      */
-    private static function render_indexes(array $parsed, &$index ) {
+    private static function render_search_terms(array $parsed, &$index ) {
         foreach ($parsed['search terms'] as $lang => $terms) {
             foreach ($terms as $term) {
                 $index[$lang][$term][] = $parsed['slug'];
             }
+        }
+    }
+
+
+
+    /**
+     * For each languages add all term forms (the term and it's alt forms, if any)
+     * to the index of all words.
+     */
+    private static function render_term_index(array $parsed, array &$index) {
+        $index[$parsed['slug']] = null;
+        foreach($parsed['alt forms'] as $alt) {
+            $index[$alt] = $parsed['slug'];
         }
     }
 
@@ -213,22 +230,22 @@ class Update_controller {
     /**
     * Indexes
     */
-    private static function save_index_files(array $index, array $config) {
+    private static function save_search_term_files(array $index, array $config) {
 
         $index_list = "";
         foreach($index as $lang=>$data) {
             ksort($data);
 
-            yaml_emit_file($config['api_path'] . "/index_{$lang}.yaml", $data);
+            yaml_emit_file($config['api_path'] . "/search_terms_{$lang}.yaml", $data);
             $index_list .= $lang . ' ';
             usleep(SELF::FULL_FILE_DELAY);
 
-            $fp = fopen($config['api_path'] . "/index_{$lang}.json", "w");
+            $fp = fopen($config['api_path'] . "/search_terms_{$lang}.json", "w");
             fputs($fp, json_encode($data));
             fclose($fp);
             usleep(SELF::FULL_FILE_DELAY);
         }
-        $config['log']->add("Indexes created: " . $index_list);
+        $config['log']->add("Search term indexes created: " . $index_list);
     }
 
 
@@ -295,6 +312,20 @@ class Update_controller {
         fclose($fp);
 
         usleep(SELF::FULL_FILE_DELAY);
+    }
+
+
+    private static function save_term_index_file(array $data, array $config) {
+        ksort($data);
+
+        yaml_emit_file($config['api_path'] . "/index.yaml", $data);
+        usleep(SELF::FULL_FILE_DELAY);
+
+        $fp = fopen($config['api_path'] . "/index.json", "w");
+        fputs($fp, json_encode($data));
+        fclose($fp);
+
+        usleep(SELF::FULL_FILE_DELAY);       
     }
 
 
