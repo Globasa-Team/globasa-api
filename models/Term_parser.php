@@ -99,7 +99,7 @@ class Term_parser
             }
             if (str_starts_with($this->map[$field], 'trans')) {
                 $lang = explode(" ", $this->map[$field])[1];
-                $raw['trans'][$lang] = htmlentities($datum);
+                $raw['trans'][$lang] = $this->pd->line(htmlentities($datum));
             } else if (strcmp($this->map[$field], "status") == 0) {
                 $raw['status'] = filter_var($datum, FILTER_VALIDATE_BOOLEAN);
             } else {
