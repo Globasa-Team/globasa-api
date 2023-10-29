@@ -193,31 +193,22 @@ class Term_parser
                 }
                 $parsed['etymology']['link'] = $this->parse_etymology_linked($cur);
             } else if (str_starts_with($cur, "Am " )) {
-                //
-                // This doesn't work.
-                //
-                // Still getting parsed at natlang?
-                //
-                //
                 if (str_starts_with($cur, "Am oko" )) {
                     if (!empty($parsed['etymology']['am oko'])) {
                         $this->log->add("Error: Duplicate `am oko` in etymology.");
                     }
-                    $parsed['etymology']['am oko'] = $this->parse_etymology_am_oko($cur);
+                    $parsed['etymology']['am oko'] = $this->parse_etymology_am_something($cur, 8);
                 }
                 else if (str_starts_with($cur, "Am kompara" )) {
-                    // var_dump($cur);
+                    $parsed['etymology']['am kompara'] = $this->parse_etymology_am_something($cur, 12);
                 }
                 else if (str_starts_with($cur, "Am pia oko" )) {
-                    // var_dump($cur);
+                    $parsed['etymology']['am pia oko'] = $this->parse_etymology_natlang_freeform(substr($cur, 12), $parsed['slug']);
                 }
                 else {
                     $this->log->add("Error: Etymology starts with 'am ' but isn't.".$cur);
                 }
             } else if (str_starts_with($cur, "kwasilexi - ")) {
-                // if (!empty($parsed['etymology']['natlang'])) {
-                //     $this->log->add("ERROR: Term `".$raw['term']."` has duplicate natlang etymology.");
-                // }
                 $parsed['etymology']['kwasilexi'] = $this->parse_etymology_natlang_freeform(substr($cur, 12), $parsed['slug']);
             } else if (str_contains($cur, "(")) {
                 if (!empty($parsed['etymology']['natlang'])) {
@@ -241,12 +232,12 @@ class Term_parser
      * 
      * Remove any that are a comma or ji or empty. However to keep `Am oko _ji_` look for spaces.
      */
-    private function parse_etymology_am_oko(string $etymology) {
+    private function parse_etymology_am_something(string $etymology, int $skip):array {
 
-        $result = explode("_", substr($etymology, 6));
+        $result = explode("_", substr($etymology, $skip));
         foreach($result as $key => $data) {
             $result[$key] = trim($data);
-            if ( empty($result[$key]) || strcmp($data, ", ") == 0 || strcmp($data, " ji ") == 0 ) {
+            if ( empty($result[$key]) || strcmp($data, ", ") == 0 || strcmp($data, ".") == 0 || strcmp($data, " ji ") == 0 ) {
                 unset($result[$key]);
                 continue;
             }
