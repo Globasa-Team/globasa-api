@@ -202,7 +202,7 @@ class Term_parser
                 else if (str_starts_with($cur, "Am kompara" )) {
                     $parsed['etymology']['am kompara'] = $this->parse_etymology_am_something($cur, 12);
                 }
-                else if (str_starts_with($cur, "Am pia oko" )) {
+                else if (str_starts_with($cur, "Am pia oko" ) || str_starts_with($cur, "Am oko pia" )) {
                     $parsed['etymology']['am pia oko'] = $this->parse_etymology_natlang_freeform(substr($cur, 12), $parsed['slug']);
                 }
                 else {
@@ -237,7 +237,7 @@ class Term_parser
         $result = explode("_", substr($etymology, $skip));
         foreach($result as $key => $data) {
             $result[$key] = trim($data);
-            if ( empty($result[$key]) || strcmp($data, ", ") == 0 || strcmp($data, ".") == 0 || strcmp($data, " ji ") == 0 ) {
+            if ( empty($result[$key]) || strcmp($data, ", ") == 0 || strcmp($data, ".") == 0 || strcmp($data, " ji ") == 0 || strcmp($data, " ji max to") == 0 ) {
                 unset($result[$key]);
                 continue;
             }
@@ -412,7 +412,10 @@ class Term_parser
                 }
                 else {
                     $lang = trim(substr($natlang_etymology, $lang_start, $pos-$lang_start));
-                    $result[$lang] = "";
+                    // record language, unless it's etc (ji max to).
+                    if (strcmp($lang, "ji max to") !== 0) {
+                        $result[$lang] = "";
+                    }
                 }
 
                 if (   str_contains($lang, '(') || str_contains($lang, ')') ||
