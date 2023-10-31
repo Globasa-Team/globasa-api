@@ -92,7 +92,7 @@ class Update_controller {
 
         // Download the official term list, processing each term.
         $term_stream = fopen($current_csv_filename, "r")
-            or throw \Exception("Failed to open ".$current_csv_filename);
+            or throw new Exception("Failed to open ".$current_csv_filename);
         $tp = new Term_parser(fgetcsv($term_stream), $c['parsedown'], $c['log']);
 
         while(($data = fgetcsv($term_stream)) !== false) {
