@@ -193,7 +193,10 @@ class Term_parser
                 }
                 $parsed['etymology']['link'] = $this->parse_etymology_linked($cur);
             } else if (str_starts_with($cur, "Am " )) {
-                if (str_starts_with($cur, "Am oko" )) {
+                if (str_starts_with($cur, "Am oko pia")) {
+                    $parsed['etymology']['am oko pia'] = $this->parse_etymology_natlang_freeform(substr($cur, 12), $parsed['slug']);
+                }
+                else if (str_starts_with($cur, "Am oko" )) {
                     if (!empty($parsed['etymology']['am oko'])) {
                         $this->log->add("Error: Duplicate `am oko` in etymology.");
                     }
@@ -201,9 +204,6 @@ class Term_parser
                 }
                 else if (str_starts_with($cur, "Am kompara" )) {
                     $parsed['etymology']['am kompara'] = $this->parse_etymology_am_something($cur, 12);
-                }
-                else if (str_starts_with($cur, "Am pia oko" ) || str_starts_with($cur, "Am oko pia" )) {
-                    $parsed['etymology']['am pia oko'] = $this->parse_etymology_natlang_freeform(substr($cur, 12), $parsed['slug']);
                 }
                 else {
                     $this->log->add("Error: Etymology starts with 'am ' but isn't.".$cur);
