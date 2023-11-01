@@ -130,8 +130,6 @@ class Term_parser
             $parsed['examples'][] = trim($raw['examples']);
         }
 
-        // if(strcmp($parsed['slug'], "hala")==0)var_dump($parsed['etymology']);
-
         return [$raw, $parsed, $csv];
     }
 
