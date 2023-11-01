@@ -127,7 +127,10 @@ class Term_parser
         $this->parse_list_field('synonyms', $raw, $parsed);
         $this->parse_list_field('antonyms', $raw, $parsed);
         if (!empty($raw['example'])) {
-            $parsed['examples'][] = trim($raw['examples']);
+            if (!isset($parsed['examples'])) {
+                $parsed['examples'] = [];
+            }
+            $parsed['examples'][] = trim($raw['example']);
         }
 
         return [$raw, $parsed, $csv];
@@ -234,11 +237,10 @@ class Term_parser
 
         $result = explode("_", substr($etymology, $skip));
         foreach($result as $key => $data) {
-            $result[$key] = trim($data);
             if ( empty($result[$key]) || strcmp($data, ", ") == 0 || strcmp($data, ".") == 0 || strcmp($data, " ji ") == 0 || strcmp($data, " ji max to") == 0 ) {
-                unset($result[$key]);
                 continue;
             }
+            $result[$key] = trim($data);
         }
         return $result;
     }
