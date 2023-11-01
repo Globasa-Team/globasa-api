@@ -126,7 +126,7 @@ class Term_parser
         $this->parse_list_field('tags', $raw, $parsed);
         $this->parse_list_field('synonyms', $raw, $parsed);
         $this->parse_list_field('antonyms', $raw, $parsed);
-        if (!empty($raw['examples'])) {
+        if (!empty($raw['example'])) {
             $parsed['examples'][] = trim($raw['examples']);
         }
 
