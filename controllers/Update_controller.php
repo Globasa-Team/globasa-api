@@ -105,7 +105,7 @@ class Update_controller {
             $csv[$parsed['slug']] = $csv_row;
             if (isset($parsed['etymology'][')'])) unset($parsed['etymology'][')']);
 
-            self::save_entry_file(parsed:$parsed, raw:$raw, config:$c);
+            // self::save_entry_file(parsed:$parsed, raw:$raw, config:$c);
             self::render_term_index(parsed:$parsed, index:$term_indexes);
             self::render_search_terms(parsed:$parsed, index:$search_terms);
             self::render_basic_entry(parsed:$parsed, raw:$raw, basic_entries:$basic_entries);
@@ -121,12 +121,13 @@ class Update_controller {
         }
         fclose($term_stream);
 
-        self::save_search_term_files(index:$search_terms, config:$c);
-        self::save_min_files(min:$min, config:$c);
-        self::save_term_index_file(data:$term_indexes, config:$c);
-        self::save_basic_files(data:$basic_entries, config:$c);
-        self::save_tag_file(tags:$tags, config:$c);
-        self::save_stats_file(word_count:$word_count, lang_count:$lang_count, category_count:$category_count, config:$c);
+        // self::save_search_term_files(index:$search_terms, config:$c);
+        // self::save_min_files(min:$min, config:$c);
+        // self::save_term_index_file(data:$term_indexes, config:$c);
+        // self::save_basic_files(data:$basic_entries, config:$c);
+        // self::save_tag_file(tags:$tags, config:$c);
+        // self::save_stats_file(word_count:$word_count, lang_count:$lang_count, category_count:$category_count, config:$c);
+        self::save_backlinks_file(data:$tp->backlinks, config:$c);
 
         return $csv;
     }
@@ -195,6 +196,12 @@ class Update_controller {
     
 
 
+
+    private static function save_backlinks_file(array $data, array $config) {
+        ksort($data);
+        yaml_emit_file($config['api_path'] . "/backlinks.yaml", $data);
+        usleep(SELF::FULL_FILE_DELAY);
+    }
 
     private static function save_basic_files(array $data, array $config) {
         foreach($data as $lang=>$dict) {

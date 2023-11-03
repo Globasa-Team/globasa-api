@@ -59,6 +59,8 @@ class Term_parser
     public $lang_sources = [];
     private $pd = null;
     private $log = null;
+    public $backlinks = [];
+    private $current_term = null;
 
 
     /**
@@ -113,6 +115,7 @@ class Term_parser
         if (empty($raw['term'])) return;
 
         $this->set_globasa_terms($raw, $parsed);
+        $this->current_term = $parsed['slug'];
         $this->create_ipa($raw, $parsed);
         
         $this->parse_basic_field('status', $raw, $parsed);
@@ -220,7 +223,7 @@ class Term_parser
                 if (!empty($parsed['etymology']['derived'])) {
                     $this->log->add("ERROR: Term `".$raw['term']."` has duplicate derived etymology.");
                 }
-                $parsed['etymology']['derived'] = $this->parse_etymology_derived($cur);
+                $parsed['etymology']['derived'] = $this->parse_etymology_derived($cur, $parsed['slug']);
             }
         }
     }
@@ -319,7 +322,9 @@ class Term_parser
                 $phraseStart = false;
             } else {
                 // Stop is true, so make link with current phrase
+                // Also, record for backlinking
                 $phrase .= $word;
+                $this->backlinks[$phrase][] = $this->current_term;
                 $phrase = preg_replace('/[^A-Za-z0-9, \-]/', '', $phrase);
 
                 // link to term
@@ -327,6 +332,7 @@ class Term_parser
                 // add to etymology
                 $etymology[] = $phrase . $stop;
                 $phrase = '';
+                
             }
             $seperator = ' ';
             $stop = '';
