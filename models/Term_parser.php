@@ -178,7 +178,7 @@ class Term_parser
     private function parse_etymology(array $raw, array &$parsed)
     {
 
-        $etymologies = explode(". ", $raw['etymology']);
+        $etymologies = explode(".", $raw['etymology']);
         // var_dump($etymologies);
         foreach($etymologies as $cur) {
 
@@ -204,7 +204,7 @@ class Term_parser
                     $parsed['etymology']['am oko'] = $this->parse_etymology_am_something($cur, 8);
                 }
                 else if (str_starts_with($cur, "Am kompara" )) {
-                    $parsed['etymology']['am kompara'] = $this->parse_etymology_am_something($cur, 12);
+                    $parsed['etymology']['am kompara'] = $this->parse_etymology_am_something_new($cur, 12);
                 }
                 else {
                     $this->log->add("Error: Etymology starts with 'am ' but isn't.".$cur);
@@ -236,6 +236,25 @@ class Term_parser
     private function parse_etymology_am_something(string $etymology, int $skip):array {
 
         $result = explode("_", substr($etymology, $skip));
+        foreach($result as $key => $data) {
+            if ( empty($result[$key]) || strcmp($data, ", ") == 0 || strcmp($data, ".") == 0 || strcmp($data, " ji ") == 0 || strcmp($data, " ji max to") == 0 ) {
+                continue;
+            }
+            $result[$key] = trim($data);
+        }
+        return $result;
+    }
+
+
+    
+    /**
+     * Am oko
+     * 
+     * Remove any that are a comma or ji or empty. However to keep `Am oko _ji_` look for spaces.
+     */
+    private function parse_etymology_am_something_new(string $etymology, int $skip):array {
+
+        $result = explode(", ", substr($etymology, $skip));
         foreach($result as $key => $data) {
             if ( empty($result[$key]) || strcmp($data, ", ") == 0 || strcmp($data, ".") == 0 || strcmp($data, " ji ") == 0 || strcmp($data, " ji max to") == 0 ) {
                 continue;
@@ -554,11 +573,11 @@ class Term_parser
             if (empty($translations)) {
                 continue;
             }
-
+            $translations = html_entity_decode($translations);
             foreach (explode(";", $translations) as $cur_group) {
                 $group_terms = [];
                 foreach (explode(",", $cur_group) as $term) {
-                    $group_terms[] = trim($term);
+                    $group_terms[] = htmlentities(trim($term));
                     // $parsed['search terms'][$lang][] = trim($term);
                 }
                 $parsed['trans'][$lang][] = $group_terms;
