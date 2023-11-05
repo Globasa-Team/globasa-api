@@ -245,7 +245,7 @@ class Term_parser
                 continue;
             }
             $result[$key] = trim($data);
-            if (str_ends_with($result[$key]), '.')) {
+            if (str_ends_with($result[$key], '.')) {
                 $result[$key] = substr($result[$key], 0, -1);
             }
         }
