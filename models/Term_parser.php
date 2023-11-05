@@ -579,8 +579,7 @@ class Term_parser
             foreach (explode(";", $translations) as $cur_group) {
                 $group_terms = [];
                 foreach (explode(",", $cur_group) as $term) {
-                    $group_terms[] = htmlentities(trim($term));
-                    // $parsed['search terms'][$lang][] = trim($term);
+                    $group_terms[] = $this->pd->line(trim($term));
                 }
                 $parsed['trans'][$lang][] = $group_terms;
             }
