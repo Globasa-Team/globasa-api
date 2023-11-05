@@ -61,6 +61,7 @@ class Term_parser
     private $log = null;
     public $backlinks = [];
     private $current_term = null;
+    public $natlang_etymologies = null;
 
 
     /**
@@ -69,7 +70,7 @@ class Term_parser
      * @param array $fields list of fields from Google Docs CSV
      * @param mixed $pd     ParseDown markdown parser
      */
-    public function __construct($fields, $parsedown, $log)
+    public function __construct(array $fields, object $parsedown, object $log, array &$natlang_etymologies)
     {
         $this->csv_columns = $fields;
         if (empty($fields)) return null;
@@ -78,6 +79,7 @@ class Term_parser
         }
         $this->log = $log;
         $this->pd = $parsedown;
+        $this->natlang_etymologies = &$natlang_etymologies;
     }
 
 
@@ -174,6 +176,8 @@ class Term_parser
      * Starts with Am pia oko
      * Starts with Am oko
      * 
+     * Splits on ". ". Includes space for acronyms in example text.
+     * 
      * 
      * @param array $raw     raw entry data
      * @param array $parsed  current parsed entry to save data to
@@ -181,7 +185,7 @@ class Term_parser
     private function parse_etymology(array $raw, array &$parsed)
     {
 
-        $etymologies = explode(".", $raw['etymology']);
+        $etymologies = explode(". ", $raw['etymology']);
         // var_dump($etymologies);
         foreach($etymologies as $cur) {
 
@@ -198,7 +202,7 @@ class Term_parser
                 $parsed['etymology']['link'] = $this->parse_etymology_linked($cur);
             } else if (str_starts_with($cur, "Am " )) {
                 if (str_starts_with($cur, "Am oko pia")) {
-                    $parsed['etymology']['am oko pia'] = $this->parse_etymology_natlang_freeform(substr($cur, 12), $parsed['slug']);
+                    $parsed['etymology']['am oko pia'] = $this->parse_etymology_natlang_freeform(substr($cur, 12), $parsed['slug'], false);
                 }
                 else if (str_starts_with($cur, "Am oko" )) {
                     if (!empty($parsed['etymology']['am oko'])) {
@@ -230,26 +234,6 @@ class Term_parser
 
 
 
-
-    /**
-     * Am oko
-     * 
-     * Remove any that are a comma or ji or empty. However to keep `Am oko _ji_` look for spaces.
-     */
-    private function DELETE_parse_etymology_am_something(string $etymology, int $skip):array {
-
-        $result = explode("_", substr($etymology, $skip));
-        foreach($result as $key => $data) {
-            if ( empty($result[$key]) || strcmp($data, ", ") == 0 || strcmp($data, ".") == 0 || strcmp($data, " ji ") == 0 || strcmp($data, " ji max to") == 0 ) {
-                continue;
-            }
-            $result[$key] = trim($data);
-        }
-        return $result;
-    }
-
-
-    
     /**
      * Gets the list of terms with on of the also see word lists.
      */
@@ -261,6 +245,9 @@ class Term_parser
                 continue;
             }
             $result[$key] = trim($data);
+            if (str_ends_with($result[$key]), '.')) {
+                $result[$key] = substr($result[$key], 0, -1);
+            }
         }
         return $result;
     }
@@ -324,8 +311,11 @@ class Term_parser
                 // Stop is true, so make link with current phrase
                 // Also, record for backlinking
                 $phrase .= $word;
-                $this->backlinks[$phrase][] = $this->current_term;
+                if (str_ends_with($phrase, '.')) {
+                    $phrase = substr($phrase, 0, -1);
+                }
                 $phrase = preg_replace('/[^A-Za-z0-9, \-]/', '', $phrase);
+                $this->backlinks[$phrase][] = $this->current_term;
 
                 // link to term
                 $phrase = '<a href="../lexi/' . $phrase . '">' . $phrase . '</a>';
@@ -366,8 +356,12 @@ class Term_parser
     private function parse_etymology_linked(string $etymology_link)
     {
         // TODO: Is a temporary link to Reddit
-        // Markdown parse
-        return $etymology_link;
+        $etymology_link = trim($etymology_link);
+        if (str_ends_with($etymology_link, '.')) {
+            $etymology_link = substr($etymology_link, 0, -1);
+        }
+        // Do an extra trim just in case they put a period after a space or something
+        return $this->pd->line(trim($etymology_link));
     }
 
 
@@ -382,7 +376,7 @@ class Term_parser
      * @param string    $natlang_etymology     Source of the word in the form of `language (term; term, term)`
      * @return array    array of languages containing array of terms
      */
-    private function parse_etymology_natlang_freeform(string $natlang_etymology, string $term)
+    private function parse_etymology_natlang_freeform(string $natlang_etymology, string $term, bool $mark_etymology = true)
     {
         $len = strlen($natlang_etymology);
         $at_seperator = false;
@@ -431,6 +425,9 @@ class Term_parser
 
                     $lang = trim(substr($natlang_etymology, $lang_start,  $enclosure_start - $lang_start));
                     $example = trim(substr($natlang_etymology, $enclosure_start + 1, $enclosure_end - $enclosure_start - 1));
+                    if (str_ends_with($example, ".")) {
+                        $example = substr($example, 0, -1);
+                    }
                     $result[$lang] = $example;
                 }
                 else {
@@ -438,6 +435,7 @@ class Term_parser
                     // record language, unless it's etc (ji max to).
                     if (strcmp($lang, "ji max to") !== 0) {
                         $result[$lang] = "";
+                        $this->natlang_etymologies[$lang][] = $this->current_term;
                     }
                 }
 

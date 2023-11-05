@@ -83,6 +83,7 @@ class Update_controller {
     public static function load_current_terms(array $c, string $current_csv_filename) {
         $search_terms = [];
         $term_indexes = [];
+        $natlang_etymologies = [];
         $lang_count = [];
         $category_count = [];
         $tags = [];
@@ -93,7 +94,7 @@ class Update_controller {
         // Download the official term list, processing each term.
         $term_stream = fopen($current_csv_filename, "r")
             or throw new Exception("Failed to open ".$current_csv_filename);
-        $tp = new Term_parser(fgetcsv($term_stream), $c['parsedown'], $c['log']);
+        $tp = new Term_parser(fields:fgetcsv($term_stream), parsedown:$c['parsedown'], log:$c['log'], natlang_etymologies:$natlang_etymologies);
 
         while(($data = fgetcsv($term_stream)) !== false) {
 
@@ -128,6 +129,7 @@ class Update_controller {
         self::save_tag_file(tags:$tags, config:$c);
         self::save_stats_file(word_count:$word_count, lang_count:$lang_count, category_count:$category_count, config:$c);
         self::save_backlinks_file(data:$tp->backlinks, config:$c);
+        self::save_natlang_etymologies_files(data:$natlang_etymologies, config:$c);
 
         return $csv;
     }
@@ -281,6 +283,20 @@ class Update_controller {
         $config['log']->add("Minimum translation files created: " . $min_list);
     }
 
+
+
+    /**
+     * Natlang etymologies
+     */
+    private static function save_natlang_etymologies_files(array $config, array $data) {
+
+        foreach ($data as $lang=>$terms) {
+            ksort($terms);
+
+            yaml_emit_file($config['api_path'] . "/etymologies_{$lang}.yaml", $terms);
+            usleep(SELF::FULL_FILE_DELAY);
+        }
+    }
 
 
 
