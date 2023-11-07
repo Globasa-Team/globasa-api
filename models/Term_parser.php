@@ -125,7 +125,7 @@ class Term_parser
         $this->parse_basic_field('word class', $raw, $parsed, true);
         
         $this->parse_translations($raw, $parsed);
-        $this->set_natlang_terms($parsed);
+        $this->set_natlang_terms($parsed, $raw);
         
         $this->parse_etymology($raw, $parsed);
         $this->parse_list_field('tags', $raw, $parsed);
@@ -625,11 +625,44 @@ class Term_parser
     /**
      * Parse natlang terms and render them for search terms.
      */
-    private function set_natlang_terms(array &$parsed)
+    private function set_natlang_terms(array &$parsed, array $raw)
     {
+        $search_terms = [];
+        self::set_natlang_terms_manual(raw:$raw, search_terms:$search_terms);
+        self::set_natlang_terms_from_translation($parsed, $search_terms);
+
+        foreach($search_terms as $lang=>$lang_terms) {
+            $parsed['search terms'][$lang] = array_unique($lang_terms);
+        }
+
+    }
+
+    /**
+     * Adds manually entered English search terms.
+     */
+    private function set_natlang_terms_manual(array $raw, array &$search_terms)
+    {
+        // Parse manual search terms (English only)
+        if(empty($raw['search terms eng'])) {
+            return;
+        }
+
+        foreach(explode($raw['search terms eng'], ", ") as $term) {
+            $search_terms['eng'][] = $term;
+        }
+
+        return;
+    }
+
+
+    /**
+     * Parse translation for search terms
+     */
+    private function set_natlang_terms_from_translation(array $parsed, array &$search_terms) {
+
         if(!isset($parsed['trans'])) return;
+
         foreach ($parsed['trans'] as $lang => $lang_trans) {
-            $cur_lang_terms = [];
             foreach ($lang_trans as $trans_group) {
                 foreach ($trans_group as $trans) {
                     // Remove notes
@@ -643,24 +676,23 @@ class Term_parser
                     }
 
                     // included all parts, removing parentheses and underscores.
-                    $search_terms = trim(preg_replace('/[\(\)_]/U', '', $trans));     // (_ ... _)
-                    $search_terms = strtolower(trim($search_terms));
-                    $cur_lang_terms[] = trim($search_terms);
+                    $cur = trim(preg_replace('/[\(\)_]/U', '', $trans));     // (_ ... _)
+                    $cur = strtolower(trim($cur));
+                    $search_terms[$lang][] = trim($cur);
 
                     // Remove optional parts by deleting what is inside the
                     // brackets and removing double white space.
                     if (strpos($trans, '(') !== false) {
-                        $search_terms = preg_replace('/\((.+)\)/U', '', $trans);
-                        $search_terms = preg_replace('/\s\s+/', ' ', $search_terms);
-                        $search_terms = strtolower(trim($search_terms));
-                        $cur_lang_terms[] = trim($search_terms);
+                        $cur = preg_replace('/\((.+)\)/U', '', $trans);
+                        $cur = preg_replace('/\s\s+/', ' ', $cur);
+                        $cur = strtolower(trim($cur));
+                        $search_terms[$lang][] = trim($cur);
                     }
                 }
             }
-            $parsed['search terms'][$lang] = array_unique($cur_lang_terms);
+            
         }
     }
-
 
 
     /**
