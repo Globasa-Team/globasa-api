@@ -334,6 +334,7 @@ class Term_parser
         // exactly as above else block
         if (!empty($phrase)) {
             $phrase = preg_replace('/[^A-Za-z0-9, \-]/', '', $phrase);
+            $this->backlinks[$phrase][] = $this->current_term;
 
             // link to term
             $phrase = '<a href="../lexi/' . $phrase . '">' . $phrase . '</a>';
