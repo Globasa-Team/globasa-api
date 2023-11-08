@@ -200,17 +200,19 @@ class Term_parser
                     $this->log->add("ERROR: Term `".$raw['term']."` has duplicate linked etymology.");
                 }
                 $parsed['etymology']['link'] = $this->parse_etymology_linked($cur);
+            } else if (strcmp($cur, "a priori") === 0) {
+                $parsed['etymology']['a priori'] = true;
             } else if (str_starts_with($cur, "Am " )) {
-                if (str_starts_with($cur, "Am oko pia")) {
+                if (str_starts_with($cur, "Am oko pia: ")) {
                     $parsed['etymology']['am oko pia'] = $this->parse_etymology_natlang_freeform(substr($cur, 12), $parsed['slug'], false);
                 }
-                else if (str_starts_with($cur, "Am oko" )) {
+                else if (str_starts_with($cur, "Am oko " )) {
                     if (!empty($parsed['etymology']['am oko'])) {
                         $this->log->add("Error: Duplicate `am oko` in etymology.");
                     }
-                    $parsed['etymology']['am oko'] = $this->parse_etymology_also_see($cur, 8);
+                    $parsed['etymology']['am oko'] = $this->parse_etymology_also_see($cur, 7);
                 }
-                else if (str_starts_with($cur, "Am kompara" )) {
+                else if (str_starts_with($cur, "Am kompara: " )) {
                     $parsed['etymology']['am kompara'] = $this->parse_etymology_also_see($cur, 12);
                 }
                 else {
