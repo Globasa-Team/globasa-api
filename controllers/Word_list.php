@@ -3,7 +3,7 @@ namespace globasa_api;
 use Exception;
 use Throwable;
 
-class Update_controller {
+class Word_list {
 
     // Microseconds (1 millions of a second)
     const SMALL_IO_DELAY = 50000; // 50k microseconds = a twentieth of a second
