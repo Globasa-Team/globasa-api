@@ -11,9 +11,9 @@ try {
     $c['log']->add("Environment: " . ($c['dev'] ? 'dev' : 'production'));
     
     // Update data files
-    $csv_data = Update_controller::load_current_terms($c, $argv[1]);
-    Update_controller::log_changes($csv_data, $data['previous'], $c);
-    Update_controller::update_i18n($c);
+    $csv_data = Word_list::load_current_terms($c, $argv[1]);
+    Word_list::log_changes($csv_data, $data['previous'], $c);
+    I18n::update($c);
 
     // Finish up
     $c['log']->add("Script complete");

@@ -90,6 +90,7 @@ class Update_controller {
         $min = [];
         $basic_entries = [];
         $word_count = 0;
+        
 
         // Download the official term list, processing each term.
         $term_stream = fopen($current_csv_filename, "r")
