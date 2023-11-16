@@ -103,7 +103,7 @@ class Term_parser
             }
             if (str_starts_with($this->map[$field], 'trans')) {
                 $lang = explode(" ", $this->map[$field])[1];
-                $raw['trans'][$lang] = $this->pd->line(htmlentities($datum));
+                $raw['trans'][$lang] = htmlentities($datum);
             } else if (strcmp($this->map[$field], "status") == 0) {
                 $raw['status'] = filter_var($datum, FILTER_VALIDATE_BOOLEAN);
             } else {
@@ -358,13 +358,12 @@ class Term_parser
      */
     private function parse_etymology_linked(string $etymology_link)
     {
-        // TODO: Is a temporary link to Reddit
         $etymology_link = trim($etymology_link);
         if (str_ends_with($etymology_link, '.')) {
             $etymology_link = substr($etymology_link, 0, -1);
         }
         // Do an extra trim just in case they put a period after a space or something
-        return $this->pd->line(trim($etymology_link));
+        return $etymology_link;
     }
 
 
@@ -567,13 +566,27 @@ class Term_parser
 
 
     /**
-     * Parse language translation from Google Docs CSV.
+     * Parse language translation from Google Docs CSV. Render
+     * individual tranlsation terms and search terms based on
+     * translation terms.
+     * 
+     * - Any number of translation groups seperated by ;
+     * - Any number of terms, seperated by ,
+     * - Optional notes or clarifications in ( ) or _ _
+     * 
+     * Example:
+     * 
+     *      term1, term2; term3 (note1, note2, not3), term4
+     * 
+     * Warning: parenthetical notes may not use ;
+     *      and may not have brackets () within brackets ()
      * 
      * @param array  $raw      $raw['trans'] the list of natlang terms
      * @param array  $parsed   the parsed entry being built
      */
     private function parse_translations(array $raw, array &$parsed)
     {
+        $rebuilt_term = null;
         foreach ($raw['trans'] as $lang => $translations) {
             if (empty($translations)) {
                 continue;
@@ -582,7 +595,24 @@ class Term_parser
             foreach (explode(";", $translations) as $cur_group) {
                 $group_terms = [];
                 foreach (explode(",", $cur_group) as $term) {
-                    $group_terms[] = $this->pd->line(trim($term));
+                    if (!empty($rebuilt_term)) {
+                        // Is rebuilding a string
+                        $rebuilt_term .= ',' . $term;
+                        if (str_contains($term, ')')) {
+                            $term = $rebuilt_term;
+                            $rebuilt_term = null;
+                        }
+
+                    } else if ($pos = strstr($term, '(') !== false && strstr($term, ')') === false) {
+                        $rebuilt_term = $term;
+                    }
+                    
+                    if (!$rebuilt_term) {
+
+                        $group_terms[] = $this->pd->line(htmlentities(trim($term)));
+                        self::set_natlang_term_from_translation(parsed:$parsed, lang:$lang, term:$term);
+                    }
+
                 }
                 $parsed['trans'][$lang][] = $group_terms;
             }
@@ -630,31 +660,64 @@ class Term_parser
      */
     private function set_natlang_terms(array &$parsed, array $raw)
     {
-        $search_terms = [];
-        self::set_natlang_terms_manual(raw:$raw, search_terms:$search_terms);
-        self::set_natlang_terms_from_translation($parsed, $search_terms);
-
-        foreach($search_terms as $lang=>$lang_terms) {
-            $parsed['search terms'][$lang] = array_unique($lang_terms);
+        self::set_natlang_terms_manual(raw:$raw, parsed:$parsed);
+        // self::set_natlang_terms_from_translation($parsed, $search_terms);
+        
+        foreach($parsed['search terms'] as $lang=>$lang_terms) {
+            // $parsed['search terms'][$lang] = sort(array_unique($lang_terms));
+            // $parsed['search terms'][$lang] = array_unique($lang_terms);
+            $parsed['search terms'][$lang] = array_values($lang_terms);
         }
-
     }
 
     /**
      * Adds manually entered English search terms.
      */
-    private function set_natlang_terms_manual(array $raw, array &$search_terms)
+    private function set_natlang_terms_manual(array $raw, array &$parsed)
     {
         // Parse manual search terms (English only)
         if(empty($raw['search terms eng'])) {
             return;
         }
 
-        foreach(explode($raw['search terms eng'], ", ") as $term) {
-            $search_terms['eng'][] = $term;
+        foreach(explode(", ", $raw['search terms eng']) as $term) {
+            $parsed['search terms']['eng'][] = $term;
         }
 
         return;
+    }
+
+
+    /**
+     * Parse single term and add to search terms
+     */
+    private function set_natlang_term_from_translation(array &$parsed, string $lang, string $term) {
+
+        if(empty($term)) return;
+
+        // Remove notes
+        $term = preg_replace('/\(_(.+)_\)/U', '', $term);     // (_ ... _)
+        $term = preg_replace('/_\*\*(.+)\*\*_/U', '', $term); // _** ... **_
+        $term = preg_replace('/\[.+\].+\]/U', '', $term);     // [...[...]...]
+        // If we also need to do single bracket: /\[.+\]/U
+        if (empty($term) || ($term[0] == '_' && $term[-1] != '_')) {
+            // No non-note content
+            return;
+        }
+
+        // included all parts, removing parentheses and underscores.
+        $cur = trim(preg_replace('/[\(\)_]/U', '', $term));     // (_ ... _)
+        $cur = strtolower(trim($cur));
+        $parsed['search terms'][$lang][] = trim($cur);
+
+        // Remove optional parts by deleting what is inside the
+        // brackets and removing double white space.
+        if (strpos($term, '(') !== false) {
+            $cur = preg_replace('/\((.+)\)/U', '', $term);
+            $cur = preg_replace('/\s\s+/', ' ', $cur);
+            $cur = strtolower(trim($cur));
+            $parsed['search terms'][$lang][] = trim($cur);
+        }
     }
 
 

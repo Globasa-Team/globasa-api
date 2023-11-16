@@ -47,34 +47,6 @@ class Word_list {
         $c['log']->add("Changes logged: ".count($comparison->changes));
     }
 
-
-
-    public static function update_i18n(array $c) {
-        $lang_resource = [];
-        $lang_resource_csv = fopen($c['api_path'] . DIRECTORY_SEPARATOR . I18N_CSV_FILENAME, 'r');
-        // $lang_resource_csv = fopen($c['i18n_url'], 'r');
-        if ($lang_resource_csv === false) {
-            die("Failed to open lang CSV");
-        }
-        //What does this do on failure? Empty file? No file found?
-
-        $columnNames = fgetcsv($lang_resource_csv);
-        $label_id = ''; // Should be set on first loop
-        while (($text_data = fgetcsv($lang_resource_csv)) !== false) {
-            foreach ($text_data as $key=>$datum) {
-                // Key is label id when in first position.
-                if ($key == 0) {
-                    $label_id = $datum;
-                    continue;
-                }
-                // key is language otherwise.
-                $lang_resource[$columnNames[$key]][$label_id] = $datum;
-            }
-        }
-        yaml_emit_file($c['api_path'] . DIRECTORY_SEPARATOR . I18N_YAML_FILENAME, $lang_resource);
-    }
-
-
     /**
      * Open current CSV, reading line by line, and processing the words
      * individually and writing out dictionary files. This is to reduce max
@@ -100,7 +72,7 @@ class Word_list {
         while(($data = fgetcsv($term_stream)) !== false) {
 
             // Parse term if it exists
-            if (empty($data) || empty($data[0])) {
+            if (empty($data) || empty($data[0]) ) {
                 continue;
             }
             [$raw, $parsed, $csv_row] = $tp->parse_term($data);
@@ -375,6 +347,6 @@ class Word_list {
             $c['log']->add("Word List Error: Invalid ctegory `$cat` on term `$word`");
         }
 
-        Update_controller::validate_and_count($cat, $count_arr);
+        Word_list::validate_and_count($cat, $count_arr);
     }
 }
