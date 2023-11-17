@@ -82,7 +82,7 @@ class Word_list {
             self::save_entry_file(parsed:$parsed, raw:$raw, config:$c);
             self::render_term_index(parsed:$parsed, index:$term_indexes);
             self::render_search_terms(parsed:$parsed, index:$search_terms);
-            self::render_basic_entry(parsed:$parsed, raw:$raw, basic_entries:$basic_entries);
+            self::render_basic_entry(parsed:$parsed, raw:$raw, basic_entries:$basic_entries, config:$c);
             self::render_minimum_definitions(parsed:$parsed, raw:$raw, min:$min, config:$c);
             self::render_tags(parsed:$parsed, tags:$tags);
             $lang_count = self::count_languages($parsed);
@@ -160,12 +160,12 @@ class Word_list {
      * Renders the basic entry for each language. Includes:
      *  term, class, category, translations.
      */
-    private static function render_basic_entry(array $parsed, array $raw, array &$basic_entries) {
+    private static function render_basic_entry(array $parsed, array $raw, array &$basic_entries, array $config) {
         foreach($raw['trans'] as $lang=>$translation) {
             $basic_entries[$lang][$parsed['slug']] = array();
             $basic_entries[$lang][$parsed['slug']]['class'] = $parsed['word class'];
             $basic_entries[$lang][$parsed['slug']]['category'] = $parsed['category'];
-            $basic_entries[$lang][$parsed['slug']]['translation'] = $translation;
+            $basic_entries[$lang][$parsed['slug']]['translation'] = $config['parsedown']->line($translation);
         }
     }
     
