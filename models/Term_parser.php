@@ -615,6 +615,7 @@ class Term_parser
 
                 }
                 $parsed['trans'][$lang][] = $group_terms;
+                $parsed['trans html'][$lang] = $this->pd->line($translations);
             }
         }
     }

@@ -138,8 +138,8 @@ class Word_list {
      * and adds them to the array of mini defs.
      */
     private static function render_minimum_definitions(array $parsed, array $raw, array &$min, array $config) {
-        foreach($raw['trans'] as $lang=>$trans) {
-            $min[$lang][$parsed['slug']] = $config['parsedown']->line('(_' . $raw['word class'] . '_) ' . $trans);
+        foreach($parsed['trans html'] as $lang=>$trans) {
+            $min[$lang][$parsed['slug']] = '(<em>' . $parsed['word class'] . '</em>) ' . $trans;
         }
     }
 
@@ -161,11 +161,11 @@ class Word_list {
      *  term, class, category, translations.
      */
     private static function render_basic_entry(array $parsed, array $raw, array &$basic_entries, array $config) {
-        foreach($raw['trans'] as $lang=>$translation) {
+        foreach($parsed['trans html'] as $lang=>$translation) {
             $basic_entries[$lang][$parsed['slug']] = array();
             $basic_entries[$lang][$parsed['slug']]['class'] = $parsed['word class'];
             $basic_entries[$lang][$parsed['slug']]['category'] = $parsed['category'];
-            $basic_entries[$lang][$parsed['slug']]['translation'] = $config['parsedown']->line($translation);
+            $basic_entries[$lang][$parsed['slug']]['translation'] = $translation;
         }
     }
     
