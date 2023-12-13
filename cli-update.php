@@ -11,8 +11,9 @@ try {
     $c['log']->add("Environment: " . ($c['dev'] ? 'dev' : 'production'));
     
     // Update data files
+    $old_data = load_csv($data['previous']);
     $csv_data = Word_list::load_current_terms($c, $argv[1]);
-    Word_list::log_changes($csv_data, $data['previous'], $c);
+    Word_list::log_changes($csv_data, $old_data, $c);
     I18n::update($c);
 
     // Finish up

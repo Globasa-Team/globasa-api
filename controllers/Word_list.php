@@ -36,9 +36,7 @@ class Word_list {
     /**
      * Compare the new and old word list and log any changes.
      */
-    static function log_changes(array $current_data, string $old_csv_filename, array $c) {
-        $old_data = loadCsv($old_csv_filename);
-        
+    static function log_changes(array &$current_data, string &$old_data, array $c) {
         // Find changes
         $comparison = new Dictionary_comparison($old_data, $current_data, $c);
         // Log changes

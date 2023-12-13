@@ -1,6 +1,8 @@
 <?php
 
-function loadCsv($file)
+const SMALL_IO_DELAY = 50000; // 50k microseconds = a twentieth of a second
+
+function load_csv($file)
 {
     $dictionaryCSV = fopen($file, 'r');
     if ($dictionaryCSV === false) {
@@ -17,6 +19,7 @@ function loadCsv($file)
         $wordIndex = strtolower(trim($word[0]));
         if (empty($wordIndex)) continue; // Skip blank lines
         $dictionary[$wordIndex] = $newWord;
+        usleep(SELF::SMALL_IO_DELAY);
     }
     return $dictionary;
 }
