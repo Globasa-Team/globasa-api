@@ -36,7 +36,7 @@ class Word_list {
     /**
      * Compare the new and old word list and log any changes.
      */
-    static function log_changes(array &$current_data, string &$old_data, array $c) {
+    static function log_changes(array &$current_data, array &$old_data, array $c) {
         // Find changes
         $comparison = new Dictionary_comparison($old_data, $current_data, $c);
         // Log changes
@@ -60,6 +60,7 @@ class Word_list {
         $min = [];
         $basic_entries = [];
         $word_count = 0;
+        $debug_last = '';
         
 
         // Download the official term list, processing each term.
@@ -86,7 +87,6 @@ class Word_list {
             $lang_count = self::count_languages($parsed);
             self::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
 
-            $word_count += 1;
         }
         if (!feof($term_stream)) {
             $c['log']->add("Unexpected fgetcsv() fail");

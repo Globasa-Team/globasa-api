@@ -19,7 +19,7 @@ function load_csv($file)
         $wordIndex = strtolower(trim($word[0]));
         if (empty($wordIndex)) continue; // Skip blank lines
         $dictionary[$wordIndex] = $newWord;
-        usleep(SELF::SMALL_IO_DELAY);
+        // usleep(SMALL_IO_DELAY);
     }
     return $dictionary;
 }

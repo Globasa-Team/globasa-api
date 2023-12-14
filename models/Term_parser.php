@@ -446,7 +446,7 @@ class Term_parser
                        str_contains($lang, '-') || str_contains($lang, '+') ||
                        str_contains($lang, ',') || str_contains($lang, '?')
                     ) {
-                    $this->log->add("Etymology Error: Term `{$term}` has one of ():;-+,? in language name `$lang`. (Missing period from previous language?)");
+                    $this->log->add("Etymology Error: Term `{$term}` has one of ():;-+,? in language name `$lang`. (Possibly caused by missing a comma from previous language?)");
                 }
 
 
