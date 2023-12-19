@@ -10,3 +10,6 @@ data.yaml
 # PHPUnit
 /.phpunit.cache
 .phpunit.result.cache
+
+# Test data
+mock*.csv
