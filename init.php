@@ -7,8 +7,6 @@ try {
     ini_set('display_errors', '0');
     ini_set('display_startup_errors', '0');
     error_reporting(E_ALL);
-    require_once("{$app_path}/models/App_log.php");
-    $log = new App_log();
     
     define("CONFIG_FILENAME", "config.yaml");
     define("OFFICIAL_WORDS_CSV_FILENAME", "words-official.csv");
@@ -23,7 +21,10 @@ try {
     define("I18N_YAML_FILENAME", "i18n.yaml");
     define("I18N_CSV_BACKUP_FILENAME", "-i18n.csv");
     define("DATA_FILENAME", "data.yaml");
+    define("SMALL_IO_DELAY", 50000); // 50k microseconds = a twentieth of a second
+    define("FULL_FILE_DELAY", 500000); // 500k microseconds = half second
     
+    require_once("{$app_path}/models/App_log.php");
     require_once("{$app_path}/vendor/parsedown-1.7.4/Parsedown.php");
     require_once("{$app_path}/vendor/phpmailer-6.8.0/src/Exception.php");
     require_once("{$app_path}/vendor/phpmailer-6.8.0/src/PHPMailer.php");
@@ -35,6 +36,7 @@ try {
     require_once("{$app_path}/models/Term_parser.php");
     require_once("{$app_path}/controllers/I18n.php");
     require_once("{$app_path}/controllers/Word_list.php");
+    require_once("{$app_path}/controllers/File_controller.php");
 }
 catch (Throwable $e) {
     echo("\nLOAD ERROR\n".
@@ -44,8 +46,9 @@ catch (Throwable $e) {
 }
 
 try {
-    $data = yaml_parse_file($app_path . DIRECTORY_SEPARATOR . DATA_FILENAME);
     $c = yaml_parse_file($app_path . DIRECTORY_SEPARATOR . CONFIG_FILENAME);
+    $log = new App_log($c);
+    $data = yaml_parse_file($app_path . DIRECTORY_SEPARATOR . DATA_FILENAME);
     $c['log'] = $log;
     $c['log']->setEmails($c["app_log_emails"]);
     $c['app_path'] = $app_path;

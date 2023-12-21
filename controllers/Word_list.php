@@ -50,14 +50,32 @@ class Word_list {
      * individually and writing out dictionary files. This is to reduce max
      * load on the server. A usleep() delay between each term is used.
      */
-    public static function load_current_terms(array $c, string $current_csv_filename) {
+    public static function load_current_terms(
+            array &$parsed_entries,
+
+            array &$min_entries,
+            array &$basic_entries,
+            
+            array &$term_indexes,
+            array &$search_terms,
+            array &$tags,
+            
+            array &$backlinks,
+            array &$natlang_etymologies,
+            
+            int &$word_count,
+            array &$lang_count,
+            array &$category_count,
+            
+            array &$debug_data,
+            array &$c, string $current_csv_filename
+        ) {
         $search_terms = [];
         $term_indexes = [];
         $natlang_etymologies = [];
         $lang_count = [];
         $category_count = [];
         $tags = [];
-        $min = [];
         $basic_entries = [];
         $word_count = 0;
         $debug_last = '';
@@ -76,13 +94,15 @@ class Word_list {
             }
             [$raw, $parsed, $csv_row] = $tp->parse_term($data);
             $csv[$parsed['slug']] = $csv_row;
+            $parsed_entries[$parsed['slug']] = $parsed;
+            $debug_data[$parsed['slug']] = $raw;
             if (isset($parsed['etymology'][')'])) unset($parsed['etymology'][')']);
 
             self::save_entry_file(parsed:$parsed, raw:$raw, config:$c);
             self::render_term_index(parsed:$parsed, index:$term_indexes);
             self::render_search_terms(parsed:$parsed, index:$search_terms);
             self::render_basic_entry(parsed:$parsed, raw:$raw, basic_entries:$basic_entries, config:$c);
-            self::render_minimum_definitions(parsed:$parsed, raw:$raw, min:$min, config:$c);
+            self::render_minimum_definitions(parsed:$parsed, raw:$raw, min:$min_entries, config:$c);
             self::render_tags(parsed:$parsed, tags:$tags);
             $lang_count = self::count_languages($parsed);
             self::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
@@ -94,7 +114,7 @@ class Word_list {
         fclose($term_stream);
 
         self::save_search_term_files(index:$search_terms, config:$c);
-        self::save_min_files(min:$min, config:$c);
+        self::save_min_files(min:$min_entries, config:$c);
         self::save_term_index_file(data:$term_indexes, config:$c);
         self::save_basic_files(data:$basic_entries, config:$c);
         self::save_tag_file(tags:$tags, config:$c);
@@ -345,6 +365,6 @@ class Word_list {
             $c['log']->add("Word List Error: Invalid ctegory `$cat` on term `$word`");
         }
 
-        Word_list::validate_and_count($cat, $count_arr);
+        self::validate_and_count($cat, $count_arr);
     }
 }

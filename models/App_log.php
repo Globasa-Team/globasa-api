@@ -18,8 +18,9 @@ class App_log {
      * 
      * @param $d    Debug mode
      */
-    public function __construct() {
+    public function __construct(array $config) {
         $this->start_usage = getrusage();
+        $this->level = $config['report_level'];
     }
 
     /**
@@ -27,10 +28,10 @@ class App_log {
      * 
      * $param $msg  Message to add to log
      */
-    public function add($msg) {
-        $this->log[] = $msg;
-        if ($this->debug) {
-            echo("> ".html_entity_decode($msg).PHP_EOL);
+    public function add(string $m, int $l=0) {
+        $this->log[] = $m;
+        if ($this->debug && $this->level >= $l) {
+            echo("> ".html_entity_decode($m).PHP_EOL);
         }
     }
 
