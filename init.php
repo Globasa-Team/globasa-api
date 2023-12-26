@@ -31,6 +31,7 @@ try {
     require_once("{$app_path}/vendor/phpmailer-6.8.0/src/SMTP.php");
     require_once("{$app_path}/helpers/fetch_files.php");
     require_once("{$app_path}/helpers/load_csv.php");
+    require_once("{$app_path}/helpers/partial_debugger.php");
     require_once("{$app_path}/models/Dictionary_log.php");
     require_once("{$app_path}/models/Dictionary_comparison.php");
     require_once("{$app_path}/models/Term_parser.php");
