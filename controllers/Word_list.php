@@ -6,11 +6,12 @@ use Throwable;
 class Word_list {
 
     // Microseconds (1 millions of a second)
+    const TINY_IO_DELAY = 5000; // 5k microseconds = a twohundreds? of a second
     const SMALL_IO_DELAY = 50000; // 50k microseconds = a twentieth of a second
     const FULL_FILE_DELAY = 500000; // 500k microseconds = half second
 
     const VALID_WORD_CATEGORIES = array(
-        'root', 'proper noun', 'derived', 'phrase', 'affix'
+        'root', 'proper word', 'derived', 'phrase', 'affix'
     );
 
 
@@ -32,6 +33,33 @@ class Word_list {
     }
 
 
+    /**
+     * Backlinks
+     */
+    public static function insert_backlinks(array &$entries, array &$backlinks, array &$trans) {
+        foreach($backlinks as $backlink_term=>$terms) {
+            // For each term, grab definitions for all languages
+            foreach($terms as $slug) {
+                foreach($trans as $lang=>$translations) {
+                    if (isset($entries[$backlink_term]) && isset($trans[$lang][$slug])) {
+                        $entries[$backlink_term]["also see"][$slug][$lang] = $trans[$lang][$slug];
+                    } elseif (!isset($entries[$backlink_term])) {
+                        // TODO: record or react to non-existent entries?
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Finds terms referenced and inserts translations in to the entry.
+     */
+    private static function insert_referenced_definition(array &$entries, array &$trans) {
+        return;
+        foreach($entries as $slug=>$entry) {
+            // see also
+        }
+    }
 
     /**
      * Compare the new and old word list and log any changes.
@@ -60,7 +88,6 @@ class Word_list {
             array &$search_terms,
             array &$tags,
             
-            array &$backlinks,
             array &$natlang_etymologies,
             
             int &$word_count,
@@ -70,16 +97,6 @@ class Word_list {
             array &$debug_data,
             array &$c, string $current_csv_filename
         ) {
-        $search_terms = [];
-        $term_indexes = [];
-        $natlang_etymologies = [];
-        $lang_count = [];
-        $category_count = [];
-        $tags = [];
-        $basic_entries = [];
-        $word_count = 0;
-        $debug_last = '';
-        
 
         // Download the official term list, processing each term.
         $term_stream = fopen($current_csv_filename, "r")
@@ -93,35 +110,31 @@ class Word_list {
                 continue;
             }
             [$raw, $parsed, $csv_row] = $tp->parse_term($data);
+
             $csv[$parsed['slug']] = $csv_row;
-            $parsed_entries[$parsed['slug']] = $parsed;
             $debug_data[$parsed['slug']] = $raw;
             if (isset($parsed['etymology'][')'])) unset($parsed['etymology'][')']);
-
-            self::save_entry_file(parsed:$parsed, raw:$raw, config:$c);
+            
             self::render_term_index(parsed:$parsed, index:$term_indexes);
             self::render_search_terms(parsed:$parsed, index:$search_terms);
             self::render_basic_entry(parsed:$parsed, raw:$raw, basic_entries:$basic_entries, config:$c);
-            self::render_minimum_definitions(parsed:$parsed, raw:$raw, min:$min_entries, config:$c);
+            self::render_minimum_translations(parsed:$parsed, min:$min_entries);
             self::render_tags(parsed:$parsed, tags:$tags);
             $lang_count = self::count_languages($parsed);
             self::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
-
+            
+            $parsed_entries[$parsed['slug']] = $parsed;
+            usleep(self::TINY_IO_DELAY);
         }
         if (!feof($term_stream)) {
             $c['log']->add("Unexpected fgetcsv() fail");
         }
         fclose($term_stream);
 
-        self::save_search_term_files(index:$search_terms, config:$c);
-        self::save_min_files(min:$min_entries, config:$c);
-        self::save_term_index_file(data:$term_indexes, config:$c);
-        self::save_basic_files(data:$basic_entries, config:$c);
-        self::save_tag_file(tags:$tags, config:$c);
-        self::save_stats_file(word_count:$word_count, lang_count:$lang_count, category_count:$category_count, config:$c);
-        self::save_backlinks_file(data:$tp->backlinks, config:$c);
-        self::save_natlang_etymologies_files(data:$natlang_etymologies, config:$c);
 
+        // Insert data that needed for all entries to be loaded
+        self::insert_referenced_definition(entries:$parsed_entries, trans:$min_entries);
+        self::insert_backlinks(backlinks:$tp->backlinks, entries:$parsed_entries, trans:$min_entries);
         return $csv;
     }
 
@@ -155,7 +168,7 @@ class Word_list {
      * Renders minimum definitions for the current term
      * and adds them to the array of mini defs.
      */
-    private static function render_minimum_definitions(array $parsed, array $raw, array &$min, array $config) {
+    private static function render_minimum_translations(array $parsed, array &$min) {
         foreach($parsed['trans html'] as $lang=>$trans) {
             $min[$lang][$parsed['slug']] = '(<em>' . $parsed['word class'] . '</em>) ' . $trans;
         }
@@ -189,162 +202,6 @@ class Word_list {
     
 
 
-
-    private static function save_backlinks_file(array $data, array $config) {
-        ksort($data);
-        yaml_emit_file($config['api_path'] . "/backlinks.yaml", $data);
-        usleep(SELF::FULL_FILE_DELAY);
-    }
-
-    private static function save_basic_files(array $data, array $config) {
-        foreach($data as $lang=>$dict) {
-            ksort($dict);
-
-            yaml_emit_file($config['api_path'] . "/basic_{$lang}.yaml", $dict);
-            usleep(SELF::FULL_FILE_DELAY);
-
-            $fp = fopen($config['api_path'] . "/basic_{$lang}.json", "w");
-            fputs($fp, json_encode($dict));
-            fclose($fp);
-            usleep(SELF::FULL_FILE_DELAY);
-        }
-    }
-
-    private static function save_entry_file(array $config, array $parsed, array $raw) {
-        $entry_file_data = $parsed;
-        $entry_file_data['raw data'] = $raw;
-
-        yaml_emit_file($config['api_path'] . '/terms/' . $parsed['slug'].".yaml", $entry_file_data,  YAML_UTF8_ENCODING);
-        usleep(SELF::SMALL_IO_DELAY);
-
-        $fp = fopen($config['api_path'] . '/terms/' . $parsed['slug'].".json", "w");
-        fputs($fp, json_encode($entry_file_data));
-        fclose($fp);
-        usleep(SELF::SMALL_IO_DELAY);
-
-        return;
-    }
-
-
-
-    /**
-    * Indexes
-    */
-    private static function save_search_term_files(array $index, array $config) {
-
-        $index_list = "";
-        foreach($index as $lang=>$data) {
-            ksort($data);
-
-            yaml_emit_file($config['api_path'] . "/search_terms_{$lang}.yaml", $data);
-            $index_list .= $lang . ' ';
-            usleep(SELF::FULL_FILE_DELAY);
-
-            $fp = fopen($config['api_path'] . "/search_terms_{$lang}.json", "w");
-            fputs($fp, json_encode($data));
-            fclose($fp);
-            usleep(SELF::FULL_FILE_DELAY);
-        }
-        $config['log']->add("Search term indexes created: " . $index_list);
-    }
-
-
-
-
-
-    /**
-     * Min
-     */
-    private static function save_min_files(array $config, array $min) {
-
-        $min_list = "";
-        foreach ($min as $lang=>$data) {
-            ksort($data);
-
-            yaml_emit_file($config['api_path'] . "/min_{$lang}.yaml", $data);
-            $min_list .= $lang . ' ';
-            usleep(SELF::FULL_FILE_DELAY);
-
-            $fp = fopen($config['api_path'] . "/min_{$lang}.json", "w");
-            fputs($fp, json_encode($data));
-            fclose($fp);
-            usleep(SELF::FULL_FILE_DELAY);
-            
-        }
-        $config['log']->add("Minimum translation files created: " . $min_list);
-    }
-
-
-
-    /**
-     * Natlang etymologies
-     */
-    private static function save_natlang_etymologies_files(array $config, array $data) {
-
-        foreach ($data as $lang=>$terms) {
-            ksort($terms);
-
-            yaml_emit_file($config['api_path'] . "/etymologies_{$lang}.yaml", $terms);
-            usleep(SELF::FULL_FILE_DELAY);
-        }
-    }
-
-
-
-
-
-    /**
-     * Statistics
-     * 
-     */
-    private static function save_stats_file(int $word_count, array $lang_count, array $category_count, array $config) {
-
-        array_multisort($lang_count, SORT_DESC);
-        yaml_emit_file($config['api_path'] . "/stats.yaml", [
-                        "terms count"=>$word_count,
-                        "source langs"=>$lang_count,
-                        "categories"=>$category_count
-                    ]);
-        usleep(SELF::SMALL_IO_DELAY);
-
-    }
-
-
-                
-
-    /**
-     * Tags
-     */
-    private static function save_tag_file(array $config, array $tags) {
-        ksort($tags);
-
-        yaml_emit_file($config['api_path'] . "/tags.yaml", $tags);
-        usleep(SELF::FULL_FILE_DELAY);
-
-        $fp = fopen($config['api_path'] . "/tags.json", "w");
-        fputs($fp, json_encode($tags));
-        fclose($fp);
-
-        usleep(SELF::FULL_FILE_DELAY);
-    }
-
-
-    private static function save_term_index_file(array $data, array $config) {
-        ksort($data);
-
-        yaml_emit_file($config['api_path'] . "/index.yaml", $data);
-        usleep(SELF::FULL_FILE_DELAY);
-
-        $fp = fopen($config['api_path'] . "/index.json", "w");
-        fputs($fp, json_encode($data));
-        fclose($fp);
-
-        usleep(SELF::FULL_FILE_DELAY);       
-    }
-
-
-
-
     private static function validate_and_count(string $cat, array &$count_arr) {
 
         if (!isset($count_arr[$cat]))
@@ -362,7 +219,7 @@ class Word_list {
     static function validate_and_count_category(array $c, string $cat, &$count_arr, string $word) {
 
         if (!in_array($cat, self::VALID_WORD_CATEGORIES)) {
-            $c['log']->add("Word List Error: Invalid ctegory `$cat` on term `$word`");
+            $c['log']->add("Word List Error: Invalid category `$cat` on term `$word`");
         }
 
         self::validate_and_count($cat, $count_arr);

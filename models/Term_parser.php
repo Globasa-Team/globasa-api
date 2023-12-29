@@ -60,7 +60,7 @@ class Term_parser
     private $pd = null;
     private $log = null;
     public $backlinks = [];
-    private $current_term = null;
+    private $current_slug = null;
     public $natlang_etymologies = null;
 
 
@@ -98,7 +98,6 @@ class Term_parser
 
         foreach ($data as $field => $datum) {
             if ($this->map[$field] == null) {
-                echo ("\nSkipped field {$field}: {$this->map[$field]}\n");
                 continue;
             }
             if (str_starts_with($this->map[$field], 'trans')) {
@@ -117,7 +116,7 @@ class Term_parser
         if (empty($raw['term'])) return;
 
         $this->set_globasa_terms($raw, $parsed);
-        $this->current_term = $parsed['slug'];
+        $this->current_slug = $parsed['slug'];
         $this->create_ipa($raw, $parsed);
         
         $this->parse_basic_field('status', $raw, $parsed);
@@ -186,7 +185,6 @@ class Term_parser
     {
 
         $etymologies = explode(". ", $raw['etymology']);
-        // var_dump($etymologies);
         foreach($etymologies as $cur) {
 
             $cur = trim($cur);
@@ -317,7 +315,8 @@ class Term_parser
                     $phrase = substr($phrase, 0, -1);
                 }
                 $phrase = preg_replace('/[^A-Za-z0-9, \-]/', '', $phrase);
-                $this->backlinks[$phrase][] = $this->current_term;
+                $slug = trim(strtolower($phrase));
+                $this->backlinks[$slug][] = $this->current_slug;
 
                 // link to term
                 $phrase = '<a href="../lexi/' . $phrase . '">' . $phrase . '</a>';
@@ -334,8 +333,8 @@ class Term_parser
         // exactly as above else block
         if (!empty($phrase)) {
             $phrase = preg_replace('/[^A-Za-z0-9, \-]/', '', $phrase);
-            $this->backlinks[$phrase][] = $this->current_term;
-
+            $slug = trim(strtolower($phrase));
+            $this->backlinks[$slug][] = $this->current_slug;
             // link to term
             $phrase = '<a href="../lexi/' . $phrase . '">' . $phrase . '</a>';
             // add to etymology
@@ -437,7 +436,7 @@ class Term_parser
                     // record language, unless it's etc (ji max to).
                     if (strcmp($lang, "ji max to") !== 0) {
                         $result[$lang] = "";
-                        $this->natlang_etymologies[$lang][] = $this->current_term;
+                        $this->natlang_etymologies[$lang][] = $this->current_slug;
                     }
                 }
 

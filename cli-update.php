@@ -24,8 +24,8 @@ try {
     $c['log']->add("Environment: " . ($c['dev'] ? 'dev' : 'production'), 1);
     
     // Update data files
-    $c['log']->add("Loading old CSV SKIPPED", 5);
-    //$old_data = load_csv($data['previous']);
+    $c['log']->add("Loading old CSV", 5);
+    $old_data = load_csv($data['previous']);
     $c['log']->add("Loading current terms", 5);
     $csv_data = Word_list::load_current_terms(
         current_csv_filename:$argv[1],
@@ -39,7 +39,6 @@ try {
         search_terms:$search_terms,
         tags:$tags,
         
-        backlinks:$backlinks,
         natlang_etymologies:$natlang_etymologies,
         
         word_count:$word_count,
@@ -49,9 +48,8 @@ try {
         debug_data:$debug_data,
         c:$c
     );
-    $c['log']->add("Logging changes SKIPPED", 5);
-    //Word_list::log_changes($csv_data, $old_data, $c);
-
+    $c['log']->add("Logging changes", 5);
+    Word_list::log_changes($csv_data, $old_data, $c);
 
     // Write dictionary files
     $c['log']->add("Writting files", 5);
@@ -65,7 +63,6 @@ try {
         search_terms:$search_terms,
         tags:$tags,
         
-        backlinks:$backlinks,
         natlang_etymologies:$natlang_etymologies,
         
         word_count:$word_count,
