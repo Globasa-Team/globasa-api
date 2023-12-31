@@ -430,6 +430,7 @@ class Term_parser
                         $example = substr($example, 0, -1);
                     }
                     $result[$lang] = $example;
+                    $this->natlang_etymologies[$lang][] = $this->current_slug;
                 }
                 else {
                     $lang = trim(substr($natlang_etymology, $lang_start, $pos-$lang_start));
