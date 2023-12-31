@@ -170,7 +170,7 @@ class Word_list {
      */
     private static function render_minimum_translations(array $parsed, array &$min) {
         foreach($parsed['trans html'] as $lang=>$trans) {
-            $min[$lang][$parsed['slug']] = '(<em>' . $parsed['word class'] . '</em>) ' . $trans;
+            $min[$lang][$parsed['slug']] = '<em>(' . $parsed['word class'] . ')</em> ' . $trans;
         }
     }
 
