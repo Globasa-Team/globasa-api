@@ -23,6 +23,8 @@ try {
     define("DATA_FILENAME", "data.yaml");
     define("SMALL_IO_DELAY", 50000); // 50k microseconds = a twentieth of a second
     define("FULL_FILE_DELAY", 500000); // 500k microseconds = half second
+    define("GLB_CODE", "art-x-globasa");
+    define("GLB_ATTR", "lang=\"art-x-globasa\"");
     
     require_once("{$app_path}/models/App_log.php");
     require_once("{$app_path}/vendor/parsedown-1.7.4/Parsedown.php");

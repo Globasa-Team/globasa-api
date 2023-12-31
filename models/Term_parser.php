@@ -461,6 +461,7 @@ class Term_parser
             
         }
 
+        sort($result);
         return $result;
     }
 
