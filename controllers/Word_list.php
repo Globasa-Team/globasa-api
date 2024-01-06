@@ -36,13 +36,20 @@ class Word_list {
     /**
      * Backlinks
      */
-    public static function insert_backlinks(array &$entries, array &$backlinks, array &$trans) {
+    public static function insert_backlinks(array &$entries, array &$backlinks, $config) {
         foreach($backlinks as $backlink_term=>$terms) {
             // For each term, grab definitions for all languages
             foreach($terms as $slug) {
-                foreach($trans as $lang=>$translations) {
-                    if (isset($entries[$backlink_term]) && isset($trans[$lang][$slug])) {
-                        $entries[$backlink_term]["also see"][$slug][$lang] = $trans[$lang][$slug];
+
+                // Skip if word doesn't exist
+                if (!array_key_exists($backlink_term, $entries)) {
+                    $config['log']->add("Attempted to link entry `{$backlink_term}` to `{$slug}`, but it doesn't exist.");
+                    continue;
+                }
+                $entries[$backlink_term]["also see"][$slug]['class'] = $entries[$slug]['word class'];
+                foreach($entries[$slug]['trans html'] as $lang=>$translation) {
+                    if (isset($entries[$backlink_term])) {
+                        $entries[$backlink_term]["also see"][$slug]['trans'][$lang] = $translation;
                     } elseif (!isset($entries[$backlink_term])) {
                         // TODO: record or react to non-existent entries?
                     }
@@ -134,7 +141,7 @@ class Word_list {
 
         // Insert data that needed for all entries to be loaded
         self::insert_referenced_definition(entries:$parsed_entries, trans:$min_entries);
-        self::insert_backlinks(backlinks:$tp->backlinks, entries:$parsed_entries, trans:$min_entries);
+        self::insert_backlinks(backlinks:$tp->backlinks, entries:$parsed_entries, config:$c);
         return $csv;
     }
 

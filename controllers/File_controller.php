@@ -60,6 +60,12 @@ class File_controller {
         $first = "~";
         foreach($data as $key=>$entry) {
             if ($entry['slug'][0] !== $first) {
+
+                if(!isset($entry['slug'])) {
+                    $config['log']->add(" - Entry key '{$key}' missing slug", 9);
+                    continue;
+                }
+
                 $first = $entry['slug'][0];
                 $config['log']->add("Saving entries starting with ".$first, 9);
             }
