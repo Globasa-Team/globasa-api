@@ -20,7 +20,17 @@ try {
     // Startup
     $app_path = __DIR__;
     require_once("{$app_path}/init.php");
-    $c['log']->add("Using: " . $argv[1], 1);
+
+    if ($argv[1] === 'r') {
+        $new_csv_filename = $data['previous'];
+        $c['log']->add("Reprocessing previous CSV file");
+    } else {
+        $new_csv_filename = $argv[1];
+    }
+
+
+    $c['log']->add("Using new: " . $new_csv_filename, 1);
+    $c['log']->add("Using old: " . $data['previous'], 1);
     $c['log']->add("Environment: " . ($c['dev'] ? 'dev' : 'production'), 1);
     
     // Update data files
@@ -28,7 +38,7 @@ try {
     $old_data = load_csv($data['previous']);
     $c['log']->add("Loading current terms", 5);
     $csv_data = Word_list::load_current_terms(
-        current_csv_filename:$argv[1],
+        current_csv_filename:$new_csv_filename,
 
         parsed_entries:$parsed_entries,
 
