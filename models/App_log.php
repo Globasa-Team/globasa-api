@@ -12,6 +12,7 @@ class App_log {
     private $emails;
     private $debug = false;
     private $start_usage;
+    private $level;
 
     /**
      * Creates log manager.
@@ -29,8 +30,14 @@ class App_log {
      * $param $msg  Message to add to log
      */
     public function add(string $m, int $l=0) {
-        $this->log[] = $m;
-        if ($this->debug && $this->level >= $l) {
+        
+        // Log only if level 1 (or less?)
+        if ($l <= 1) {
+            $this->log[] = $m;
+        }
+        
+        // Display only if a good level
+        if ($this->debug && $this->level <= $l) {
             echo("> ".html_entity_decode($m).PHP_EOL);
         }
     }
