@@ -122,9 +122,6 @@ class Word_list {
         }
         fclose($term_stream);
 
-        global $parse_report;
-        echo "((".count($parse_report)."))";
-
         // Insert data that needed for all entries to be loaded
         self::insert_referenced_definition(entries:$parsed_entries, trans:$min_entries);
         self::insert_backlinks(backlinks:$tp->backlinks, entries:$parsed_entries, config:$c);
