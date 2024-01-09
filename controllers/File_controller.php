@@ -24,22 +24,22 @@ class File_controller {
         global $parse_report;
 
         $config['log']->add("save_entry_files ", 9);
-        //self::save_entry_files      (data:$parsed_entries,  config:$config);
+        self::save_entry_files      (data:$parsed_entries,  config:$config);
         $config['log']->add("save_search_term_files ", 9);
-        //self::save_search_term_files(data:$search_terms,    config:$config);
+        self::save_search_term_files(data:$search_terms,    config:$config);
         $config['log']->add("save_min_files ", 9);
-        //self::save_min_files        (data:$min_entries,     config:$config);
+        self::save_min_files        (data:$min_entries,     config:$config);
         $config['log']->add("save_term_index_file ", 9);
-        //self::save_term_index_file  (data:$term_indexes,    config:$config);
+        self::save_term_index_file  (data:$term_indexes,    config:$config);
         $config['log']->add("save_basic_files ", 9);
-        //self::save_basic_files      (data:$basic_entries,   config:$config);
+        self::save_basic_files      (data:$basic_entries,   config:$config);
         $config['log']->add("save_tag_file ", 9);
-        //self::save_tag_file         (data:$tags,            config:$config);
+        self::save_tag_file         (data:$tags,            config:$config);
         $config['log']->add("save_natlang_etymologies_files ", 9);
-        //self::save_natlang_etymologies_files(data:$natlang_etymologies, config:$config);
+        self::save_natlang_etymologies_files(data:$natlang_etymologies, config:$config);
 
         $config['log']->add("save_stats_file ", 9);
-        // self::save_stats_file       (word_count:$word_count, category_count:$category_count, natlang_data:$natlang_etymologies, config:$config);
+        self::save_stats_file       (word_count:$word_count, category_count:$category_count, natlang_data:$natlang_etymologies, config:$config);
 
         $config['log']->add("save_report_file", 9);
         self::save_report(config: $config, data:$parse_report, name:"parse_report");
