@@ -380,11 +380,6 @@ class Term_parser
     {
         global $parse_report;
 
-        if ($this->current_slug==="nini" || $this->current_slug==="kanada") {
-            var_dump($parse_report);
-        }
-
-
         $len = strlen($natlang_etymology);
         $at_seperator = false;
         $lang_start = 0;
