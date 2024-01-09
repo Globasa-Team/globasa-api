@@ -152,7 +152,7 @@ class File_controller {
         foreach ($data as $lang=>$terms) {
             ksort($terms);
 
-            yaml_emit_file($config['api_path'] . "/etymologies_{$lang}.yaml", $terms);
+            yaml_emit_file($config['api_path'] . "/etymologies_".strtolower($lang).".yaml", $terms);
             usleep(FULL_FILE_DELAY);
         }
     }
