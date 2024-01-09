@@ -16,27 +16,12 @@ class Word_list {
 
 
 
-                
-    /**
-     * Count natlang sources.
-     * 
-     */
-    private static function count_languages($parsed) {
-        $lang_count = array();
-        if (!empty($parsed['etymology']['natlang'])) {
-            foreach($parsed['etymology']['natlang'] as $lang => $term_data) {
-                if (!array_key_exists($lang, $lang_count)) $lang_count[$lang] = 1;
-                else $lang_count[$lang] += 1;
-            }
-        }
-        return $lang_count;
-    }
-
-
     /**
      * Backlinks
      */
     public static function insert_backlinks(array &$entries, array &$backlinks, $config) {
+        global $parse_report;
+        
         foreach($backlinks as $backlink_term=>$terms) {
             // For each term, grab definitions for all languages
             foreach($terms as $slug) {
@@ -44,6 +29,7 @@ class Word_list {
                 // Skip if word doesn't exist
                 if (!array_key_exists($backlink_term, $entries)) {
                     $config['log']->add("Attempted to link entry `{$backlink_term}` to `{$slug}`, but it doesn't exist.");
+                    $parse_report[] = ['term'=>$backlink_term, 'msg'=>"Term missing. Was linking from `{$slug}`."];
                     continue;
                 }
                 $entries[$backlink_term]["also see"][$slug]['class'] = $entries[$slug]['word class'];
@@ -98,7 +84,6 @@ class Word_list {
             array &$natlang_etymologies,
             
             int &$word_count,
-            array &$lang_count,
             array &$category_count,
             
             array &$debug_data,
@@ -127,7 +112,6 @@ class Word_list {
             self::render_basic_entry(parsed:$parsed, raw:$raw, basic_entries:$basic_entries, config:$c);
             self::render_minimum_translations(parsed:$parsed, min:$min_entries);
             self::render_tags(parsed:$parsed, tags:$tags);
-            $lang_count = self::count_languages($parsed);
             self::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
             
             $parsed_entries[$parsed['slug']] = $parsed;
@@ -138,6 +122,8 @@ class Word_list {
         }
         fclose($term_stream);
 
+        global $parse_report;
+        echo "((".count($parse_report)."))";
 
         // Insert data that needed for all entries to be loaded
         self::insert_referenced_definition(entries:$parsed_entries, trans:$min_entries);

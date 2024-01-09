@@ -21,7 +21,11 @@ class App_log {
      */
     public function __construct(array $config) {
         $this->start_usage = getrusage();
-        $this->level = $config['report_level'];
+        if (isset($config['report_level'])) {
+            $this->level = $config['report_level'];
+        } else {
+            $this->level = 1;
+        }
     }
 
     /**
@@ -31,14 +35,14 @@ class App_log {
      */
     public function add(string $m, int $l=0) {
         
-        // Log only if level 1 (or less?)
-        if ($l <= 1) {
+        // Log only if acceptable level
+        if ($l <= $this->level) {
             $this->log[] = $m;
-        }
-        
-        // Display only if a good level
-        if ($this->debug && $this->level <= $l) {
-            echo("> ".html_entity_decode($m).PHP_EOL);
+            
+            // Display only if in debug mode
+            if ($this->debug) {
+                echo("> ".html_entity_decode($m).PHP_EOL);
+            }
         }
     }
 

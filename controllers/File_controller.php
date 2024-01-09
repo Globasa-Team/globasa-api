@@ -16,29 +16,35 @@ class File_controller {
         array &$natlang_etymologies,
         
         int &$word_count,
-        array &$lang_count,
         array &$category_count,
         
         array &$config
     ) {
 
+        global $parse_report;
+
         $config['log']->add("save_entry_files ", 9);
-        self::save_entry_files      (data:$parsed_entries,  config:$config);
+        //self::save_entry_files      (data:$parsed_entries,  config:$config);
         $config['log']->add("save_search_term_files ", 9);
-        self::save_search_term_files(data:$search_terms,    config:$config);
+        //self::save_search_term_files(data:$search_terms,    config:$config);
         $config['log']->add("save_min_files ", 9);
-        self::save_min_files        (data:$min_entries,     config:$config);
+        //self::save_min_files        (data:$min_entries,     config:$config);
         $config['log']->add("save_term_index_file ", 9);
-        self::save_term_index_file  (data:$term_indexes,    config:$config);
+        //self::save_term_index_file  (data:$term_indexes,    config:$config);
         $config['log']->add("save_basic_files ", 9);
-        self::save_basic_files      (data:$basic_entries,   config:$config);
+        //self::save_basic_files      (data:$basic_entries,   config:$config);
         $config['log']->add("save_tag_file ", 9);
-        self::save_tag_file         (data:$tags,            config:$config);
+        //self::save_tag_file         (data:$tags,            config:$config);
         $config['log']->add("save_natlang_etymologies_files ", 9);
-        self::save_natlang_etymologies_files(data:$natlang_etymologies, config:$config);
+        //self::save_natlang_etymologies_files(data:$natlang_etymologies, config:$config);
 
         $config['log']->add("save_stats_file ", 9);
-        self::save_stats_file       (word_count:$word_count, lang_count:$lang_count, category_count:$category_count, config:$config);
+        // self::save_stats_file       (word_count:$word_count, category_count:$category_count, natlang_data:$natlang_etymologies, config:$config);
+
+        $config['log']->add("save_report_file", 9);
+        self::save_report(config: $config, data:$parse_report, name:"parse_report");
+
+
     }
 
     
@@ -153,18 +159,43 @@ class File_controller {
 
 
 
+    /**
+     * Save report
+     */
+    private static function save_report(array $config, array $data, string $name) {
+
+        yaml_emit_file($config['api_path'] . "/reports/{$name}.yaml", $data);
+
+        usleep(FULL_FILE_DELAY);
+
+        $fp = fopen($config['api_path'] . "/reports/{$name}.json", "w");
+        fputs($fp, json_encode($data));
+        fclose($fp);
+
+        usleep(FULL_FILE_DELAY);
+    }
 
 
     /**
      * Statistics
      * 
      */
-    private static function save_stats_file(int &$word_count, array &$lang_count, array &$category_count, array &$config) {
+    private static function save_stats_file(int &$word_count, array &$category_count, array &$natlang_data, array &$config) {
 
-        array_multisort($lang_count, SORT_DESC);
+        $natlang_count = [];
+        /**
+         * Calculate natlang etymology counts
+         */
+        foreach(array_keys($natlang_data) as $natlang) {
+            $natlang_count[$natlang] = count($natlang_data[$natlang]);
+        }
+
+
+
+        // array_multisort($natlang_count, SORT_DESC);
         yaml_emit_file($config['api_path'] . "/stats.yaml", [
                         "terms count"=>$word_count,
-                        "source langs"=>$lang_count,
+                        "source langs"=>$natlang_count,
                         "categories"=>$category_count
                     ]);
         usleep(SMALL_IO_DELAY);

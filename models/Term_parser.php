@@ -151,13 +151,6 @@ class Term_parser
      */
     private function parse_basic_field($field, $raw, &$entry, $log_empty = false)
     {
-        if ($log_empty && empty($raw[$field])) {
-            //
-            // Debug
-            //
-            //$this->log->add("Notice: Term `{$entry['term']}` has blank `$field` field.");
-        }
-
         if (is_string($raw[$field]))
             $entry[$field] = trim($raw[$field]);
         else
@@ -183,6 +176,7 @@ class Term_parser
      */
     private function parse_etymology(array $raw, array &$parsed)
     {
+        global $parse_report;
 
         $etymologies = explode(". ", $raw['etymology']);
         foreach($etymologies as $cur) {
@@ -196,6 +190,7 @@ class Term_parser
             } else if (str_starts_with($cur, "https://") || str_starts_with($cur, "http://")) {
                 if (!empty($parsed['etymology']['link'])) {
                     $this->log->add("ERROR: Term `".$raw['term']."` has duplicate linked etymology.");
+                    $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate linked etymology."];
                 }
                 $parsed['etymology']['link'] = $this->parse_etymology_linked($cur);
             } else if (strcmp($cur, "a priori") === 0) {
@@ -207,6 +202,7 @@ class Term_parser
                 else if (str_starts_with($cur, "Am oko " )) {
                     if (!empty($parsed['etymology']['am oko'])) {
                         $this->log->add("Error: Duplicate `am oko` in etymology.");
+                        $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate `am oko` in etymology."];
                     }
                     $parsed['etymology']['am oko'] = $this->parse_etymology_also_see($cur, 7);
                 }
@@ -215,17 +211,20 @@ class Term_parser
                 }
                 else {
                     $this->log->add("Error: Etymology starts with 'am ' but isn't.".$cur);
+                    $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"One etymology starts with 'am ' but isn't."];
                 }
             } else if (str_starts_with($cur, "kwasilexi - ")) {
                 $parsed['etymology']['kwasilexi'] = $this->parse_etymology_natlang_freeform(substr($cur, 12), $parsed['slug']);
             } else if (str_contains($cur, "(")) {
                 if (!empty($parsed['etymology']['natlang'])) {
                     $this->log->add("ERROR: Term `".$raw['term']."` has duplicate natlang etymology.");
+                    $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate natlang etymology."];
                 }
                 $parsed['etymology']['natlang'] = $this->parse_etymology_natlang_freeform($cur, $parsed['slug']);
             } else {
                 if (!empty($parsed['etymology']['derived'])) {
                     $this->log->add("ERROR: Term `".$raw['term']."` has duplicate derived etymology.");
+                    $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate derived etymology."];
                 }
                 $parsed['etymology']['derived'] = $this->parse_etymology_derived($cur, $parsed['slug']);
             }
@@ -379,6 +378,13 @@ class Term_parser
      */
     private function parse_etymology_natlang_freeform(string $natlang_etymology, string $term, bool $mark_etymology = true)
     {
+        global $parse_report;
+
+        if ($this->current_slug==="nini" || $this->current_slug==="kanada") {
+            var_dump($parse_report);
+        }
+
+
         $len = strlen($natlang_etymology);
         $at_seperator = false;
         $lang_start = 0;
@@ -419,6 +425,7 @@ class Term_parser
 
                 if ($len > $pos && $enclosure_level > 0) {
                     $this->log->add("Error: Term `{$term}` has malformed etymology, missing `)`");
+                    $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Malformed etymology, missing `)`"];
                     $enclosure_end = $pos;
                 }
 
@@ -447,11 +454,13 @@ class Term_parser
                        str_contains($lang, ',') || str_contains($lang, '?')
                     ) {
                     $this->log->add("Etymology Error: Term `{$term}` has one of ():;-+,? in language name `$lang`. (Possibly caused by missing a comma from previous language?)");
+                    $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Natlang etymology has one of ():;-+,? in language name `{$lang}`. (Possibly caused by missing a comma from previous language?)"];
                 }
 
 
                 if (empty($lang)) {
                     $this->log->add("Etymology Error: Term `{$term}` has blank language name in it's natlang etymology.");
+                    $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Blank language name natlang etymology"];
                 }
 
                 $at_seperator = false;
