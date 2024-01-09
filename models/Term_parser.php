@@ -178,6 +178,11 @@ class Term_parser
     {
         global $parse_report;
 
+        if (empty($raw['etymology'])) {
+            $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Empty etymology"];
+            return;
+        }
+
         $etymologies = explode(". ", $raw['etymology']);
         foreach($etymologies as $cur) {
 
