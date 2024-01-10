@@ -13,7 +13,7 @@ data.yaml
 
 # Ignore dev stuff
 notes.md
-todo.md
+todo*.md
 spreadsheet-format.md
 
 mock*.csv
