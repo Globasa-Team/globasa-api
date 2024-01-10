@@ -234,6 +234,10 @@ class Term_parser
                 $parsed['etymology']['derived'] = $this->parse_etymology_derived($cur, $parsed['slug']);
             }
         }
+
+        if (isset($parsed['etymology']['natlang'])){
+            ksort($parsed['etymology']['natlang']);
+        }
     }
 
 
@@ -640,7 +644,7 @@ class Term_parser
 
 
     //
-    // DEBUG FUNCTIONS
+    // Debug Functions
     //
 
     public function term_dump($data, $indent = null)
@@ -672,12 +676,9 @@ class Term_parser
     private function set_natlang_terms(array &$parsed, array $raw)
     {
         self::set_natlang_terms_manual(raw:$raw, parsed:$parsed);
-        // self::set_natlang_terms_from_translation($parsed, $search_terms);
         
         foreach($parsed['search terms'] as $lang=>$lang_terms) {
-            // $parsed['search terms'][$lang] = sort(array_unique($lang_terms));
-            // $parsed['search terms'][$lang] = array_unique($lang_terms);
-            $parsed['search terms'][$lang] = array_values($lang_terms);
+            $parsed['search terms'][$lang] = array_values(array_unique($lang_terms));
         }
     }
 

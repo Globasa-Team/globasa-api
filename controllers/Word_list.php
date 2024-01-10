@@ -96,11 +96,12 @@ class Word_list {
         $tp = new Term_parser(fields:fgetcsv($term_stream), parsedown:$c['parsedown'], log:$c['log'], natlang_etymologies:$natlang_etymologies);
 
         while(($data = fgetcsv($term_stream)) !== false) {
-
+            
             // Parse term if it exists
             if (empty($data) || empty($data[0]) ) {
                 continue;
             }
+            
             [$raw, $parsed, $csv_row] = $tp->parse_term($data);
 
             $csv[$parsed['slug']] = $csv_row;

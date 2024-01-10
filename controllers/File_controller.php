@@ -75,6 +75,7 @@ class File_controller {
                 $first = $entry['slug'][0];
                 $config['log']->add("Saving entries starting with ".$first, 9);
             }
+            
             self::save_entry_file($config, $entry);
         }
     }
