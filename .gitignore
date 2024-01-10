@@ -1,15 +1,21 @@
-notes.md
-todo.md
-spreadsheet-format.md
+# Ignore web server error logs
+error_log
+debug.log
+
+# Ignore configs
 config.php
 config.yaml
 data.yaml
-.backup/
-*.backup
 
 # PHPUnit
 /.phpunit.cache
 .phpunit.result.cache
 
-# Test data
+# Ignore dev stuff
+notes.md
+todo.md
+spreadsheet-format.md
+
 mock*.csv
+.backup/
+*.backup
