@@ -53,7 +53,7 @@ class Dictionary_comparison {
         // Log removed terms
         $i = 0;
         foreach($this->removed_terms as $term) {
-            if ($i++ % 200 == 0 && $i != 1) { echo("\n\n\n\n*\tpress enter\n\n"); readline();}
+            if (isset($this->c['dev']) && $this->c['dev'] && $i++ % 200 == 0 && $i != 1) { echo("\n\n\n\n*\tpress enter\n\n"); readline();}
             $this->log_term_change($term, "term removed", "", $this->old_dict[$term], null);
         }
         // Compare same terms for changes, & log
