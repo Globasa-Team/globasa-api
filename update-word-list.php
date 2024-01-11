@@ -5,11 +5,14 @@ namespace globasa_api;
 use Throwable;
 
 global  $parse_report,
+        $rhyme_data,
         $natlang_count;
 
 
 
 $parse_report = [];
+$rhyme_data = [];
+$natlang_count = [];
 
 $parsed_entries = [];
 $min_entries = [];
@@ -20,7 +23,6 @@ $tags = [];
 $backlinks = [];
 $natlang_etymologies = [];
 $word_count = 0;
-$natlang_count = [];
 $category_count = [];
 $debug_data = [];
 

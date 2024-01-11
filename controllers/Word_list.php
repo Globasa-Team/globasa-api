@@ -114,7 +114,7 @@ class Word_list {
             self::render_minimum_translations(parsed:$parsed, min:$min_entries);
             self::render_tags(parsed:$parsed, tags:$tags);
             self::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
-            
+            self::update_rhyme_data($parsed['slug']);
             $parsed_entries[$parsed['slug']] = $parsed;
             
             usleep(self::TINY_IO_DELAY);
@@ -127,6 +127,8 @@ class Word_list {
         // Insert data that needed for all entries to be loaded
         self::insert_referenced_definition(entries:$parsed_entries, trans:$min_entries);
         self::insert_backlinks(backlinks:$tp->backlinks, entries:$parsed_entries, config:$c);
+        self::update_entry_rhymes($parsed_entries);
+
         return $csv;
     }
 
@@ -193,6 +195,39 @@ class Word_list {
     }
     
 
+
+    private static function update_entry_rhymes(array &$dict) {
+        global $rhyme_data;
+
+        foreach($rhyme_data as $group) {
+            if(count($group) < 2) {
+                // skip if there are no rhymes
+                continue;
+            }
+
+            foreach($group as $term) {
+                $dict[$term]['rhymes'] = $group;
+            }
+        }
+    }
+
+
+    /**
+     * Collecting rhyming data. A rhyme is the last two letters matching.
+     * If there are no vowels, use 3.
+     */
+    private static function update_rhyme_data(string $term) {
+        global $rhyme_data;
+
+        $group = substr($term, -2);
+
+        if(!preg_match(GLOBAL_VOWEL_REGEX, $group)) {
+            // If it does not have vowels use 3 letters
+            $group = substr($term, -3);
+        }
+
+        $rhyme_data[$group][] = $term;
+    }
 
     private static function validate_and_count(string $cat, array &$count_arr) {
 
