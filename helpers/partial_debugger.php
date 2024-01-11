@@ -16,12 +16,20 @@ function pard_sec(string $name) {
 }
 
 function pard(mixed $msg) {
-    if (is_string($msg))
-        echo "┣━ ".$msg.PHP_EOL;
-    if (is_array($msg)) {
+    switch (gettype($msg)) {
+        case "integer":
+        case "double":
+        case "string":
+            echo "┣━ ".$msg.PHP_EOL;
+            break;
+        case 'array':
 
-        echo("┣━ ".DIM."(array)".TEXT_RESET.PHP_EOL);
-        pard_print_array($msg, 2);
+            echo("┣━ ".DIM."(array)".TEXT_RESET.PHP_EOL);
+            pard_print_array($msg, 2);
+            break;
+        default:
+            echo "┣━ ".DIM."type: ".gettype($msg).PHP_EOL;
+            break;
     }
     echo(TEXT_RESET);
 }
