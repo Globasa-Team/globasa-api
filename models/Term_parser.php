@@ -596,54 +596,6 @@ class Term_parser
      * @param array  $raw      $raw['trans'] the list of natlang terms
      * @param array  $parsed   the parsed entry being built
      */
-    private function parse_translations_old(array $raw, array &$parsed) // TODO: remove
-    {
-        $rebuilt_term = null;
-        foreach ($raw['trans'] as $lang => $translations) {
-            if (empty($translations)) continue;
-            if (empty($translations)) {
-                continue;
-            }
-            $translations = html_entity_decode($translations);
-            foreach (explode(";", $translations) as $cur_group) {
-                if (!$rebuilt_term){
-                    $group_terms = [];
-                }
-                foreach (explode(",", $cur_group) as $term) {
-                    if (!empty($rebuilt_term)) {
-                        // Is rebuilding a string
-                        $rebuilt_term .= ',' . $term;
-                        if (str_contains($term, ')')) {
-                            $term = $rebuilt_term;
-                            $rebuilt_term = null;
-                        }
-
-                    } else if ($pos = strstr($term, '(') !== false && strstr($term, ')') === false) {
-                        $rebuilt_term = $term;
-                    }
-                    
-                    if (!$rebuilt_term) {
-                        // Add full term (rebuilt or straight forward;
-                        $group_terms[] = $this->pd->line(htmlentities(trim($term)));
-                        self::set_natlang_term_from_translation(parsed:$parsed, lang:$lang, term:$term);
-                    }
-
-                }
-
-                if ($rebuilt_term) {
-                    // Lang group ended but term is not finished being rebuilt
-                    // This means a ; was inside ()
-                    // Add ; and skip to next lang group
-                    $rebuilt_term .= '; ';
-                    continue;
-                }
-            }
-            $parsed['trans'][$lang][] = $group_terms;
-            $parsed['trans html'][$lang] = $this->pd->line($translations);
-        }
-    }
-
-
     private function parse_translations(array &$raw, array &$parsed) {
 
         foreach($raw['trans'] as $lang => $translations) {
@@ -693,41 +645,8 @@ class Term_parser
         }
     }
 
-/*
-machine, device, apparatus (_attached to nouns; compare with -tora_) 
-*/
 
-    // END OF CLASS
-
-
-
-
-    //
-    // Debug Functions
-    //
-
-    public function term_dump($data, $indent = null)
-    {
-        if ($indent == null) {
-            echo "term: " . $data['term'] . "\n";
-            $this->term_dump($data, "\t");
-            return;
-        }
-
-        foreach ($data as $key => $datum) {
-            if (empty($datum) || strcmp($key, 'term') == 0) continue;
-            if (!is_array($datum)) {
-                echo ($indent . $key . ":" . $datum . PHP_EOL);
-            } else {
-
-                echo ($indent . $key . ">" . PHP_EOL);
-                $this->term_dump($datum, $indent . "\t");
-            }
-        }
-    }
-
-
-
+    
 
     /**
      * Parse natlang terms and render them for search terms.
