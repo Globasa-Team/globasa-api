@@ -234,10 +234,6 @@ class Term_parser
                 $parsed['etymology']['derived'] = $this->parse_etymology_derived($cur, $parsed['slug']);
             }
         }
-
-        if (isset($parsed['etymology']['natlang'])){
-            ksort($parsed['etymology']['natlang']);
-        }
     }
 
 
@@ -426,6 +422,7 @@ class Term_parser
             }
 
             if ($at_seperator || $len <= $pos) {
+                // Reached the end of an etymology
 
                 if ($len > $pos && $enclosure_level > 0) {
                     $this->log->add("Error: Term `{$term}` has malformed etymology, missing `)`");
@@ -434,7 +431,7 @@ class Term_parser
                 }
 
                 if ($enclosure_start != $enclosure_end) {
-
+                    // If it includes enclosure, save example
                     $lang = trim(substr($natlang_etymology, $lang_start,  $enclosure_start - $lang_start));
                     $example = trim(substr($natlang_etymology, $enclosure_start + 1, $enclosure_end - $enclosure_start - 1));
                     if (str_ends_with($example, ".")) {
@@ -442,8 +439,8 @@ class Term_parser
                     }
                     $result[$lang] = $example;
                     $this->natlang_etymologies[$lang][] = $this->current_slug;
-                }
-                else {
+                } else {
+                    // No enclusre, no example to save.
                     $lang = trim(substr($natlang_etymology, $lang_start, $pos-$lang_start));
                     // record language, unless it's etc (ji max to).
                     if (strcmp($lang, "ji max to") !== 0) {
@@ -452,6 +449,7 @@ class Term_parser
                     }
                 }
 
+                // Error check the language name
                 if (   str_contains($lang, '(') || str_contains($lang, ')') ||
                        str_contains($lang, ':') || str_contains($lang, ';') ||
                        str_contains($lang, '-') || str_contains($lang, '+') ||
@@ -598,16 +596,19 @@ class Term_parser
      * @param array  $raw      $raw['trans'] the list of natlang terms
      * @param array  $parsed   the parsed entry being built
      */
-    private function parse_translations(array $raw, array &$parsed)
+    private function parse_translations_old(array $raw, array &$parsed) // TODO: remove
     {
         $rebuilt_term = null;
         foreach ($raw['trans'] as $lang => $translations) {
+            if (empty($translations)) continue;
             if (empty($translations)) {
                 continue;
             }
             $translations = html_entity_decode($translations);
             foreach (explode(";", $translations) as $cur_group) {
-                $group_terms = [];
+                if (!$rebuilt_term){
+                    $group_terms = [];
+                }
                 foreach (explode(",", $cur_group) as $term) {
                     if (!empty($rebuilt_term)) {
                         // Is rebuilding a string
@@ -622,21 +623,79 @@ class Term_parser
                     }
                     
                     if (!$rebuilt_term) {
-
+                        // Add full term (rebuilt or straight forward;
                         $group_terms[] = $this->pd->line(htmlentities(trim($term)));
                         self::set_natlang_term_from_translation(parsed:$parsed, lang:$lang, term:$term);
                     }
 
                 }
-                $parsed['trans'][$lang][] = $group_terms;
-                $parsed['trans html'][$lang] = $this->pd->line($translations);
+
+                if ($rebuilt_term) {
+                    // Lang group ended but term is not finished being rebuilt
+                    // This means a ; was inside ()
+                    // Add ; and skip to next lang group
+                    $rebuilt_term .= '; ';
+                    continue;
+                }
             }
+            $parsed['trans'][$lang][] = $group_terms;
+            $parsed['trans html'][$lang] = $this->pd->line($translations);
         }
     }
 
 
+    private function parse_translations(array &$raw, array &$parsed) {
 
+        foreach($raw['trans'] as $lang => $translations) {
+            
+            if (empty($translations)) {
+                continue;
+            }
+            
+            // For each language, save rich text string output
+            $parsed['trans html'][$lang] = $this->pd->line($translations);
+            
+            // For each language, parse translations
+            $parsed['trans'][$lang] = [];
+            $translations = html_entity_decode($translations);
+            $start = 0;
+            $len = strlen($translations);
+            $group_terms = [];
+            
+            for($pos = 0; $pos < $len; $pos++) {
+                
+                if ($translations[$pos]==='(') {
+                    // Skip to end of enclosure
+                    $pos = strpos($translations, ')', $pos) + 1;
+                    if ($pos >= $len) {
+                        $pos = $len-1;
+                    }
+                }
 
+                if($translations[$pos]===',') {
+                    // save single term
+                    $group_terms[] = substr($translations, $start, $pos-$start);
+                    $start = $pos+1;
+                } elseif($translations[$pos]===';') {
+                    // end of group, save current group of terms
+                    // save single term
+                    $group_terms[] = substr($translations, $start, $pos-$start);
+                    $parsed['trans'][$lang][] = $group_terms;
+                    $group_terms = [];
+                } elseif($pos >= $len-1) {
+                    // end of translations, save current group of terms
+                    // save single term
+                    $group_terms[] = substr($translations, $start);
+                    $parsed['trans'][$lang][] = $group_terms;
+                    $group_terms = [];
+                }
+            }
+        }
+    }
+
+/*
+machine, device, apparatus (_attached to nouns; compare with -tora_) 
+*/
 
     // END OF CLASS
 

@@ -96,7 +96,7 @@ class Word_list {
         $tp = new Term_parser(fields:fgetcsv($term_stream), parsedown:$c['parsedown'], log:$c['log'], natlang_etymologies:$natlang_etymologies);
 
         while(($data = fgetcsv($term_stream)) !== false) {
-            
+
             // Parse term if it exists
             if (empty($data) || empty($data[0]) ) {
                 continue;
@@ -116,6 +116,7 @@ class Word_list {
             self::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
             
             $parsed_entries[$parsed['slug']] = $parsed;
+            
             usleep(self::TINY_IO_DELAY);
         }
         if (!feof($term_stream)) {
