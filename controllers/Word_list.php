@@ -210,8 +210,11 @@ class Word_list {
      */
     static function validate_and_count_category(array $c, string $cat, &$count_arr, string $word) {
 
+        global $parse_report;
+
         if (!in_array($cat, self::VALID_WORD_CATEGORIES)) {
             $c['log']->add("Word List Error: Invalid category `$cat` on term `$word`");
+            $parse_report[] = ['term'=>$word, 'msg'=>"Word List Error: Invalid category `$cat`"];
         }
 
         self::validate_and_count($cat, $count_arr);
