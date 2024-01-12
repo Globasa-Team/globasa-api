@@ -626,19 +626,25 @@ class Term_parser
 
                 if($translations[$pos]===',') {
                     // save single term
-                    $group_terms[] = trim(substr($translations, $start, $pos-$start));
+                    $term = trim(substr($translations, $start, $pos-$start));
+                    $group_terms[] = $term;
+                    self::set_natlang_term_from_translation(parsed:$parsed, lang:$lang, term:$term);
                     $start = $pos+1;
                 } elseif($translations[$pos]===';') {
                     // end of group, save current group of terms
                     // save single term
-                    $group_terms[] = trim(substr($translations, $start, $pos-$start));
+                    $term = trim(substr($translations, $start, $pos-$start));
+                    $group_terms[] = $term;
                     $parsed['trans'][$lang][] = $group_terms;
+                    self::set_natlang_term_from_translation(parsed:$parsed, lang:$lang, term:$term);
                     $group_terms = [];
                 } elseif($pos >= $len-1) {
                     // end of translations, save current group of terms
                     // save single term
-                    $group_terms[] = trim(substr($translations, $start));
+                    $term = trim(substr($translations, $start));
+                    $group_terms[] = $term;
                     $parsed['trans'][$lang][] = $group_terms;
+                    self::set_natlang_term_from_translation(parsed:$parsed, lang:$lang, term:$term);
                     $group_terms = [];
                 }
             }
