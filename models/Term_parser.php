@@ -232,6 +232,7 @@ class Term_parser
                     $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate derived etymology."];
                 }
                 $parsed['etymology']['derived'] = $this->parse_etymology_derived($cur, $parsed['slug']);
+                $parsed['etymology']['derived html'] = $parsed['etymology']['derived'];
             }
         }
     }

@@ -108,27 +108,30 @@ class Word_list {
             $debug_data[$parsed['slug']] = $raw;
             if (isset($parsed['etymology'][')'])) unset($parsed['etymology'][')']);
             
-            self::render_term_index(parsed:$parsed, index:$term_indexes);
-            self::render_search_terms(parsed:$parsed, index:$search_terms);
-            self::render_basic_entry(parsed:$parsed, raw:$raw, basic_entries:$basic_entries, config:$c);
-            self::render_minimum_translations(parsed:$parsed, min:$min_entries);
-            self::render_tags(parsed:$parsed, tags:$tags);
+            // Insert entry in aggregate data
+            self::insert_term_index(parsed:$parsed, index:$term_indexes);
+            self::insert_search_terms(parsed:$parsed, index:$search_terms);
+            self::insert_basic_entry(parsed:$parsed, raw:$raw, basic_entries:$basic_entries, config:$c);
+            self::insert_minimum_entry(parsed:$parsed, min:$min_entries);
+            self::insert_standard_entry($parsed);
+
+            self::insert_tags(parsed:$parsed, tags:$tags);
             self::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
             self::update_rhyme_data($parsed['slug']);
+
             $parsed_entries[$parsed['slug']] = $parsed;
-            
             usleep(self::TINY_IO_DELAY);
         }
         if (!feof($term_stream)) {
             $c['log']->add("Unexpected fgetcsv() fail");
         }
         fclose($term_stream);
-
+        
         // Insert data that needed for all entries to be loaded
         self::insert_referenced_definition(entries:$parsed_entries, trans:$min_entries);
         self::insert_backlinks(backlinks:$tp->backlinks, entries:$parsed_entries, config:$c);
         self::update_entry_rhymes($parsed_entries);
-
+        
         return $csv;
     }
 
@@ -137,7 +140,7 @@ class Word_list {
      * For each languages, add that languages search terms to the
      * search term array for that languages.
      */
-    private static function render_search_terms(array $parsed, &$index ) {
+    private static function insert_search_terms(array $parsed, &$index ) {
         foreach ($parsed['search terms'] as $lang => $terms) {
             foreach ($terms as $term) {
                 $index[$lang][$term][] = $parsed['slug'];
@@ -151,7 +154,7 @@ class Word_list {
      * For each languages add all term forms (the term and it's alt forms, if any)
      * to the index of all words.
      */
-    private static function render_term_index(array $parsed, array &$index) {
+    private static function insert_term_index(array $parsed, array &$index) {
         $index[$parsed['slug']] = null;
         foreach($parsed['alt forms'] as $alt) {
             $index[$alt] = $parsed['slug'];
@@ -162,17 +165,35 @@ class Word_list {
      * Renders minimum definitions for the current term
      * and adds them to the array of mini defs.
      */
-    private static function render_minimum_translations(array $parsed, array &$min) {
+    private static function insert_minimum_entry(array $parsed, array &$min) {
         foreach($parsed['trans html'] as $lang=>$trans) {
             $min[$lang][$parsed['slug']] = '<em>(' . $parsed['word class'] . ')</em> ' . $trans;
         }
     }
 
+
+
+    /**
+     * 
+     */
+    private static function insert_standard_entry(array $entry) {
+        global $standard_entries;
+
+        $standard_entries[$entry['slug']] = [
+            'word class'=>$entry['word class'],
+            'category'=>$entry['category'],
+            'trans'=>$entry['trans'],
+            'etymology'=>$entry['etymology']
+        ];
+    }
+
+
+
     /**
      * Renders tags for the current term
      * and adds them to the array of tags.
      */
-    private static function render_tags(array $parsed, array &$tags) {
+    private static function insert_tags(array $parsed, array &$tags) {
         if (array_key_exists('tags', $parsed)) {
             foreach ($parsed['tags'] as $tag) {
                 $tags[$tag][] = $parsed['slug'];
@@ -185,7 +206,7 @@ class Word_list {
      * Renders the basic entry for each language. Includes:
      *  term, class, category, translations.
      */
-    private static function render_basic_entry(array $parsed, array $raw, array &$basic_entries, array $config) {
+    private static function insert_basic_entry(array $parsed, array $raw, array &$basic_entries, array $config) {
         foreach($parsed['trans html'] as $lang=>$translation) {
             $basic_entries[$lang][$parsed['slug']] = array();
             $basic_entries[$lang][$parsed['slug']]['class'] = $parsed['word class'];

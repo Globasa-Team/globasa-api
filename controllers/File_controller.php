@@ -23,12 +23,15 @@ class File_controller {
 
         global $parse_report;
 
+        
         $config['log']->add("save_entry_files ", 5);
         self::save_entry_files      (data:$parsed_entries,  config:$config);
         $config['log']->add("save_search_term_files ", 5);
         self::save_search_term_files(data:$search_terms,    config:$config);
         $config['log']->add("save_min_files ", 5);
         self::save_min_files        (data:$min_entries,     config:$config);
+        $config['log']->add("save_standard_files ", 5);
+        self::save_standard_files   (cfg:$config);
         $config['log']->add("save_term_index_file ", 5);
         self::save_term_index_file  (data:$term_indexes,    config:$config);
         $config['log']->add("save_basic_files ", 5);
@@ -95,6 +98,19 @@ class File_controller {
     }
 
 
+
+    /**
+     * Standard entry dictionary file
+     */
+    private static function save_standard_files(array $cfg) {
+        global $standard_entries;
+
+        yaml_emit_file($cfg['api_path'] . '/standard.yaml', $standard_entries,  YAML_UTF8_ENCODING);
+        usleep(FULL_FILE_DELAY);
+
+        file_put_contents($cfg['api_path'] . '/standard.json', json_encode($standard_entries));
+        usleep(FULL_FILE_DELAY);
+    }
 
     /**
     * Indexes
