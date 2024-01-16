@@ -638,6 +638,7 @@ class Term_parser
                     $group_terms[] = $this->pd->line($term);
                     $parsed['trans'][$lang][] = $group_terms;
                     $group_terms = [];
+                    $start = $pos+1;
                     self::set_natlang_term_from_translation(parsed:$parsed, lang:$lang, term:$term);
                 } elseif($pos >= $len-1) {
                     // end of translations, save current group of terms
@@ -645,8 +646,9 @@ class Term_parser
                     $term = htmlentities(trim(substr($translations, $start)));
                     $group_terms[] = $this->pd->line($term);
                     $parsed['trans'][$lang][] = $group_terms;
-                    self::set_natlang_term_from_translation(parsed:$parsed, lang:$lang, term:$term);
                     $group_terms = [];
+                    $start = $pos+1;
+                    self::set_natlang_term_from_translation(parsed:$parsed, lang:$lang, term:$term);
                 }
             }
         }

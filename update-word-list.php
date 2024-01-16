@@ -4,15 +4,19 @@ namespace globasa_api;
 
 use Throwable;
 
-global  $parse_report,
-        $rhyme_data,
-        $natlang_count;
+global
+    $parse_report,
+    $rhyme_data,
+    $natlang_count,
+    $standard_entries
+    ;
 
 
 
 $parse_report = [];
 $rhyme_data = [];
 $natlang_count = [];
+$standard_entries = [];
 
 $parsed_entries = [];
 $min_entries = [];
