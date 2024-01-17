@@ -627,14 +627,14 @@ class Term_parser
 
                 if($translations[$pos]===',') {
                     // save single term
-                    $term = htmlentities(trim(substr($translations, $start, $pos-$start)));
+                    $term = trim(substr($translations, $start, $pos-$start));
                     $group_terms[] = $this->pd->line($term);
                     self::set_natlang_term_from_translation(parsed:$parsed, lang:$lang, term:$term);
                     $start = $pos+1;
                 } elseif($translations[$pos]===';') {
                     // end of group, save current group of terms
                     // save single term
-                    $term = htmlentities(trim(substr($translations, $start, $pos-$start)));
+                    $term = trim(substr($translations, $start, $pos-$start));
                     $group_terms[] = $this->pd->line($term);
                     $parsed['trans'][$lang][] = $group_terms;
                     $group_terms = [];
@@ -643,7 +643,7 @@ class Term_parser
                 } elseif($pos >= $len-1) {
                     // end of translations, save current group of terms
                     // save single term
-                    $term = htmlentities(trim(substr($translations, $start)));
+                    $term = trim(substr($translations, $start));
                     $group_terms[] = $this->pd->line($term);
                     $parsed['trans'][$lang][] = $group_terms;
                     $group_terms = [];
