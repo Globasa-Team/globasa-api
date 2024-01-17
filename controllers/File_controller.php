@@ -55,7 +55,7 @@ class File_controller {
         foreach($data as $lang=>$dict) {
             ksort($dict);
 
-            yaml_emit_file($config['api_path'] . "/basic_{$lang}.yaml", $dict);
+            yaml_emit_file($config['api_path'] . "/basic_{$lang}.yaml", $dict, YAML_UTF8_ENCODING);
             usleep(FULL_FILE_DELAY);
 
             $fp = fopen($config['api_path'] . "/basic_{$lang}.json", "w");
@@ -121,7 +121,7 @@ class File_controller {
         foreach($data as $lang=>$index) {
             ksort($index);
 
-            yaml_emit_file($config['api_path'] . "/search_terms_{$lang}.yaml", $index);
+            yaml_emit_file($config['api_path'] . "/search_terms_{$lang}.yaml", $index, YAML_UTF8_ENCODING);
             $index_list .= $lang . ' ';
             usleep(FULL_FILE_DELAY);
 
@@ -146,7 +146,7 @@ class File_controller {
         foreach ($data as $lang=>$data) {
             ksort($data);
 
-            yaml_emit_file($config['api_path'] . "/min_{$lang}.yaml", $data);
+            yaml_emit_file($config['api_path'] . "/min_{$lang}.yaml", $data, YAML_UTF8_ENCODING);
             $min_list .= $lang . ' ';
             usleep(FULL_FILE_DELAY);
 
@@ -169,7 +169,7 @@ class File_controller {
         foreach ($data as $lang=>$terms) {
             ksort($terms);
 
-            yaml_emit_file($config['api_path'] . "/etymologies_".strtolower($lang).".yaml", $terms);
+            yaml_emit_file($config['api_path'] . "/etymologies_".strtolower($lang).".yaml", $terms, YAML_UTF8_ENCODING);
             usleep(FULL_FILE_DELAY);
         }
     }
@@ -181,7 +181,7 @@ class File_controller {
      */
     private static function save_report(array $config, array $data, string $name) {
 
-        yaml_emit_file($config['api_path'] . "/reports/{$name}.yaml", $data);
+        yaml_emit_file($config['api_path'] . "/reports/{$name}.yaml", $data, YAML_UTF8_ENCODING);
 
         usleep(FULL_FILE_DELAY);
 
@@ -214,13 +214,13 @@ class File_controller {
                         "terms count"=>$word_count,
                         "source langs"=>$natlang_count,
                         "categories"=>$category_count
-                    ]);
+                    ], YAML_UTF8_ENCODING);
         usleep(SMALL_IO_DELAY);
 
     }
 
 
-                
+
 
     /**
      * Tags
@@ -228,7 +228,7 @@ class File_controller {
     private static function save_tag_file(array &$config, array &$data) {
         ksort($data);
 
-        yaml_emit_file($config['api_path'] . "/tags.yaml", $data);
+        yaml_emit_file($config['api_path'] . "/tags.yaml", $data, YAML_UTF8_ENCODING);
 
         usleep(FULL_FILE_DELAY);
 
@@ -243,7 +243,7 @@ class File_controller {
     private static function save_term_index_file(array &$data, array &$config) {
         ksort($data);
 
-        yaml_emit_file($config['api_path'] . "/index.yaml", $data);
+        yaml_emit_file($config['api_path'] . "/index.yaml", $data, YAML_UTF8_ENCODING);
         usleep(FULL_FILE_DELAY);
 
         $fp = fopen($config['api_path'] . "/index.json", "w");
