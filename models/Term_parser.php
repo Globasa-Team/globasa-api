@@ -227,12 +227,12 @@ class Term_parser
                 }
                 $parsed['etymology']['natlang'] = $this->parse_etymology_natlang_freeform($cur, $parsed['slug']);
             } else {
+                // Assume it's derived
                 if (!empty($parsed['etymology']['derived'])) {
                     $this->log->add("ERROR: Term `".$raw['term']."` has duplicate derived etymology.");
                     $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate derived etymology."];
                 }
-                $parsed['etymology']['derived'] = $this->parse_etymology_derived($cur, $parsed['slug']);
-                $parsed['etymology']['derived html'] = $parsed['etymology']['derived'];
+                [$parsed['etymology']['derived html'], $parsed['etymology']['derived']] = $this->parse_etymology_derived($cur, $parsed['slug']);
             }
         }
     }
@@ -273,6 +273,8 @@ class Term_parser
         $phrase = ''; // this is actually a term which might be a phrase, I think?
         $seperator = '';
         $phraseStart = false;
+        $etymology_html = [];
+        $etymology_array = [];
 
         foreach ($frag as $word) {
             // Check if end of phrase (or term). The end is reach when $word
@@ -282,30 +284,12 @@ class Term_parser
 
             if ($word == '+') {
                 $word = '';
-                $stop = ' + ';
+                $stop = ' + '; // TODO: remove spaces
                 $phraseStart = true;
             } else if (substr($word, -1) == ',') {
                 $word = substr($word, 0, -1);
-                $stop = ', ';
+                $stop = ', '; // TODO: remove spaces
                 $phraseStart = true;
-            } else if (substr($word, -1) == '.') {
-                $word = substr($word, 0, -1);
-                $stop = '.';
-            } else if ($word == 'oko' || $word == 'priori_') {
-                $tempPhrase = $phrase . ' ' . $word;
-                if ($tempPhrase == 'Am oko') {
-                    $etymology[] = $phrase . ' ' . $word . ' ';
-                    $phrase = '';
-                    $seperator = '';
-                    $stop = '';
-                    $word = '';
-                } else if ($tempPhrase == '_a priori_') {
-                    $etymology[] = $phrase . ' ' . $word;
-                    $phrase = '';
-                    $seperator = '';
-                    $stop = '';
-                    $word = '';
-                }
             }
 
             if (empty($stop)) {
@@ -323,10 +307,10 @@ class Term_parser
                 $slug = trim(strtolower($phrase));
                 $this->backlinks[$slug][] = $this->current_slug;
 
-                // link to term
-                $phrase = '<a href="../lexi/' . $phrase . '">' . $phrase . '</a>';
-                // add to etymology
-                $etymology[] = $phrase . $stop;
+                // add to etymology result
+                $etymology_array[] = $phrase;
+                $etymology_array[] = $stop;
+                $etymology_html[] = '<a href="../lexi/' . $phrase . '">' . $phrase . '</a>' . $stop;
                 $phrase = '';
                 
             }
@@ -340,13 +324,14 @@ class Term_parser
             $phrase = preg_replace('/[^A-Za-z0-9, \-]/', '', $phrase);
             $slug = trim(strtolower($phrase));
             $this->backlinks[$slug][] = $this->current_slug;
+            $etymology_array[] = $phrase;
             // link to term
             $phrase = '<a href="../lexi/' . $phrase . '">' . $phrase . '</a>';
             // add to etymology
-            $etymology[] = $phrase . $stop;
+            $etymology_html[] = $phrase;
         }
 
-        return implode("", $etymology);
+        return [implode("", $etymology_html), $etymology_array];
     }
 
 
