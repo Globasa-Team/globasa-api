@@ -232,7 +232,7 @@ class Term_parser
                     $this->log->add("ERROR: Term `".$raw['term']."` has duplicate derived etymology.");
                     $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate derived etymology."];
                 }
-                [$parsed['etymology']['derived html'], $parsed['etymology']['derived']] = $this->parse_etymology_derived($cur, $parsed['slug']);
+                $parsed['etymology']['derived'] = $this->parse_etymology_derived($cur, $parsed['slug']);
             }
         }
     }
@@ -258,6 +258,7 @@ class Term_parser
     }
 
 
+
     /**
      * Parse derived etymology for derived, affix or phrase terms.
      * 
@@ -266,72 +267,61 @@ class Term_parser
      */
     private function parse_etymology_derived(string $derived_etymology)
     {
-        // Not borrowed, so find mentioned terms. Break in to fragments and
-        // rebuild fragment by fragment. When reaching term index and link
-        // where applicable.
+        // Break in to fragments and rebuild fragment by fragment.
         $frag = explode(' ', $derived_etymology);
         $phrase = ''; // this is actually a term which might be a phrase, I think?
-        $seperator = '';
-        $phraseStart = false;
-        $etymology_html = [];
         $etymology_array = [];
 
         foreach ($frag as $word) {
-            // Check if end of phrase (or term). The end is reach when $word
-            // is a `+` or ends with a `,`, is the oko of the `Am oko` or the
-            // priori_ of `_a priori_`
+            // Check if end of phrase (or term).
+            // The end is reach when $word is a `+` or ends with a `,`
             $stop = '';
 
+            // Find if we are stopping with a seperator
             if ($word == '+') {
                 $word = '';
-                $stop = ' + '; // TODO: remove spaces
-                $phraseStart = true;
+                $stop = '+';
             } else if (substr($word, -1) == ',') {
                 $word = substr($word, 0, -1);
-                $stop = ', '; // TODO: remove spaces
-                $phraseStart = true;
+                $stop = ',';
             }
 
-            if (empty($stop)) {
-                // Don't stop, so add next fragment to phrase
-                $phrase .= (!$phraseStart ? $seperator : '') . $word;
-                $phraseStart = false;
-            } else {
-                // Stop is true, so make link with current phrase
-                // Also, record for backlinking
-                $phrase .= $word;
-                if (str_ends_with($phrase, '.')) {
-                    $phrase = substr($phrase, 0, -1);
-                }
-                $phrase = preg_replace('/[^A-Za-z0-9, \-]/', '', $phrase);
-                $slug = trim(strtolower($phrase));
-                $this->backlinks[$slug][] = $this->current_slug;
+            // Add word to phrase
+            if (!empty($phrase) && !empty($word)) {
+                $phrase .= ' ';
+            }
+            $phrase .= $word;
+            
+            if ($stop) {
+                // Finished phrase!
 
                 // add to etymology result
                 $etymology_array[] = $phrase;
                 $etymology_array[] = $stop;
-                $etymology_html[] = '<a href="../lexi/' . $phrase . '">' . $phrase . '</a>' . $stop;
                 $phrase = '';
                 
+                // Record for backlinking
+                $slug = preg_replace('/[^A-Za-z0-9, \-]/', '', $phrase);
+                $slug = trim(strtolower($slug));
+                $this->backlinks[$slug][] = $this->current_slug;
+
+                $stop = '';
             }
-            $seperator = ' ';
-            $stop = '';
         }
 
         // Add final $phrase if it's a leftover
         // exactly as above else block
         if (!empty($phrase)) {
-            $phrase = preg_replace('/[^A-Za-z0-9, \-]/', '', $phrase);
-            $slug = trim(strtolower($phrase));
-            $this->backlinks[$slug][] = $this->current_slug;
+            // add to etymology result
             $etymology_array[] = $phrase;
-            // link to term
-            $phrase = '<a href="../lexi/' . $phrase . '">' . $phrase . '</a>';
-            // add to etymology
-            $etymology_html[] = $phrase;
+
+            // Record backlink
+            $slug = preg_replace('/[^A-Za-z0-9, \-]/', '', $phrase);
+            $slug = trim(strtolower($slug));
+            $this->backlinks[$slug][] = $this->current_slug;
         }
 
-        return [implode("", $etymology_html), $etymology_array];
+        return $etymology_array;
     }
 
 
