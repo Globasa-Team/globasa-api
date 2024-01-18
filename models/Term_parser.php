@@ -298,13 +298,13 @@ class Term_parser
                 // add to etymology result
                 $etymology_array[] = $phrase;
                 $etymology_array[] = $stop;
-                $phrase = '';
                 
                 // Record for backlinking
                 $slug = preg_replace('/[^A-Za-z0-9, \-]/', '', $phrase);
                 $slug = trim(strtolower($slug));
                 $this->backlinks[$slug][] = $this->current_slug;
-
+                
+                $phrase = '';
                 $stop = '';
             }
         }
