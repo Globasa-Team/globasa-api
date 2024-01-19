@@ -42,7 +42,7 @@ class File_controller {
         self::save_natlang_etymologies_files(data:$natlang_etymologies, config:$config);
 
         $config['log']->add("save_stats_file ", 5);
-        self::save_stats_file       (word_count:$word_count, category_count:$category_count, natlang_data:$natlang_etymologies, config:$config);
+        self::save_stats_file       (dict:$parsed_entries, category_count:$category_count, natlang_data:$natlang_etymologies, config:$config);
 
         $config['log']->add("save_report_file", 5);
         self::save_report(config: $config, data:$parse_report, name:"parse_report");
@@ -197,7 +197,7 @@ class File_controller {
      * Statistics
      * 
      */
-    private static function save_stats_file(int &$word_count, array &$category_count, array &$natlang_data, array &$config) {
+    private static function save_stats_file(array &$dict, array &$category_count, array &$natlang_data, array &$config) {
 
         $natlang_count = [];
         /**
@@ -208,10 +208,9 @@ class File_controller {
         }
 
 
-
         // array_multisort($natlang_count, SORT_DESC);
         yaml_emit_file($config['api_path'] . "/stats.yaml", [
-                        "terms count"=>$word_count,
+                        "terms count"=>count($dict),
                         "source langs"=>$natlang_count,
                         "categories"=>$category_count
                     ], YAML_UTF8_ENCODING);
