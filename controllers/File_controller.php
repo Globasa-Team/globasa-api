@@ -206,9 +206,8 @@ class File_controller {
         foreach(array_keys($natlang_data) as $natlang) {
             $natlang_count[$natlang] = count($natlang_data[$natlang]);
         }
+        arsort($natlang_count);
 
-
-        // array_multisort($natlang_count, SORT_DESC);
         yaml_emit_file($config['api_path'] . "/stats.yaml", [
                         "terms count"=>count($dict),
                         "source langs"=>$natlang_count,
