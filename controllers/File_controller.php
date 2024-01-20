@@ -23,7 +23,6 @@ class File_controller {
 
         global $parse_report;
 
-        
         $config['log']->add("save_entry_files ", 5);
         self::save_entry_files      (data:$parsed_entries,  config:$config);
         $config['log']->add("save_search_term_files ", 5);
@@ -42,7 +41,7 @@ class File_controller {
         self::save_natlang_etymologies_files(data:$natlang_etymologies, config:$config);
 
         $config['log']->add("save_stats_file ", 5);
-        self::save_stats_file       (dict:$parsed_entries, category_count:$category_count, natlang_data:$natlang_etymologies, config:$config);
+        self::save_stats_file       (category_count:$category_count, natlang_data:$natlang_etymologies, config:$config);
 
         $config['log']->add("save_report_file", 5);
         self::save_report(config: $config, data:$parse_report, name:"parse_report");
@@ -197,7 +196,9 @@ class File_controller {
      * Statistics
      * 
      */
-    private static function save_stats_file(array &$dict, array &$category_count, array &$natlang_data, array &$config) {
+    private static function save_stats_file(array &$category_count, array &$natlang_data, array &$config) {
+
+        global $dict, $stats;
 
         $natlang_count = [];
         /**
@@ -208,11 +209,12 @@ class File_controller {
         }
         arsort($natlang_count);
 
-        yaml_emit_file($config['api_path'] . "/stats.yaml", [
-                        "terms count"=>count($dict),
-                        "source langs"=>$natlang_count,
-                        "categories"=>$category_count
-                    ], YAML_UTF8_ENCODING);
+        
+        $stats["terms count"] = count($dict);
+        $stats["source langs"] = $natlang_count;
+        $stats["categories"] = $category_count;
+
+        yaml_emit_file($config['api_path'] . "/stats.yaml", $stats, YAML_UTF8_ENCODING);
         usleep(SMALL_IO_DELAY);
 
     }

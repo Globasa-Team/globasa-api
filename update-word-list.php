@@ -8,7 +8,9 @@ global
     $parse_report,
     $rhyme_data,
     $natlang_count,
-    $standard_entries
+    $standard_entries,
+    $stats,
+    $dict
     ;
 
 
@@ -17,8 +19,9 @@ $parse_report = [];
 $rhyme_data = [];
 $natlang_count = [];
 $standard_entries = [];
+$stats = [];
+$dict = [];
 
-$parsed_entries = [];
 $min_entries = [];
 $basic_entries = [];
 $term_indexes = [];
@@ -51,35 +54,32 @@ try {
     
     // Update data files
     $c['log']->add("Loading old CSV", 1);
-    $old_data = load_csv($data['previous']);
+    // DEBUG
+    // $old_data = load_csv($data['previous']);
     $c['log']->add("Loading current terms", 1);
     $csv_data = Word_list::load_current_terms(
         current_csv_filename:$new_csv_filename,
-
-        parsed_entries:$parsed_entries,
-
+        parsed_entries:$dict,
         min_entries:$min_entries,
         basic_entries:$basic_entries,
-        
         term_indexes:$term_indexes,
         search_terms:$search_terms,
         tags:$tags,
-        
         natlang_etymologies:$natlang_etymologies,
-        
         word_count:$word_count,
         category_count:$category_count,
-        
         debug_data:$debug_data,
         c:$c
     );
     $c['log']->add("Logging changes", 2);
-    Word_list::log_changes($csv_data, $old_data, $c);
+    // DEBUG
+    // Word_list::log_changes($csv_data, $old_data, $c);
+    Word_list::calculate_stats();
 
     // Write dictionary files
     $c['log']->add("Writting files", 2);
     File_controller::write_api2_files(
-        parsed_entries:$parsed_entries,
+        parsed_entries:$dict,
 
         min_entries:$min_entries,
         basic_entries:$basic_entries,
@@ -107,8 +107,8 @@ try {
     $c['log']->email_log($c);
     yaml_emit_file(DATA_FILENAME, ['previous'=>$new_csv_filename]);
 }
-catch (Throwable $e) {
+catch (Throwable $t) {
     echo("\nCAUGHT
-    Prob\t".$e->getCode()." :".$e->getMessage().PHP_EOL.
-        "Line\t".$e->getLine()." :".$e->getFile().PHP_EOL);
+    Prob\t".$t->getCode()." :".$t->getMessage().PHP_EOL.
+        "Line\t".$t->getLine()." :".$t->getFile().PHP_EOL);
 }

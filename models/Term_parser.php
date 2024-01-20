@@ -137,10 +137,19 @@ class Term_parser
             $parsed['examples'][] = trim($raw['example']);
         }
 
+        // $this->lint($parsed);
+
         return [$raw, $parsed, $csv];
     }
 
 
+
+    /**
+     * Find anomolies or errors not otherwise caught
+     */
+    private function lint($entry) {
+        global $parse_report;
+    }
 
     /**
      * Parse basic field by getting the $raw data and copying it to $parsed.

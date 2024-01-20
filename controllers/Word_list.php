@@ -17,6 +17,53 @@ class Word_list {
 
 
     /**
+     * Calculate stats from the dictionary entries.
+     */
+    public static function calculate_stats(): void {
+        global $dict, $stats;
+
+        $stats['etymology source percent'] = [];
+        $stats['natlang roots'] = 0;
+
+        foreach($dict as $entry) {
+            
+            if ($entry['category'] === 'root' && array_key_exists('natlang', $entry['etymology']) ) {
+
+                // Calculate the total number of roots and roots for each source lang
+                $stats['natlang roots'] += 1;
+
+                foreach($entry['etymology']['natlang'] as $natlang => $data) {
+                    if (!array_key_exists($natlang, $stats['etymology source percent'])) {
+                        $stats['etymology source percent'][$natlang] = 0;
+                    }
+                    $stats['etymology source percent'][$natlang] += 1;
+                }
+            } elseif ($entry['category'] === 'root' && array_key_exists('kwasilexi', $entry['etymology']) ) {
+    
+                // Calculate the total number of roots and roots for each source lang
+                $stats['natlang roots'] += 1;
+
+                foreach($entry['etymology']['kwasilexi'] as $natlang => $data) {
+                    if (!array_key_exists($natlang, $stats['etymology source percent'])) {
+                        $stats['etymology source percent'][$natlang] = 0;
+                    }
+                    $stats['etymology source percent'][$natlang] += 1;
+                }
+            }
+
+        }
+
+        // Calculate percentages
+        foreach($stats['etymology source percent'] as $natlang=>$count) {
+            $stats['etymology source percent'][$natlang] = round($count/$stats['natlang roots']*100, 2);
+        }
+        arsort($stats['etymology source percent']);
+    }
+
+
+
+
+    /**
      * Backlinks
      */
     public static function insert_backlinks(array &$entries, array &$backlinks, $config) {
