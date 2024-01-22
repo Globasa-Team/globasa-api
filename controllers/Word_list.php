@@ -66,24 +66,28 @@ class Word_list {
     /**
      * Backlinks
      */
-    public static function insert_backlinks(array &$entries, array &$backlinks, $config) {
+    public static function insert_derived_terms(array &$entries, array &$derived_terms, $config) {
         global $parse_report;
         
-        foreach($backlinks as $backlink_term=>$terms) {
-            // For each term, grab definitions for all languages
-            foreach($terms as $slug) {
+        foreach($derived_terms as $root=>$terms) {
+            // For each root, find all derived terms
+            foreach($terms as $term) {
 
                 // Skip if word doesn't exist
-                if (!array_key_exists($backlink_term, $entries)) {
-                    $config['log']->add("Attempted to link entry `{$backlink_term}` to `{$slug}`, but it doesn't exist.");
-                    $parse_report[] = ['term'=>$backlink_term, 'msg'=>"Term missing. Was linking from `{$slug}`."];
+                if (!array_key_exists($root, $entries)) {
+                    $config['log']->add("Attempted to link entry `{$root}` to `{$term}`, but it doesn't exist.");
+                    $parse_report[] = ['term'=>$root, 'msg'=>"Term missing. Was linking from `{$term}`."];
                     continue;
                 }
-                $entries[$backlink_term]["also see"][$slug]['class'] = $entries[$slug]['word class'];
-                foreach($entries[$slug]['trans html'] as $lang=>$translation) {
-                    if (isset($entries[$backlink_term])) {
-                        $entries[$backlink_term]["also see"][$slug]['trans'][$lang] = $translation;
-                    } elseif (!isset($entries[$backlink_term])) {
+
+                // Copy derived term class to root
+                $entries[$root]["derived terms"][$term]['class'] = $entries[$term]['word class'];
+
+                // Copy derived term translation data to root
+                foreach($entries[$term]['trans html'] as $lang=>$translation) {
+                    if (isset($entries[$root])) {
+                        $entries[$root]["derived terms"][$term]['trans'][$lang] = $translation;
+                    } elseif (!isset($entries[$root])) {
                         // TODO: record or react to non-existent entries?
                     }
                 }
@@ -176,7 +180,7 @@ class Word_list {
         
         // Insert data that needed for all entries to be loaded
         self::insert_referenced_definition(entries:$parsed_entries, trans:$min_entries);
-        self::insert_backlinks(backlinks:$tp->backlinks, entries:$parsed_entries, config:$c);
+        self::insert_derived_terms(derived_terms:$tp->backlinks, entries:$parsed_entries, config:$c);
         self::update_entry_rhymes($parsed_entries);
         
         return $csv;
@@ -267,14 +271,31 @@ class Word_list {
     private static function update_entry_rhymes(array &$dict) {
         global $rhyme_data;
 
+        // Go through each rhyme group to copy rhyming terms in to entry
         foreach($rhyme_data as $group) {
             if(count($group) < 2) {
                 // skip if there are no rhymes
                 continue;
             }
 
-            foreach($group as $term) {
-                $dict[$term]['rhymes'] = $group;
+            foreach($group as $entry) {
+                // Copy data for all entries (rhymes) in this rhyme group
+                $dict[$entry]['rhymes'] = $group;
+
+                foreach ($group as $rhyme) {
+                    // Copy each rhyme
+                    if ($group === $rhyme) continue;
+
+                    // Copy all data from this rhyme to the entry
+                    $dict[$entry]['rhyme trans'][$rhyme]['word class'] = $dict[$rhyme]['word class'];
+
+                    foreach($dict[$rhyme]['trans html'] as $lang=>$trans) {
+                        // Copy each translation
+                        $dict[$entry]['rhyme trans'][$rhyme][$lang] = $trans;
+                    }
+
+                }
+
             }
         }
     }
