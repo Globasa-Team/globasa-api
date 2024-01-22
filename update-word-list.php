@@ -54,8 +54,7 @@ try {
     
     // Update data files
     $c['log']->add("Loading old CSV", 1);
-    // DEBUG
-    // $old_data = load_csv($data['previous']);
+    $old_data = load_csv($data['previous']);
     $c['log']->add("Loading current terms", 1);
     $csv_data = Word_list::load_current_terms(
         current_csv_filename:$new_csv_filename,
@@ -72,8 +71,7 @@ try {
         c:$c
     );
     $c['log']->add("Logging changes", 2);
-    // DEBUG
-    // Word_list::log_changes($csv_data, $old_data, $c);
+    Word_list::log_changes($csv_data, $old_data, $c);
     Word_list::calculate_stats();
 
     // Write dictionary files
