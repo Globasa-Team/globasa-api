@@ -309,8 +309,7 @@ class Term_parser
                 $etymology_array[] = $stop;
                 
                 // Record for backlinking
-                $slug = preg_replace('/[^A-Za-z0-9, \-]/', '', $phrase);
-                $slug = trim(strtolower($slug));
+                $slug = slugify($phrase);
                 $this->backlinks[$slug][] = $this->current_slug;
                 
                 $phrase = '';
@@ -325,8 +324,7 @@ class Term_parser
             $etymology_array[] = $phrase;
 
             // Record backlink
-            $slug = preg_replace('/[^A-Za-z0-9, \-]/', '', $phrase);
-            $slug = trim(strtolower($slug));
+            $slug = slugify($phrase);
             $this->backlinks[$slug][] = $this->current_slug;
         }
 
@@ -707,6 +705,7 @@ class Term_parser
     /**
      * Parse translation for search terms
      */
+    // TODO: remove?
     private function set_natlang_terms_from_translation(array $parsed, array &$search_terms) {
 
         if(!isset($parsed['trans'])) return;
@@ -772,10 +771,11 @@ class Term_parser
      */
     private function set_globasa_terms($raw, &$parsed)
     {
+        require_once('helpers/slugify.php');
         $search_terms = [];
 
         $parsed['term'] = trim($raw['term']);
-        $parsed['slug'] = strtolower($parsed['term']);
+        $parsed['slug'] = slugify($parsed['term']);
 
         // If has optional part, remove and add to index
         if (strpos($parsed['slug'], "(") !== false) {

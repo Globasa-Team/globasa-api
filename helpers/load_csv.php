@@ -16,7 +16,7 @@ function load_csv($file)
         foreach ($word as $key=>$datum) {
             $newWord[empty($columnNames[$key])?'Word':$columnNames[$key]] = $datum;
         }
-        $wordIndex = strtolower(trim($word[0]));
+        $wordIndex = slugify($word[0]);
         if (empty($wordIndex)) continue; // Skip blank lines
         $dictionary[$wordIndex] = $newWord;
         usleep(SMALL_IO_DELAY);

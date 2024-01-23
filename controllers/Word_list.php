@@ -181,6 +181,7 @@ class Word_list {
         // Insert data that needed for all entries to be loaded
         self::insert_referenced_definition(entries:$parsed_entries, trans:$min_entries);
         self::insert_derived_terms(derived_terms:$tp->backlinks, entries:$parsed_entries, config:$c);
+        self::update_derived_etymology();
         self::update_entry_rhymes($parsed_entries);
         
         return $csv;
@@ -268,6 +269,34 @@ class Word_list {
     
 
 
+    /**
+     * Updates the etymology/derived field to include translations
+     */
+    private static function update_derived_etymology() {
+        require_once('helpers/slugify.php');
+        global $dict;
+
+        foreach($dict as $slug=>$entry) {
+            if (!isset($entry['etymology']['derived'])) continue;
+
+            foreach($entry['etymology']['derived'] as $cur) {
+                $cur = slugify($cur);
+
+                if ((strlen($cur) === 1 && !ctype_alnum($cur)) || !isset($dict[$cur])) {
+                    $dict[$slug]['etymology']['derived trans'][] = ['text'=>$cur];
+                } else {
+                    $dict[$slug]['etymology']['derived trans'][] = [
+                        'text'=>$cur,
+                        'word class'=>$dict[$cur]['word class'],
+                        'trans'=>$dict[$cur]['trans html']
+                    ];
+                }
+                
+            }
+        }
+    }
+
+
     private static function update_entry_rhymes(array &$dict) {
         global $rhyme_data;
 
@@ -279,9 +308,7 @@ class Word_list {
             }
 
             foreach($group as $entry) {
-                // Copy data for all entries (rhymes) in this rhyme group
-                $dict[$entry]['rhymes'] = $group;
-
+                // For each entry
                 foreach ($group as $rhyme) {
                     // Copy each rhyme
                     if ($group === $rhyme) continue;
