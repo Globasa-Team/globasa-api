@@ -21,8 +21,8 @@ try {
     define("I18N_YAML_FILENAME", "i18n.yaml");
     define("I18N_CSV_BACKUP_FILENAME", "-i18n.csv");
     define("DATA_FILENAME", "data.yaml");
-    define("SMALL_IO_DELAY", 50000); // 50k microseconds = a twentieth of a second
-    define("FULL_FILE_DELAY", 500000); // 500k microseconds = half second
+    define("SMALL_IO_DELAY", 5000); // 5k microseconds = a twohundredths of a second
+    define("FULL_FILE_DELAY", 50000); // 50k microseconds = a twentieth of a second
     define("GLB_CODE", "art-x-globasa");
     define("GLB_ATTR", "lang=\"art-x-globasa\"");
     

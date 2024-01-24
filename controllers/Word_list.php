@@ -6,9 +6,7 @@ use Throwable;
 class Word_list {
 
     // Microseconds (1 millions of a second)
-    const TINY_IO_DELAY = 5000; // 5k microseconds = a twohundreds? of a second
-    const SMALL_IO_DELAY = 50000; // 50k microseconds = a twentieth of a second
-    const FULL_FILE_DELAY = 500000; // 500k microseconds = half second
+    const TINY_IO_DELAY = 5000; // 5k microseconds = a twohundredths of a second
 
     const VALID_WORD_CATEGORIES = array(
         'root', 'proper word', 'derived', 'phrase', 'affix'
@@ -168,7 +166,7 @@ class Word_list {
 
             self::insert_tags(parsed:$parsed, tags:$tags);
             self::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
-            self::update_rhyme_data($parsed['slug']);
+            self::update_rhyme_data($parsed);
 
             $parsed_entries[$parsed['slug']] = $parsed;
             usleep(self::TINY_IO_DELAY);
@@ -178,7 +176,7 @@ class Word_list {
         }
         fclose($term_stream);
         
-        // Insert data that needed for all entries to be loaded
+        // Insert data that needed all entries to be loaded
         self::insert_referenced_definition(entries:$parsed_entries, trans:$min_entries);
         self::insert_derived_terms(derived_terms:$tp->backlinks, entries:$parsed_entries, config:$c);
         self::update_derived_etymology();
@@ -332,18 +330,25 @@ class Word_list {
      * Collecting rhyming data. A rhyme is the last two letters matching.
      * If there are no vowels, use 3.
      */
-    private static function update_rhyme_data(string $term) {
+    private static function update_rhyme_data(array $entry):void {
         global $rhyme_data;
 
-        $group = substr($term, -2);
+        if ($entry['category'] === 'phrase' || $entry['category'] === 'affix') {
+            return;
+        }
+
+        $group = substr($entry['term'], -2);
 
         if(!preg_match(GLOBAL_VOWEL_REGEX, $group)) {
             // If it does not have vowels use 3 letters
-            $group = substr($term, -3);
+            $group = substr($entry['term'], -3);
         }
 
-        $rhyme_data[$group][] = $term;
+        $rhyme_data[$group][] = $entry['term'];
     }
+
+
+
 
     private static function validate_and_count(string $cat, array &$count_arr) {
 

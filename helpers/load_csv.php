@@ -1,6 +1,6 @@
 <?php
 
-const SMALL_IO_DELAY = 50000; // 50k microseconds = a twentieth of a second
+const SMALL_IO_DELAY = 5000; // 5k microseconds = a twohundredths of a second
 
 function load_csv($file)
 {
