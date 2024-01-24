@@ -89,10 +89,10 @@ class Dictionary_comparison {
             $new_keys = array_diff_key($example_new_entry, $example_old_entry);
             
             foreach($new_keys as $field=>$value) {
-                // 
-                // if ($value) {
+                
+                if (empty($value)) {
                     $this->log_term_change($term2, "field added", $field, null, $this->new_dict[$term2][$field]);
-                // }
+                }
             }
         }
     }

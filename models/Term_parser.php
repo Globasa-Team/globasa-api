@@ -51,6 +51,8 @@ class Term_parser
         'Example' => 'example',
         'Tags' => 'tags',
         'LexiliAsel' => 'etymology',
+        'See Also' => 'similar natlang',
+        'Similar Natlang' => 'similar natlang',
         'LexiliEstatus' => 'etymology status', // depracated
     );
 
@@ -170,7 +172,7 @@ class Term_parser
 
 
     /**
-     * Parse etymology string.
+     * Parse etymology string and similar words string.
      * 
      * 
      * Starts with kwasilexi 
@@ -210,10 +212,7 @@ class Term_parser
             } else if (strcmp($cur, "a priori") === 0) {
                 $parsed['etymology']['a priori'] = true;
             } else if (str_starts_with($cur, "Am " )) {
-                if (str_starts_with($cur, "Am oko pia: ")) {
-                    $parsed['etymology']['am oko pia'] = $this->parse_etymology_natlang_freeform(substr($cur, 12), $parsed['slug'], false);
-                }
-                else if (str_starts_with($cur, "Am oko " )) {
+                if (str_starts_with($cur, "Am oko " )) {
                     if (!empty($parsed['etymology']['am oko'])) {
                         $this->log->add("Error: Duplicate `am oko` in etymology.");
                         $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate `am oko` in etymology."];
@@ -243,6 +242,12 @@ class Term_parser
                 }
                 $parsed['etymology']['derived'] = $this->parse_etymology_derived($cur, $parsed['slug']);
             }
+        }
+
+
+        // Also check the similar natlang words
+        if (isset($raw['similar natlang']) && !empty($raw['similar natlang'])) {
+            $parsed['etymology']['natlang similar'] = $this->parse_etymology_natlang_freeform($raw['similar natlang'], $parsed['slug'], false);
         }
     }
 
