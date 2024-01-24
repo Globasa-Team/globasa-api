@@ -7,6 +7,9 @@ config.php
 config*.yaml
 data.yaml
 
+# Ignore data files
+examples.yaml
+
 # PHPUnit
 /.phpunit.cache
 .phpunit.result.cache
