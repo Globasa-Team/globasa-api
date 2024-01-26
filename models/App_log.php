@@ -41,7 +41,6 @@ class App_log {
             
             // Display only if in debug mode
             if ($this->debug) {
-                // echo("> ".html_entity_decode($m).PHP_EOL);
                 pard(html_entity_decode($m));
             }
         }

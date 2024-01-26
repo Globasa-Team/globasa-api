@@ -72,8 +72,6 @@ class File_controller {
 
                 if(!isset($entry['slug'])) {
                     $config['log']->add(" - Entry key '{$key}' missing slug", 6);
-                    pard($entry);
-
                     continue;
                 }
 

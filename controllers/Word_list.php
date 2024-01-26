@@ -66,7 +66,7 @@ class Word_list {
         }
         arsort($stats['etymology source percent']);
 
-        pard("Most examples: ".$max_examples_term." with ".$max_examples_term);
+        pard("Most examples: ".$max_examples_term." with ".$max_examples);
     }
 
 
@@ -169,13 +169,6 @@ class Word_list {
             $debug_data[$parsed['slug']] = $raw;
             if (isset($parsed['etymology'][')'])) unset($parsed['etymology'][')']);
             
-            // DEBUG:
-            if(!isset($parsed['category'])) {
-                pard("Missing slug: ".$parsed['slug']);
-            }
-            if(!isset($parsed['category'])) {
-                pard("Missing Category: ".$parsed['slug']);
-            }
             // Insert entry in aggregate data
             self::insert_term_index(parsed:$parsed, index:$term_indexes);
             self::insert_search_terms(parsed:$parsed, index:$search_terms);
