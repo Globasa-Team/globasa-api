@@ -1,7 +1,5 @@
 <?php
 
-const SMALL_IO_DELAY = 5000; // 5k microseconds = a twohundredths of a second
-
 function load_csv($file)
 {
     $dictionaryCSV = fopen($file, 'r');

@@ -22,7 +22,7 @@ class File_controller {
     ) {
 
         global $parse_report;
-
+        pard_sec("Writing API files");
         $config['log']->add("save_entry_files ", 5);
         self::save_entry_files      (data:$parsed_entries,  config:$config);
         $config['log']->add("save_search_term_files ", 5);
@@ -46,7 +46,7 @@ class File_controller {
         $config['log']->add("save_report_file", 5);
         self::save_report(config: $config, data:$parse_report, name:"parse_report");
 
-
+        pard_end();
     }
 
     
@@ -65,21 +65,26 @@ class File_controller {
     }
 
     private static function save_entry_files(array &$config, array &$data) {
-        $first = "~";
+        $first = "";
+        pard_step_start("Saving entry files");
         foreach($data as $key=>$entry) {
             if ($entry['slug'][0] !== $first) {
 
                 if(!isset($entry['slug'])) {
                     $config['log']->add(" - Entry key '{$key}' missing slug", 6);
+                    pard($entry);
+
                     continue;
                 }
 
                 $first = $entry['slug'][0];
-                $config['log']->add("Saving entries starting with ".$first, 9);
+                // $config['log']->add("Saving entries starting with ".$first, 9);
+                pard_step($first);
             }
             
             self::save_entry_file($config, $entry);
         }
+        pard_step_end();
     }
 
     private static function save_entry_file(array &$config, array &$parsed) {
@@ -116,12 +121,10 @@ class File_controller {
     */
     private static function save_search_term_files(array &$data, array &$config) {
 
-        $index_list = "";
         foreach($data as $lang=>$index) {
             ksort($index);
 
             yaml_emit_file($config['api_path'] . "/search_terms_{$lang}.yaml", $index, YAML_UTF8_ENCODING);
-            $index_list .= $lang . ' ';
             usleep(FULL_FILE_DELAY);
 
             $fp = fopen($config['api_path'] . "/search_terms_{$lang}.json", "w");
@@ -129,7 +132,6 @@ class File_controller {
             fclose($fp);
             usleep(FULL_FILE_DELAY);
         }
-        $config['log']->add("Search term indexes created: " . $index_list);
     }
 
 
@@ -141,21 +143,17 @@ class File_controller {
      */
     private static function save_min_files(array &$config, array &$data) {
 
-        $min_list = "";
         foreach ($data as $lang=>$data) {
             ksort($data);
 
             yaml_emit_file($config['api_path'] . "/min_{$lang}.yaml", $data, YAML_UTF8_ENCODING);
-            $min_list .= $lang . ' ';
             usleep(FULL_FILE_DELAY);
 
             $fp = fopen($config['api_path'] . "/min_{$lang}.json", "w");
             fputs($fp, json_encode($data));
             fclose($fp);
             usleep(FULL_FILE_DELAY);
-            
         }
-        $config['log']->add("Minimum translation files created: " . $min_list);
     }
 
 

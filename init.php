@@ -63,8 +63,10 @@ try {
         $c['log']->add("Development Environment");
         ini_set('display_errors', '1');
         ini_set('display_startup_errors', '1');
+        pard_status(true);
     }
     else {
+        pard_status(false);
     }
 }
 catch (Throwable $e) {

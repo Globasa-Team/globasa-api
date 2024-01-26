@@ -10,8 +10,8 @@ global
     $natlang_count,
     $standard_entries,
     $stats,
-    $dict
-    ;
+    $dict,
+    $examples;
 
 
 
@@ -39,6 +39,8 @@ try {
     // Startup
     $app_path = __DIR__;
     require_once("{$app_path}/init.php");
+    pard_app_start();
+    pard_sec("Initiation");
 
     if ($argv[1] === 'r') {
         $new_csv_filename = $data['previous'];
@@ -47,6 +49,7 @@ try {
         $new_csv_filename = $argv[1];
     }
 
+    $examples = yaml_parse_file('examples.yaml');
 
     $c['log']->add("Using new: " . $new_csv_filename, 1);
     $c['log']->add("Using old: " . $data['previous'], 1);
@@ -56,6 +59,7 @@ try {
     $c['log']->add("Loading old CSV", 1);
     $old_data = load_csv($data['previous']);
     $c['log']->add("Loading current terms", 1);
+    pard_end();
     $csv_data = Word_list::load_current_terms(
         current_csv_filename:$new_csv_filename,
         parsed_entries:$dict,
@@ -70,6 +74,8 @@ try {
         debug_data:$debug_data,
         c:$c
     );
+
+    pard_sec("Post dictionary");
     $c['log']->add("Logging changes", 2);
     Word_list::log_changes($csv_data, $old_data, $c);
     Word_list::calculate_stats();
@@ -95,7 +101,7 @@ try {
     );
 
 
-
+    pard_sec("Other stuff");
     // Update i18n
     $c['log']->add("Updating I18n", 5);
     I18n::update($c);

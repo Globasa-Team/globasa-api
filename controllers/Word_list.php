@@ -20,11 +20,20 @@ class Word_list {
     public static function calculate_stats(): void {
         global $dict, $stats;
 
+        $max_examples = 0;
+        $max_examples_term = "";
+
+        pard("calculate stats");
         $stats['etymology source percent'] = [];
         $stats['natlang roots'] = 0;
 
-        foreach($dict as $entry) {
+        foreach($dict as $slug=>$entry) {
             
+            if (isset($entry['examples']) && count($entry['examples']) > $max_examples) {
+                $max_examples = count($entry['examples']);
+                $max_examples_term = $entry['slug'];
+            }
+
             if ($entry['category'] === 'root' && array_key_exists('natlang', $entry['etymology']) ) {
 
                 // Calculate the total number of roots and roots for each source lang
@@ -56,6 +65,8 @@ class Word_list {
             $stats['etymology source percent'][$natlang] = round($count/$stats['natlang roots']*100, 2);
         }
         arsort($stats['etymology source percent']);
+
+        pard("Most examples: ".$max_examples_term." with ".$max_examples_term);
     }
 
 
@@ -144,6 +155,7 @@ class Word_list {
             or throw new Exception("Failed to open ".$current_csv_filename);
         $tp = new Term_parser(fields:fgetcsv($term_stream), parsedown:$c['parsedown'], log:$c['log'], natlang_etymologies:$natlang_etymologies);
 
+        pard_sec("Parse entries");
         while(($data = fgetcsv($term_stream)) !== false) {
 
             // Parse term if it exists
@@ -157,6 +169,13 @@ class Word_list {
             $debug_data[$parsed['slug']] = $raw;
             if (isset($parsed['etymology'][')'])) unset($parsed['etymology'][')']);
             
+            // DEBUG:
+            if(!isset($parsed['category'])) {
+                pard("Missing slug: ".$parsed['slug']);
+            }
+            if(!isset($parsed['category'])) {
+                pard("Missing Category: ".$parsed['slug']);
+            }
             // Insert entry in aggregate data
             self::insert_term_index(parsed:$parsed, index:$term_indexes);
             self::insert_search_terms(parsed:$parsed, index:$search_terms);
@@ -165,6 +184,7 @@ class Word_list {
             self::insert_standard_entry($parsed);
 
             self::insert_tags(parsed:$parsed, tags:$tags);
+            self::insert_examples($parsed);
             self::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
             self::update_rhyme_data($parsed);
 
@@ -176,14 +196,36 @@ class Word_list {
         }
         fclose($term_stream);
         
+        pard_end();
+        pard_sec("Post parse");
         // Insert data that needed all entries to be loaded
+        pard("Referenced definition");
         self::insert_referenced_definition(entries:$parsed_entries, trans:$min_entries);
+        pard("Derived terms");
         self::insert_derived_terms(derived_terms:$tp->backlinks, entries:$parsed_entries, config:$c);
+        pard("Derived etymology");
         self::update_derived_etymology();
+        pard("Rhymes");
         self::update_entry_rhymes($parsed_entries);
-        
+        pard_end();
         return $csv;
     }
+
+
+    private static function insert_examples(array &$entry) {
+        global $examples;
+
+        if (!isset($examples[$entry['slug']])) {
+            return;
+        }
+
+        if (isset($entry['examples'])) {
+            $entry['examples'] = array_merge($entry['examples'], $examples[$entry['slug']]);
+        } else {
+            $entry['examples'] = $examples[$entry['slug']];
+        }
+    }
+
 
 
     /**
@@ -298,11 +340,19 @@ class Word_list {
     private static function update_entry_rhymes(array &$dict) {
         global $rhyme_data;
 
+        $max = 0;
+        $max_example = "";
+
+        pard_progress_start(count($rhyme_data), "rhyme groups");
         // Go through each rhyme group to copy rhyming terms in to entry
         foreach($rhyme_data as $group) {
             if(count($group) < 2) {
                 // skip if there are no rhymes
                 continue;
+            }
+            if (count($group)>$max) {
+                $max = count($group);
+                $max_example = $group[array_key_first($group)];
             }
 
             foreach($group as $entry) {
@@ -311,18 +361,26 @@ class Word_list {
                     // Copy each rhyme
                     if ($group === $rhyme) continue;
 
-                    // Copy all data from this rhyme to the entry
-                    $dict[$entry]['rhyme trans'][$rhyme]['word class'] = $dict[$rhyme]['word class'];
+                    $rhyme_slug = slugify($rhyme);
 
-                    foreach($dict[$rhyme]['trans html'] as $lang=>$trans) {
-                        // Copy each translation
-                        $dict[$entry]['rhyme trans'][$rhyme][$lang] = $trans;
+                    // Copy all data from this rhyme to the entry
+                    $dict[$entry]['rhyme trans'][$rhyme_slug]['word class'] = $dict[$rhyme_slug]['word class'];
+
+                    foreach($dict[$rhyme_slug]['trans html'] as $lang=>$trans) {
+                        // Copy each translation, except for self
+
+                        if ($entry===$rhyme_slug) continue;
+                        $dict[$entry]['rhyme trans'][$rhyme_slug][$lang] = $trans;
                     }
 
                 }
 
             }
+            pard_progress_increment();
+            usleep(500);
         }
+        pard_progress_end();
+        pard("Largest group: ".$max_example);
     }
 
 
@@ -337,14 +395,14 @@ class Word_list {
             return;
         }
 
-        $group = substr($entry['term'], -2);
+        $group = substr($entry['slug'], -2);
 
         if(!preg_match(GLOBAL_VOWEL_REGEX, $group)) {
             // If it does not have vowels use 3 letters
-            $group = substr($entry['term'], -3);
+            $group = substr($entry['slug'], -3);
         }
 
-        $rhyme_data[$group][] = $entry['term'];
+        $rhyme_data[$group][] = $entry['slug'];
     }
 
 
