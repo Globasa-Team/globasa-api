@@ -58,6 +58,8 @@ function pard(mixed $msg):void {
 }
 
 function pard_app_start():void {
+    global $_pard_status;
+    if (!$_pard_status) return;
     echo MAGENTA."\n\n
         ┏┓      ┏┓      
         ┣┫┏┓┏┓  ┗┓╋┏┓┏┓╋
@@ -67,6 +69,8 @@ function pard_app_start():void {
 }
 
 function pard_app_finished():void {
+    global $_pard_status;
+    if (!$_pard_status) return;
     echo MAGENTA."\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n".TEXT_RESET;
 }
 
