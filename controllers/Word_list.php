@@ -312,16 +312,16 @@ class Word_list {
         foreach($dict as $slug=>$entry) {
             if (!isset($entry['etymology']['derived'])) continue;
 
-            foreach($entry['etymology']['derived'] as $cur) {
-                $cur = slugify($cur);
+            foreach($entry['etymology']['derived'] as $part) {
+                $part_slug = slugify($part);
 
-                if ((strlen($cur) === 1 && !ctype_alnum($cur)) || !isset($dict[$cur])) {
-                    $dict[$slug]['etymology']['derived trans'][] = ['text'=>$cur];
+                if ((strlen($part) === 1 && !ctype_alnum($part)) || !isset($dict[$part])) {
+                    $dict[$slug]['etymology']['derived trans'][] = ['text'=>$part];
                 } else {
                     $dict[$slug]['etymology']['derived trans'][] = [
-                        'text'=>$cur,
-                        'word class'=>$dict[$cur]['word class'],
-                        'trans'=>$dict[$cur]['trans html']
+                        'text'=>$part_slug,
+                        'word class'=>$dict[$part_slug]['word class'],
+                        'trans'=>$dict[$part_slug]['trans html']
                     ];
                 }
                 
