@@ -20,6 +20,7 @@ define('CUR_DOWN', 'B');
 define('CUR_FOR', 'C');
 define('CUR_BACK', 'D');
 
+define('PARD_LENGTH', 50);
 // Eg. `C0.'5'.CUR_BACK` to go backward 5 characters.
 
 // https://blog.devgenius.io/writing-beautiful-cli-programs-6fc3e3728c8b
@@ -39,9 +40,22 @@ function pard(mixed $msg):void {
     if (!$_pard_status) return;
     
     switch (gettype($msg)) {
+        case "string":
+            if (count($msg) < PARD_LENGTH) {
+                echo "┣━ ".$msg.PHP_EOL;
+            } else {
+                $first = true;
+                foreach(explode("\n",wordwrap($msg)) as $line) {
+                    if ($first) {
+                        echo "┣━ ".$line.PHP_EOL;
+                        $first = false;
+                    } else {
+                        echo "┃  ".$line.PHP_EOL;
+                    }
+                }
+            }
         case "integer":
         case "double":
-        case "string":
         case "boolean":
             echo "┣━ ".$msg.PHP_EOL;
             break;
