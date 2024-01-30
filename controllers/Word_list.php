@@ -335,6 +335,8 @@ class Word_list {
 
         $max = 0;
         $max_example = "";
+        $min = 100;
+        $max_example = "";
 
         pard_progress_start(count($rhyme_data), "rhyme groups");
         // Go through each rhyme group to copy rhyming terms in to entry
@@ -346,6 +348,10 @@ class Word_list {
             if (count($group)>$max) {
                 $max = count($group);
                 $max_example = $group[array_key_first($group)];
+            }
+            if (count($group)<$min) {
+                $min = count($group);
+                $min_example = $group[array_key_first($group)];
             }
 
             foreach($group as $entry) {
@@ -373,7 +379,8 @@ class Word_list {
             usleep(500);
         }
         pard_progress_end();
-        pard("Largest group: ".$max_example);
+        pard("Largest rhyme group: ".$max_example);
+        pard("Smallest rhyme group: ".$min_example);
     }
 
 
