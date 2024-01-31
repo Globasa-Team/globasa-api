@@ -15,9 +15,7 @@ examples.yaml
 .phpunit.result.cache
 
 # Ignore dev stuff
-notes.md
 todo*.md
-spreadsheet-format.md
 
 mock*.csv
 .backup/
