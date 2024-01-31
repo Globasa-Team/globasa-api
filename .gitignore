@@ -7,8 +7,8 @@ config.php
 config*.yaml
 data.yaml
 
-# Ignore data files
-examples.yaml
+# Ignore temp/debug files
+temp/
 
 # PHPUnit
 /.phpunit.cache
