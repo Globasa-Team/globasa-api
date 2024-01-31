@@ -39,11 +39,11 @@ try {
     require_once("{$app_path}/models/Dictionary_comparison.php");
     require_once("{$app_path}/models/Term_parser.php");
     require_once("{$app_path}/controllers/I18n.php");
-    require_once("{$app_path}/controllers/Word_list.php");
+    require_once("{$app_path}/controllers/Entry_update_controller.php");
     require_once("{$app_path}/controllers/File_controller.php");
 }
 catch (Throwable $e) {
-    echo("\nLOAD ERROR\n".
+    echo("\nINITIATION PHP ERROR\n".
         " Prob\t{$e->getCode()} : {$e->getMessage()}\n".
         " Line\t{$e->getLine()} : {$e->getFile()}\n");
     die();
@@ -70,7 +70,7 @@ try {
     }
 }
 catch (Throwable $e) {
-    echo("\nCONFIG ERROR
+    echo("\nINITIATION CONFIG ERROR
     Prob\t".$e->getCode()." :".$e->getMessage().PHP_EOL.
         "Line\t".$e->getLine()." :".$e->getFile().PHP_EOL);
     die();

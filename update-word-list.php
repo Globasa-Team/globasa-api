@@ -60,7 +60,7 @@ try {
     // $old_data = load_csv($data['previous']);
     $c['log']->add("Loading current terms", 1);
     pard_end();
-    $csv_data = Word_list::load_current_terms(
+    $csv_data = Entry_update_controller::load_current_terms(
         current_csv_filename:$new_csv_filename,
         parsed_entries:$dict,
         min_entries:$min_entries,
@@ -77,8 +77,8 @@ try {
 
     pard_sec("Post dictionary");
     $c['log']->add("Logging changes", 2);
-    // Word_list::log_changes($csv_data, $old_data, $c);
-    Word_list::calculate_stats();
+    // Entry_update_controller::log_changes($csv_data, $old_data, $c);
+    Entry_update_controller::calculate_stats();
 
     // Write dictionary files
     $c['log']->add("Writting files", 2);
