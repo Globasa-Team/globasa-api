@@ -3,88 +3,79 @@ namespace globasa_api;
 
 class File_controller {
 
-    public static function write_api2_files(
-        array &$parsed_entries,
-
-        array &$min_entries,
-        array &$basic_entries,
-        
-        array &$term_indexes,
-        array &$search_terms,
-        array &$tags,
-        
-        array &$natlang_etymologies,
-        
-        int &$word_count,
-        array &$category_count,
-        
-        array &$config
-    ) {
+    public static function write_api2_files() {
 
         global $parse_report, $rhyme_data;
         pard_sec("Writing API files");
-        // self::save_entry_files      (data:$parsed_entries,  config:$config);
-        // self::save_search_term_files(data:$search_terms,    config:$config);
-        // self::save_min_files        (data:$min_entries,     config:$config);
-        // self::save_standard_files   (cfg:$config);
-        // self::save_term_index_file  (data:$term_indexes,    config:$config);
-        // self::save_basic_files      (data:$basic_entries,   config:$config);
-        // self::save_tag_file         (data:$tags,            config:$config);
-        // self::save_natlang_etymologies_files(data:$natlang_etymologies, config:$config);
 
-        // self::save_stats_file       (category_count:$category_count, natlang_data:$natlang_etymologies, config:$config);
+        self::save_entry_files();
+        self::save_search_term_files();
+        self::save_min_files();
+        self::save_standard_files();
+        self::save_term_index_file();
+        self::save_basic_files();
+        self::save_tag_file();
+        self::save_natlang_etymologies_files();
 
-        // self::save_report(config: $config, data:$parse_report, name:"parse_report");
-        self::save_report(config: $config, data:$rhyme_data, name:"rhyme_report");
+        self::save_stats_file();
+
+        self::save_report(data:$parse_report, name:"parse_report");
+        self::save_report(data:$rhyme_data, name:"rhyme_report");
 
         pard_end();
     }
 
     
-    private static function save_basic_files(array &$data, array &$config) {
-        $config['log']->add("save_basic_files ", 5);
+    private static function save_basic_files() {
+        global $cfg, $basic_entries;
 
-        foreach($data as $lang=>$dict) {
+        pard("save_basic_files");
+
+        foreach($basic_entries as $lang=>$dict) {
             ksort($dict);
 
-            yaml_emit_file($config['api_path'] . "/basic_{$lang}.yaml", $dict, YAML_UTF8_ENCODING);
+            yaml_emit_file($cfg['api_path'] . "/basic_{$lang}.yaml", $dict, YAML_UTF8_ENCODING);
             usleep(FULL_FILE_DELAY);
 
-            $fp = fopen($config['api_path'] . "/basic_{$lang}.json", "w");
+            $fp = fopen($cfg['api_path'] . "/basic_{$lang}.json", "w");
             fputs($fp, json_encode($dict));
             fclose($fp);
             usleep(FULL_FILE_DELAY);
         }
     }
 
-    private static function save_entry_files(array &$config, array &$data) {
+
+
+    private static function save_entry_files() {
+        global $cfg, $dict;
+
         $first = "";
         pard_step_start("Saving entry files");
-        foreach($data as $key=>$entry) {
+        foreach($dict as $key=>$entry) {
             if ($entry['slug'][0] !== $first) {
 
                 if(!isset($entry['slug'])) {
-                    $config['log']->add(" - Entry key '{$key}' missing slug", 6);
+                    $cfg['log']->add(" - Entry key '{$key}' missing slug", 6);
                     continue;
                 }
 
                 $first = $entry['slug'][0];
-                // $config['log']->add("Saving entries starting with ".$first, 9);
                 pard_step($first);
             }
             
-            self::save_entry_file($config, $entry);
+            self::save_entry_file($entry);
         }
         pard_step_end();
     }
 
-    private static function save_entry_file(array &$config, array &$parsed) {
+    private static function save_entry_file(array &$parsed) {
+        global $cfg;
         $entry_file_data = $parsed;
 
-        yaml_emit_file($config['api_path'] . '/terms/' . $parsed['slug'].".yaml", $entry_file_data,  YAML_UTF8_ENCODING);
+        yaml_emit_file($cfg['api_path'] . '/terms/' . $parsed['slug'].".yaml", $entry_file_data,  YAML_UTF8_ENCODING);
         usleep(SMALL_IO_DELAY);
 
-        $fp = fopen($config['api_path'] . '/terms/' . $parsed['slug'].".json", "w");
+        $fp = fopen($cfg['api_path'] . '/terms/' . $parsed['slug'].".json", "w");
         fputs($fp, json_encode($entry_file_data));
         fclose($fp);
         usleep(SMALL_IO_DELAY);
@@ -97,8 +88,8 @@ class File_controller {
     /**
      * Standard entry dictionary file
      */
-    private static function save_standard_files(array $cfg) {
-        global $standard_entries;
+    private static function save_standard_files() {
+        global $cfg, $standard_entries;
         $cfg['log']->add("save_standard_files ", 5);
 
         yaml_emit_file($cfg['api_path'] . '/standard.yaml', $standard_entries,  YAML_UTF8_ENCODING);
@@ -111,16 +102,18 @@ class File_controller {
     /**
     * Indexes
     */
-    private static function save_search_term_files(array &$data, array &$config) {
-        $config['log']->add("save_search_term_files ", 5);
+    private static function save_search_term_files() {
+        global $cfg, $search_terms;
 
-        foreach($data as $lang=>$index) {
+        pard("save_search_term_files ");
+
+        foreach($search_terms as $lang=>$index) {
             ksort($index);
 
-            yaml_emit_file($config['api_path'] . "/search_terms_{$lang}.yaml", $index, YAML_UTF8_ENCODING);
+            yaml_emit_file($cfg['api_path'] . "/search_terms_{$lang}.yaml", $index, YAML_UTF8_ENCODING);
             usleep(FULL_FILE_DELAY);
 
-            $fp = fopen($config['api_path'] . "/search_terms_{$lang}.json", "w");
+            $fp = fopen($cfg['api_path'] . "/search_terms_{$lang}.json", "w");
             fputs($fp, json_encode($index));
             fclose($fp);
             usleep(FULL_FILE_DELAY);
@@ -134,16 +127,17 @@ class File_controller {
     /**
      * Min
      */
-    private static function save_min_files(array &$config, array &$data) {
-        $config['log']->add("save_min_files ", 5);
+    private static function save_min_files() {
+        global $cfg, $min_entries;
+        pard("save_min_files ");
 
-        foreach ($data as $lang=>$data) {
+        foreach ($min_entries as $lang=>$data) {
             ksort($data);
 
-            yaml_emit_file($config['api_path'] . "/min_{$lang}.yaml", $data, YAML_UTF8_ENCODING);
+            yaml_emit_file($cfg['api_path'] . "/min_{$lang}.yaml", $data, YAML_UTF8_ENCODING);
             usleep(FULL_FILE_DELAY);
 
-            $fp = fopen($config['api_path'] . "/min_{$lang}.json", "w");
+            $fp = fopen($cfg['api_path'] . "/min_{$lang}.json", "w");
             fputs($fp, json_encode($data));
             fclose($fp);
             usleep(FULL_FILE_DELAY);
@@ -155,13 +149,14 @@ class File_controller {
     /**
      * Natlang etymologies
      */
-    private static function save_natlang_etymologies_files(array &$config, array &$data) {
-        $config['log']->add("save_natlang_etymologies_files ", 5);
+    private static function save_natlang_etymologies_files() {
+        global $cfg, $natlang_etymologies;
+        pard("save_natlang_etymologies_files ");
 
-        foreach ($data as $lang=>$terms) {
+        foreach ($natlang_etymologies as $lang=>$terms) {
             ksort($terms);
 
-            yaml_emit_file($config['api_path'] . "/etymologies/etymology_".strtolower($lang).".yaml", $terms, YAML_UTF8_ENCODING);
+            yaml_emit_file($cfg['api_path'] . "/etymologies/etymology_".strtolower($lang).".yaml", $terms, YAML_UTF8_ENCODING);
             usleep(FULL_FILE_DELAY);
         }
     }
@@ -171,14 +166,15 @@ class File_controller {
     /**
      * Save report
      */
-    private static function save_report(array $config, array $data, string $name) {
+    private static function save_report(array $data, string $name) {
+        global $cfg;
         pard("Saving report: ".$name);
 
-        yaml_emit_file($config['api_path'] . "/reports/{$name}.yaml", $data, YAML_UTF8_ENCODING);
+        yaml_emit_file($cfg['api_path'] . "/reports/{$name}.yaml", $data, YAML_UTF8_ENCODING);
 
         usleep(FULL_FILE_DELAY);
 
-        $fp = fopen($config['api_path'] . "/reports/{$name}.json", "w");
+        $fp = fopen($cfg['api_path'] . "/reports/{$name}.json", "w");
         fputs($fp, json_encode($data));
         fclose($fp);
 
@@ -190,25 +186,24 @@ class File_controller {
      * Statistics
      * 
      */
-    private static function save_stats_file(array &$category_count, array &$natlang_data, array &$config) {
-        global $dict, $stats;
+    private static function save_stats_file() {
+        global $cfg, $dict, $stats, $category_count, $natlang_etymologies, $cfg;
 
-        $config['log']->add("save_stats_file ", 5);
+        pard("save_stats_file");
         $natlang_count = [];
         /**
          * Calculate natlang etymology counts
          */
-        foreach(array_keys($natlang_data) as $natlang) {
-            $natlang_count[$natlang] = count($natlang_data[$natlang]);
+        foreach(array_keys($natlang_etymologies) as $natlang) {
+            $natlang_count[$natlang] = count($natlang_etymologies[$natlang]);
         }
         arsort($natlang_count);
-
         
         $stats["terms count"] = count($dict);
         $stats["source langs"] = $natlang_count;
         $stats["categories"] = $category_count;
 
-        yaml_emit_file($config['api_path'] . "/stats.yaml", $stats, YAML_UTF8_ENCODING);
+        yaml_emit_file($cfg['api_path'] . "/stats.yaml", $stats, YAML_UTF8_ENCODING);
         usleep(SMALL_IO_DELAY);
 
     }
@@ -219,33 +214,35 @@ class File_controller {
     /**
      * Tags
      */
-    private static function save_tag_file(array &$config, array &$data) {
-        $config['log']->add("save_tag_file ", 5);
+    private static function save_tag_file() {
+        global $cfg, $tags;
+        pard("save_tag_file");
 
-        ksort($data);
+        ksort($tags);
 
-        yaml_emit_file($config['api_path'] . "/tags.yaml", $data, YAML_UTF8_ENCODING);
+        yaml_emit_file($cfg['api_path'] . "/tags.yaml", $tags, YAML_UTF8_ENCODING);
 
         usleep(FULL_FILE_DELAY);
 
-        $fp = fopen($config['api_path'] . "/tags.json", "w");
-        fputs($fp, json_encode($data));
+        $fp = fopen($cfg['api_path'] . "/tags.json", "w");
+        fputs($fp, json_encode($tags));
         fclose($fp);
 
         usleep(FULL_FILE_DELAY);
     }
 
 
-    private static function save_term_index_file(array &$data, array &$config) {
-        $config['log']->add("save_term_index_file ", 5);
+    private static function save_term_index_file() {
+        global $cfg, $term_index;
+        pard("save_term_index_file");
         
-        ksort($data);
+        ksort($term_index);
 
-        yaml_emit_file($config['api_path'] . "/index.yaml", $data, YAML_UTF8_ENCODING);
+        yaml_emit_file($cfg['api_path'] . "/index.yaml", $term_index, YAML_UTF8_ENCODING);
         usleep(FULL_FILE_DELAY);
 
-        $fp = fopen($config['api_path'] . "/index.json", "w");
-        fputs($fp, json_encode($data));
+        $fp = fopen($cfg['api_path'] . "/index.json", "w");
+        fputs($fp, json_encode($term_index));
         fclose($fp);
 
         usleep(FULL_FILE_DELAY);       

@@ -5,14 +5,11 @@ use Throwable;
 
 class I18n {
 
-    // Microseconds (1 millions of a second)
-    const SMALL_IO_DELAY = 50000; // 50k microseconds = a twentieth of a second
-    const FULL_FILE_DELAY = 500000; // 500k microseconds = half second
+    public static function update() {
+        global $cfg;
 
-    
-    public static function update(array $c) {
         $lang_resource = [];
-        $lang_resource_csv = fopen($c['api_path'] . DIRECTORY_SEPARATOR . I18N_CSV_FILENAME, 'r');
+        $lang_resource_csv = fopen($cfg['api_path'] . DIRECTORY_SEPARATOR . I18N_CSV_FILENAME, 'r');
         // $lang_resource_csv = fopen($c['i18n_url'], 'r');
         if ($lang_resource_csv === false) {
             die("Failed to open lang CSV");
@@ -32,7 +29,7 @@ class I18n {
                 $lang_resource[$columnNames[$key]][$label_id] = $datum;
             }
         }
-        yaml_emit_file($c['api_path'] . DIRECTORY_SEPARATOR . I18N_YAML_FILENAME, $lang_resource);
+        yaml_emit_file($cfg['api_path'] . DIRECTORY_SEPARATOR . I18N_YAML_FILENAME, $lang_resource);
     }
 
 }

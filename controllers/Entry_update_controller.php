@@ -3,7 +3,7 @@ namespace globasa_api;
 use Exception;
 use Throwable;
 
-class Word_list {
+class Entry_update_controller {
 
     // Microseconds (1 millions of a second)
     const TINY_IO_DELAY = 5000; // 5k microseconds = a twohundredths of a second
@@ -11,6 +11,58 @@ class Word_list {
     const VALID_WORD_CATEGORIES = array(
         'root', 'proper word', 'derived', 'phrase', 'affix'
     );
+
+
+
+    /**
+     * 
+     * Rule 1 & 2: Assumes you are not sending any phrases or affixes as $rhyme!
+     */
+    private static function add_entry_rhyme($entry, $rhyme) {
+        global $dict;
+        
+        if (
+            $dict[$rhyme]['category'] === 'affix' ||  // 1i
+            $dict[$rhyme]['category'] === 'phrase' || // 1ii
+            $entry === $rhyme                           // 2iii
+        ) return;
+        
+        
+        // Fetch entry final morpheme
+        if (isset($dict[$entry]['etymology']['derived'])) {
+            $entry_final_morpheme = $dict[$entry]['etymology']['derived'][array_key_last($dict[$entry]['etymology']['derived'])];
+        } else {
+            $entry_final_morpheme = $entry;
+        }
+
+        // Fetch entry final morpheme
+        if (isset($dict[$rhyme]['etymology']['derived'])) {
+            $rhyme_final_morpheme = $dict[$rhyme]['etymology']['derived'][array_key_last($dict[$rhyme]['etymology']['derived'])];
+        } else {
+            $rhyme_final_morpheme = $rhyme;
+        }
+        
+        // Rhyme alt form
+        if ($rhyme_final_morpheme[0] === '-') {
+            $rhyme_final_morpheme_alt = substr($rhyme_final_morpheme, 1);
+        } else {
+            $rhyme_final_morpheme_alt = '-'.$rhyme_final_morpheme;
+        }
+        
+        if (
+            $entry_final_morpheme === $rhyme_final_morpheme ||  // 2i & 2ii
+            $entry_final_morpheme === $rhyme_final_morpheme_alt // 3i, 3ii, 3iii
+        ) return;
+
+
+        // If still here, copy data
+        $dict[$entry]['rhyme trans'][$rhyme]['category'] = $dict[$entry]['category'];
+        // Copy all translations
+        foreach($dict[$rhyme]['trans html'] as $lang=>$trans) {
+            $dict[$entry]['rhyme trans'][$rhyme][$lang] = $trans;
+        }
+
+    }
 
 
 
@@ -71,32 +123,61 @@ class Word_list {
 
 
 
+    private static function finalize_entry_data() {
+        // Insert data that needed all entries to be loaded
+        pard_sec("Finalize entries");
+        self::insert_derived_terms();
+        self::update_derived_etymology();
+        self::update_entry_rhymes();
+        pard_end();
+    }
+
+
+
 
     /**
-     * Backlinks
+     * Renders the basic entry for each language. Includes:
+     *  term, class, category, translations.
      */
-    public static function insert_derived_terms(array &$entries, array &$derived_terms, $config) {
-        global $parse_report;
-        
-        foreach($derived_terms as $root=>$terms) {
+    private static function insert_basic_entry(array $parsed) {
+        global $basic_entries;
+
+        foreach($parsed['trans html'] as $lang=>$translation) {
+            $basic_entries[$lang][$parsed['slug']] = array();
+            $basic_entries[$lang][$parsed['slug']]['class'] = $parsed['word class'];
+            $basic_entries[$lang][$parsed['slug']]['category'] = $parsed['category'];
+            $basic_entries[$lang][$parsed['slug']]['translation'] = $translation;
+        }
+    }
+    
+
+
+    /**
+     * Insert derived term data
+     */
+    public static function insert_derived_terms() {
+        global $cfg, $dict, $parse_report, $derived_data;
+        pard("Derived terms");
+
+        foreach($derived_data as $root=>$terms) {
             // For each root, find all derived terms
             foreach($terms as $term) {
 
                 // Skip if word doesn't exist
-                if (!array_key_exists($root, $entries)) {
-                    $config['log']->add("Attempted to link entry `{$root}` to `{$term}`, but it doesn't exist.");
+                if (!array_key_exists($root, $dict)) {
+                    $cfg['log']->add("Attempted to link entry `{$root}` to `{$term}`, but it doesn't exist.");
                     $parse_report[] = ['term'=>$root, 'msg'=>"Term missing. Was linking from `{$term}`."];
                     continue;
                 }
 
                 // Copy derived term class to root
-                $entries[$root]["derived terms"][$term]['class'] = $entries[$term]['word class'];
+                $dict[$root]["derived terms"][$term]['class'] = $dict[$term]['word class'];
 
                 // Copy derived term translation data to root
-                foreach($entries[$term]['trans html'] as $lang=>$translation) {
-                    if (isset($entries[$root])) {
-                        $entries[$root]["derived terms"][$term]['trans'][$lang] = $translation;
-                    } elseif (!isset($entries[$root])) {
+                foreach($dict[$term]['trans html'] as $lang=>$translation) {
+                    if (isset($dict[$root])) {
+                        $dict[$root]["derived terms"][$term]['trans'][$lang] = $translation;
+                    } elseif (!isset($dict[$root])) {
                         // TODO: record or react to non-existent entries?
                     }
                 }
@@ -104,105 +185,6 @@ class Word_list {
         }
     }
 
-    /**
-     * Finds terms referenced and inserts translations in to the entry.
-     */
-    private static function insert_referenced_definition(array &$entries, array &$trans) {
-        return;
-        foreach($entries as $slug=>$entry) {
-            // see also
-        }
-    }
-
-    /**
-     * Compare the new and old word list and log any changes.
-     */
-    static function log_changes(array &$current_data, array &$old_data, array $c) {
-        // Find changes
-        $comparison = new Dictionary_comparison($old_data, $current_data, $c);
-        // Log changes
-        $log = new Dictionary_log($c);
-        $log->add($comparison->changes);
-        $c['log']->add("Changes logged: ".count($comparison->changes));
-    }
-
-    /**
-     * Open current CSV, reading line by line, and processing the words
-     * individually and writing out dictionary files. This is to reduce max
-     * load on the server. A usleep() delay between each term is used.
-     */
-    public static function load_current_terms(
-            array &$parsed_entries,
-
-            array &$min_entries,
-            array &$basic_entries,
-            
-            array &$term_indexes,
-            array &$search_terms,
-            array &$tags,
-            
-            array &$natlang_etymologies,
-            
-            int &$word_count,
-            array &$category_count,
-            
-            array &$debug_data,
-            array &$c, string $current_csv_filename
-        ) {
-
-        // Download the official term list, processing each term.
-        $term_stream = fopen($current_csv_filename, "r")
-            or throw new Exception("Failed to open ".$current_csv_filename);
-        $tp = new Term_parser(fields:fgetcsv($term_stream), parsedown:$c['parsedown'], log:$c['log'], natlang_etymologies:$natlang_etymologies);
-
-        pard_sec("Parse entries");
-        while(($data = fgetcsv($term_stream)) !== false) {
-
-            // Parse term if it exists
-            if (empty($data) || empty($data[0]) ) {
-                continue;
-            }
-            
-            [$raw, $parsed, $csv_row] = $tp->parse_term($data);
-
-            $csv[$parsed['slug']] = $csv_row;
-            $debug_data[$parsed['slug']] = $raw;
-            if (isset($parsed['etymology'][')'])) unset($parsed['etymology'][')']);
-            
-            // Insert entry in aggregate data
-            self::insert_term_index(parsed:$parsed, index:$term_indexes);
-            self::insert_search_terms(parsed:$parsed, index:$search_terms);
-            self::insert_basic_entry(parsed:$parsed, raw:$raw, basic_entries:$basic_entries, config:$c);
-            self::insert_minimum_entry(parsed:$parsed, min:$min_entries);
-            self::insert_standard_entry($parsed);
-
-            self::insert_tags(parsed:$parsed, tags:$tags);
-            self::insert_examples($parsed);
-            self::validate_and_count_category($c, $parsed['category'], $category_count, $parsed['term']);
-            self::update_rhyme_data($parsed);
-
-            $parsed_entries[$parsed['slug']] = $parsed;
-            usleep(self::TINY_IO_DELAY);
-        }
-        if (!feof($term_stream)) {
-            $c['log']->add("Unexpected fgetcsv() fail");
-        }
-        fclose($term_stream);
-        
-        pard_end();
-        pard_sec("Post parse");
-        // Insert data that needed all entries to be loaded
-        pard("Referenced definition");
-        self::insert_referenced_definition(entries:$parsed_entries, trans:$min_entries);
-        pard("Derived terms");
-        self::insert_derived_terms(derived_terms:$tp->backlinks, entries:$parsed_entries, config:$c);
-        pard("Derived etymology");
-        self::update_derived_etymology();
-        pard("Rhymes");
-        self::update_entry_rhymes($parsed_entries);
-        pard_end();
-        return $csv;
-    }
 
 
     private static function insert_examples(array &$entry) {
@@ -220,42 +202,32 @@ class Word_list {
     }
 
 
+    /**
+     * Renders minimum definitions for the current term
+     * and adds them to the array of mini defs.
+     */
+    private static function insert_minimum_entry(array $parsed) {
+        global $min_entries;
+
+        foreach($parsed['trans html'] as $lang=>$trans) {
+            $min_entries[$lang][$parsed['slug']] = '<em>(' . $parsed['word class'] . ')</em> ' . $trans;
+        }
+    }
+
+
 
     /**
      * For each languages, add that languages search terms to the
      * search term array for that languages.
      */
-    private static function insert_search_terms(array $parsed, &$index ) {
+    private static function insert_search_terms(array $parsed) {
+        global $search_terms;
         foreach ($parsed['search terms'] as $lang => $terms) {
             foreach ($terms as $term) {
-                $index[$lang][$term][] = $parsed['slug'];
+                $search_terms[$lang][$term][] = $parsed['slug'];
             }
         }
     }
-
-
-
-    /**
-     * For each languages add all term forms (the term and it's alt forms, if any)
-     * to the index of all words.
-     */
-    private static function insert_term_index(array $parsed, array &$index) {
-        $index[$parsed['slug']] = null;
-        foreach($parsed['alt forms'] as $alt) {
-            $index[$alt] = $parsed['slug'];
-        }
-    }
-
-    /**
-     * Renders minimum definitions for the current term
-     * and adds them to the array of mini defs.
-     */
-    private static function insert_minimum_entry(array $parsed, array &$min) {
-        foreach($parsed['trans html'] as $lang=>$trans) {
-            $min[$lang][$parsed['slug']] = '<em>(' . $parsed['word class'] . ')</em> ' . $trans;
-        }
-    }
-
 
 
     /**
@@ -278,7 +250,8 @@ class Word_list {
      * Renders tags for the current term
      * and adds them to the array of tags.
      */
-    private static function insert_tags(array $parsed, array &$tags) {
+    private static function insert_tags(array $parsed) {
+        global $tags;
         if (array_key_exists('tags', $parsed)) {
             foreach ($parsed['tags'] as $tag) {
                 $tags[$tag][] = $parsed['slug'];
@@ -287,27 +260,89 @@ class Word_list {
     }
 
 
+
+
     /**
-     * Renders the basic entry for each language. Includes:
-     *  term, class, category, translations.
+     * For each languages add all term forms (the term and it's alt forms, if any)
+     * to the index of all words.
      */
-    private static function insert_basic_entry(array $parsed, array $raw, array &$basic_entries, array $config) {
-        foreach($parsed['trans html'] as $lang=>$translation) {
-            $basic_entries[$lang][$parsed['slug']] = array();
-            $basic_entries[$lang][$parsed['slug']]['class'] = $parsed['word class'];
-            $basic_entries[$lang][$parsed['slug']]['category'] = $parsed['category'];
-            $basic_entries[$lang][$parsed['slug']]['translation'] = $translation;
+    private static function insert_term_index(array $parsed) {
+        global $term_index;
+        $term_index[$parsed['slug']] = [];
+        foreach($parsed['alt forms'] as $alt) {
+            $term_index[$alt] = $parsed['slug'];
         }
     }
-    
+
+
+
+
+    static function parse_spreadsheet_data($term_stream) {
+        global $new_csv_data, $dict, $debug_data;
+
+        // Download the official term list, processing each term.
+        $tp = new Term_parser(fields:fgetcsv($term_stream));
+
+        pard_counter_start("Parsing spreadsheet terms");
+        while(($data = fgetcsv($term_stream)) !== false) {
+
+            // Parse term if it exists
+            if (empty($data) || empty($data[0]) ) {
+                continue;
+            }
+            
+            [$raw_entry, $entry, $csv_row] = $tp->parse_term($data);
+
+            $new_csv_data[$entry['slug']] = $csv_row;
+            $debug_data[$entry['slug']] = $raw_entry;
+            if (isset($entry['etymology'][')'])) unset($entry['etymology'][')']);
+            
+            // Insert entry in aggregate data
+            self::insert_term_index($entry);
+            self::insert_search_terms($entry);
+            self::insert_basic_entry($entry);
+            self::insert_minimum_entry($entry);
+            self::insert_standard_entry($entry);
+
+            self::insert_tags(parsed:$entry);
+            self::insert_examples($entry);
+            self::validate_and_count_category($entry['category'], $entry['term']);
+            self::update_rhyme_data($entry);
+
+            $dict[$entry['slug']] = $entry;
+            usleep(SMALL_IO_DELAY);
+            pard_counter_next();
+        }
+        
+        pard_counter_end();
+        pard_end();
+    }
+
+
+
+    /**
+     * Compare the new and old word list and log any changes.
+     */
+    static function log_changes() {
+        global $cfg, $old_csv_data, $new_csv_data;
+        // Find changes
+        $comparison = new Dictionary_comparison();
+        // Log changes
+        $log = new Dictionary_log($cfg);
+        $log->add($comparison->changes);
+        $cfg['log']->add("Changes logged: ".count($comparison->changes));
+    }
+
+
 
 
     /**
      * Updates the etymology/derived field to include translations
      */
     private static function update_derived_etymology() {
-        require_once('helpers/slugify.php');
         global $dict;
+        pard("Derived etymology");
+
 
         foreach($dict as $slug=>$entry) {
             if (!isset($entry['etymology']['derived'])) continue;
@@ -330,57 +365,69 @@ class Word_list {
     }
 
 
-    private static function update_entry_rhymes(array &$dict) {
+    static function update_entries(string $current_csv_filename, string $old_csv_filename) {
+        global $cfg, $old_csv_data;
+
+        pard_sec("Update entries");
+        
+        // Load old
+        pard("Loading old CSV");
+        load_csv($old_csv_filename, $old_csv_data);
+
+        // Load and parse new data
+        pard("Loading current terms");
+        $term_stream = fopen($current_csv_filename, "r")
+            or throw new Exception("Failed to open ".$current_csv_filename);
+        self::parse_spreadsheet_data($term_stream);
+
+        if (!feof($term_stream)) {
+            $cfg['log']->add("Unexpected fgetcsv() fail");
+        }
+        fclose($term_stream);
+        
+
+        // Add cross referenced data to entries
+        self::finalize_entry_data();
+
+        // Check for changes
+        pard_sec("Post entry update");
+        pard("Logging changes");
+        Entry_update_controller::log_changes();
+        pard("Calculating stats");
+        Entry_update_controller::calculate_stats();
+        pard_end();
+
+        // Write dictionary files
+        File_controller::write_api2_files();
+    }
+
+
+    /**
+     * Go through each rhyme ending group, and add
+     * each term to each term, skipping inappropriate terms
+     * as done in `self::add_entry_rhyme()`
+     */
+    private static function update_entry_rhymes() {
         global $rhyme_data;
-
-        $max = 0;
-        $max_example = "";
-        $min = 100;
-        $max_example = "";
-
+        pard("Update entry rhymes");
         pard_progress_start(count($rhyme_data), "rhyme groups");
+
         // Go through each rhyme group to copy rhyming terms in to entry
-        foreach($rhyme_data as $group) {
-            if(count($group) < 2) {
-                // skip if there are no rhymes
-                continue;
-            }
-            if (count($group)>$max) {
-                $max = count($group);
-                $max_example = $group[array_key_first($group)];
-            }
-            if (count($group)<$min) {
-                $min = count($group);
-                $min_example = $group[array_key_first($group)];
-            }
+        foreach($rhyme_data as $ending_group) {
+            // skip if there are no rhymes
+            if(count($ending_group) < 2) continue;
 
-            foreach($group as $entry) {
-                // For each entry
-                foreach ($group as $rhyme) {
-                    // Copy each rhyme
-                    if ($group === $rhyme) continue;
+            sort($ending_group);
 
-                    $rhyme_slug = slugify($rhyme);
-
-                    // Copy all data from this rhyme to the entry
-                    $dict[$entry]['rhyme trans'][$rhyme_slug]['word class'] = $dict[$rhyme_slug]['word class'];
-
-                    foreach($dict[$rhyme_slug]['trans html'] as $lang=>$trans) {
-                        // Copy each translation, except for self
-
-                        if ($entry===$rhyme_slug) continue;
-                        $dict[$entry]['rhyme trans'][$rhyme_slug][$lang] = $trans;
-                    }
-
+            foreach($ending_group as $entry) {
+                foreach($ending_group as $rhyme) {
+                    self::add_entry_rhyme($entry, $rhyme);
                 }
-
             }
             pard_progress_increment();
-            usleep(500);
+            usleep(100);
         }
         pard_progress_end();
-        pard("Largest rhyme group: ".$max_example);
-        pard("Smallest rhyme group: ".$min_example);
     }
 
 
@@ -390,10 +437,6 @@ class Word_list {
      */
     private static function update_rhyme_data(array $entry):void {
         global $rhyme_data;
-
-        if ($entry['category'] === 'phrase' || $entry['category'] === 'affix') {
-            return;
-        }
 
         $group = substr($entry['slug'], -2);
 
@@ -422,15 +465,15 @@ class Word_list {
     /**
      * Counts the category
      */
-    static function validate_and_count_category(array $c, string $cat, &$count_arr, string $word) {
+    static function validate_and_count_category(string $cat, string $word) {
 
-        global $parse_report;
+        global $cfg, $parse_report, $category_count;
 
         if (!in_array($cat, self::VALID_WORD_CATEGORIES)) {
-            $c['log']->add("Word List Error: Invalid category `$cat` on term `$word`");
+            $cfg['log']->add("Word List Error: Invalid category `$cat` on term `$word`");
             $parse_report[] = ['term'=>$word, 'msg'=>"Word List Error: Invalid category `$cat`"];
         }
 
-        self::validate_and_count($cat, $count_arr);
+        self::validate_and_count($cat, $category_count);
     }
 }

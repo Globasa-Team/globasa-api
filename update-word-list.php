@@ -5,35 +5,66 @@ namespace globasa_api;
 use Throwable;
 
 global
-    $parse_report,
-    $rhyme_data,
-    $natlang_count,
-    $standard_entries,
-    $stats,
+    $cfg,
+
     $dict,
-    $examples;
+    $min_entries,
+    $basic_entries,
+    $standard_entries,
 
+    $term_indexes,
+    $search_terms,
 
+    $rhyme_data,
+    $examples,
+    $derived_data,
+    $tags,
 
-$parse_report = [];
-$rhyme_data = [];
-$natlang_count = [];
-$standard_entries = [];
-$stats = [];
+    $parse_report,
+    $natlang_count,
+    $stats,
+    $natlang_etymologies,
+    $word_count,
+    $category_count,
+
+    $old_csv_filename,
+    $new_csv_data,
+
+    $debug_data,
+    $debug_mode;
+
+// Initialize global data
+$cfg = [];
+
 $dict = [];
-
 $min_entries = [];
 $basic_entries = [];
+$standard_entries = [];
+
 $term_indexes = [];
 $search_terms = [];
+
+$rhyme_data = [];
 $tags = [];
-$backlinks = [];
+$derived_data = [];
+
+$parse_report = [];
+$natlang_count = [];
+$stats = [];
 $natlang_etymologies = [];
 $word_count = 0;
 $category_count = [];
-$debug_data = [];
 
+$old_csv_data = [];
+$new_csv_data = [];
+
+$debug_data = [];
+$debug_mode = false;
+
+// Initialize local data
 $new_csv_filename = "";
+
+
 
 try {
     // Startup
@@ -42,77 +73,45 @@ try {
     pard_app_start();
     pard_sec("Initiation");
 
-    if ($argv[1] === 'r') {
-        $new_csv_filename = $data['previous'];
-        $c['log']->add("Reprocessing previous CSV file", 1);
-    } else {
-        $new_csv_filename = $argv[1];
+    if ($argv[1] === 'd') {
+        pard("Debug Output Mode (only writing some entries)");
+        $debug_mode = true;
     }
 
-    $examples = yaml_parse_file('examples.yaml');
+    if ($argv[1] === 'r' || $argv[1] === 'd') {
+        pard("Reprocessing previous CSV file");
+        $new_csv_filename = $data['previous'];
+    } elseif ($argv[1] === 'd') {
+        pard("Debug Output Mode (only writing some entries)");
+        $debug_mode = true;
+    } else {
+        $new_csv_filename = $argv[1];
+        pard("Using: ".$new_csv_filename);
+    }
 
-    $c['log']->add("Using new: " . $new_csv_filename, 1);
-    $c['log']->add("Using old: " . $data['previous'], 1);
-    $c['log']->add("Environment: " . ($c['dev'] ? 'dev' : 'production'), 1);
+    pard("Loading examples.yaml");
+    $examples = yaml_parse_file('temp/examples.yaml');
+    $cfg['log']->add("Environment: " . ($cfg['dev'] ? 'dev' : 'production'), 1);
+    pard($cfg['dev'], "Debug mode: ");
+    pard_end();
     
     // Update data files
-    $c['log']->add("Loading old CSV", 1);
-    // $old_data = load_csv($data['previous']);
-    $c['log']->add("Loading current terms", 1);
-    pard_end();
-    $csv_data = Entry_update_controller::load_current_terms(
-        current_csv_filename:$new_csv_filename,
-        parsed_entries:$dict,
-        min_entries:$min_entries,
-        basic_entries:$basic_entries,
-        term_indexes:$term_indexes,
-        search_terms:$search_terms,
-        tags:$tags,
-        natlang_etymologies:$natlang_etymologies,
-        word_count:$word_count,
-        category_count:$category_count,
-        debug_data:$debug_data,
-        c:$c
-    );
-
-    pard_sec("Post dictionary");
-    $c['log']->add("Logging changes", 2);
-    // Entry_update_controller::log_changes($csv_data, $old_data, $c);
-    Entry_update_controller::calculate_stats();
-
-    // Write dictionary files
-    $c['log']->add("Writting files", 2);
-    File_controller::write_api2_files(
-        parsed_entries:$dict,
-
-        min_entries:$min_entries,
-        basic_entries:$basic_entries,
-        
-        term_indexes:$term_indexes,
-        search_terms:$search_terms,
-        tags:$tags,
-        
-        natlang_etymologies:$natlang_etymologies,
-        
-        word_count:$word_count,
-        category_count:$category_count,
-        
-        config:$c
-    );
+    Entry_update_controller::update_entries($data['previous'], $new_csv_filename);
 
 
     pard_sec("Other stuff");
+
     // Update i18n
-    $c['log']->add("Updating I18n", 5);
-    I18n::update($c);
+    $cfg['log']->add("Updating I18n", 5);
+    I18n::update();
 
     // Finish up
-    $c['log']->add("Script complete", 5);
-    $c['log']->email_log($c);
+    $cfg['log']->add("Script complete", 5);
+    $cfg['log']->email_log($cfg);
     yaml_emit_file(DATA_FILENAME, ['previous'=>$new_csv_filename]);
+    pard_end();
 }
 catch (Throwable $t) {
-    echo("\nCAUGHT
-    Prob\t".$t->getCode()." :".$t->getMessage().PHP_EOL.
-        "Line\t".$t->getLine()." :".$t->getFile().PHP_EOL);
+    pard_print_throwable($t);
 }
+pard_app_finished();
