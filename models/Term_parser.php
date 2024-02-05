@@ -61,9 +61,7 @@ class Term_parser
     public $lang_sources = [];
     private $pd = null;
     private $log = null;
-    public $backlinks = [];
     private $current_slug = null;
-    public $natlang_etymologies = null;
 
 
     /**
@@ -72,16 +70,16 @@ class Term_parser
      * @param array $fields list of fields from Google Docs CSV
      * @param mixed $pd     ParseDown markdown parser
      */
-    public function __construct(array $fields, object $parsedown, object $log, array &$natlang_etymologies)
+    public function __construct(array $fields)
     {
+        global $cfg;
         $this->csv_columns = $fields;
         if (empty($fields)) return null;
         foreach ($fields as $key => $field) {
             $this->map[$key] = SELF::CONONICAL_FIELDS[$field];
         }
-        $this->log = $log;
-        $this->pd = $parsedown;
-        $this->natlang_etymologies = &$natlang_etymologies;
+        $this->log = $cfg['log'];
+        $this->pd = $cfg['parsedown'];
     }
 
 
@@ -281,6 +279,8 @@ class Term_parser
      */
     private function parse_etymology_derived(string $derived_etymology)
     {
+        global $derived_data;
+
         // Break in to fragments and rebuild fragment by fragment.
         $frag = explode(' ', $derived_etymology);
         $phrase = ''; // this is actually a term which might be a phrase, I think?
@@ -315,7 +315,7 @@ class Term_parser
                 
                 // Record for backlinking
                 $slug = slugify($phrase);
-                $this->backlinks[$slug][] = $this->current_slug;
+                $derived_data[$slug][] = $this->current_slug;
                 
                 $phrase = '';
                 $stop = '';
@@ -330,7 +330,7 @@ class Term_parser
 
             // Record backlink
             $slug = slugify($phrase);
-            $this->backlinks[$slug][] = $this->current_slug;
+            $derived_data[$slug][] = $this->current_slug;
         }
 
         return $etymology_array;
@@ -371,7 +371,7 @@ class Term_parser
      */
     private function parse_etymology_natlang_freeform(string $natlang_etymology, string $term, bool $mark_etymology = true)
     {
-        global $parse_report;
+        global $parse_report, $natlang_etymologies;
 
         $len = strlen($natlang_etymology);
         $at_seperator = false;
@@ -426,14 +426,14 @@ class Term_parser
                         $example = substr($example, 0, -1);
                     }
                     $result[$lang] = $example;
-                    $this->natlang_etymologies[$lang][] = $this->current_slug;
+                    $natlang_etymologies[$lang][] = $this->current_slug;
                 } else {
                     // No enclusre, no example to save.
                     $lang = trim(substr($natlang_etymology, $lang_start, $pos-$lang_start));
                     // record language, unless it's etc (ji max to).
                     if (strcmp($lang, "ji max to") !== 0) {
                         $result[$lang] = "";
-                        $this->natlang_etymologies[$lang][] = $this->current_slug;
+                        $natlang_etymologies[$lang][] = $this->current_slug;
                     }
                 }
 
@@ -776,7 +776,6 @@ class Term_parser
      */
     private function set_globasa_terms($raw, &$parsed)
     {
-        require_once('helpers/slugify.php');
         $search_terms = [];
 
         $parsed['term'] = trim($raw['term']);
