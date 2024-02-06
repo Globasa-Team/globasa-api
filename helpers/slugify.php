@@ -23,7 +23,7 @@ function slugify(string $text) {
     RULES;
     
     return \Transliterator::createFromRules($rules)
-        ->transliterate(trim($text));
+        ->transliterate(strtolower(trim($text)));
     
 }
 

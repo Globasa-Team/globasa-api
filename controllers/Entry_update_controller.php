@@ -56,10 +56,11 @@ class Entry_update_controller {
 
 
         // If still here, copy data
-        $dict[$entry]['rhyme trans'][$rhyme]['category'] = $dict[$entry]['category'];
+        $dict[$entry]['rhyme'][$rhyme]['word class'] = $dict[$rhyme]['word class'];
+        $dict[$entry]['rhyme'][$rhyme]['term'] = $dict[$rhyme]['term'];
         // Copy all translations
         foreach($dict[$rhyme]['trans html'] as $lang=>$trans) {
-            $dict[$entry]['rhyme trans'][$rhyme][$lang] = $trans;
+            $dict[$entry]['rhyme'][$rhyme][$lang] = $trans;
         }
 
     }
@@ -172,14 +173,11 @@ class Entry_update_controller {
 
                 // Copy derived term class to root
                 $dict[$root]["derived terms"][$term]['class'] = $dict[$term]['word class'];
+                $dict[$root]["derived terms"][$term]['term'] = $dict[$term]['term'];
 
                 // Copy derived term translation data to root
                 foreach($dict[$term]['trans html'] as $lang=>$translation) {
-                    if (isset($dict[$root])) {
-                        $dict[$root]["derived terms"][$term]['trans'][$lang] = $translation;
-                    } elseif (!isset($dict[$root])) {
-                        // TODO: record or react to non-existent entries?
-                    }
+                    $dict[$root]['derived terms'][$term]['trans'][$lang] = $translation;
                 }
             }
         }
@@ -350,11 +348,13 @@ class Entry_update_controller {
             foreach($entry['etymology']['derived'] as $part) {
                 $part_slug = slugify($part);
 
-                if ((strlen($part) === 1 && !ctype_alnum($part)) || !isset($dict[$part])) {
+                if ((strlen($part) === 1 && !ctype_alnum($part)) || !isset($dict[$part_slug])) {
+                    // If it's a '+' or ','
                     $dict[$slug]['etymology']['derived trans'][] = ['text'=>$part];
                 } else {
                     $dict[$slug]['etymology']['derived trans'][] = [
-                        'text'=>$part_slug,
+                        'slug'=>$part_slug,
+                        'text'=>$dict[$part_slug]['term'],
                         'word class'=>$dict[$part_slug]['word class'],
                         'trans'=>$dict[$part_slug]['trans html']
                     ];
@@ -408,7 +408,7 @@ class Entry_update_controller {
      * as done in `self::add_entry_rhyme()`
      */
     private static function update_entry_rhymes() {
-        global $rhyme_data;
+        global $rhyme_data, $dict;
         pard("Update entry rhymes");
         pard_progress_start(count($rhyme_data), "rhyme groups");
 
@@ -423,6 +423,33 @@ class Entry_update_controller {
                 foreach($ending_group as $rhyme) {
                     self::add_entry_rhyme($entry, $rhyme);
                 }
+
+                if ($entry[0]==='-') {
+                    $alt = substr($entry, 1);
+                } else {
+                    $alt = '-'.$entry;
+                }
+
+                // Fetch entry final morpheme
+                if (isset($dict[$entry]['etymology']['derived'])) {
+                    $final_morpheme = $dict[$entry]['etymology']['derived'][array_key_last($dict[$entry]['etymology']['derived'])];
+                } else {
+                    $final_morpheme = $entry;
+                }
+
+                if ($final_morpheme[0]==='-') {
+                    $alt = substr($final_morpheme, 1);
+                } else {
+                    $alt = '-'.$final_morpheme;
+                }
+
+                
+                if(isset($dict[$alt])) {
+                    $dict[$entry]['rhyme exclusions'] = [$final_morpheme, $alt];
+                } else {
+                    $dict[$entry]['rhyme exclusions'] = [$final_morpheme];
+                }
+                
             }
             pard_progress_increment();
             usleep(100);
