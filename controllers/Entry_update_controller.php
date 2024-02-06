@@ -322,7 +322,7 @@ class Entry_update_controller {
      * Compare the new and old word list and log any changes.
      */
     static function log_changes() {
-        global $cfg, $old_csv_data, $new_csv_data;
+        global $cfg;
         // Find changes
         $comparison = new Dictionary_comparison();
         // Log changes
