@@ -420,6 +420,9 @@ class Entry_update_controller {
             sort($ending_group);
 
             foreach($ending_group as $entry) {
+
+                if ($entry['category'] === 'phrase') continue;
+                
                 foreach($ending_group as $rhyme) {
                     self::add_entry_rhyme($entry, $rhyme);
                 }
