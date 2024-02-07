@@ -29,9 +29,10 @@ class Dictionary_comparison {
         foreach($this->added_terms as $new_key => $new_term) {
             foreach($this->removed_terms as $old_key => $old_term) {
                 foreach($this->c['translated_languages'] as $lang) {
+                    if (empty($lang)) continue;
 
                     // If this has any translation field the same, log as a renamed term
-                    if (strcmp($old_csv_data[$old_term][$lang], $new_csv_data[$new_term][$lang]) == 0) {
+                    if (strcmp($old_csv_data[$old_term][$lang], $new_csv_data[$new_term][$lang]) === 0) {
                         // Save log to both terms
                         $this->log_term_change($old_term, "term renamed", "", $old_term, $new_term);
                         $this->log_term_change($new_term, "term renamed", "", $old_term, $new_term);
