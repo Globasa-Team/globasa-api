@@ -42,7 +42,7 @@ try {
     require_once("{$app_path}/controllers/Entry_update_controller.php");
     require_once("{$app_path}/controllers/File_controller.php");
 }
-catch (Throwable $e) {
+catch (Throwable $t) {
     pard_print_throwable($t);
     die();
 }

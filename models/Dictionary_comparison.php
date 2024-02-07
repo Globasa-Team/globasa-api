@@ -26,21 +26,19 @@ class Dictionary_comparison {
         $this->added_terms = array_diff($new_terms, $old_terms);
 
         // look for renamed terms, & log.
-        foreach($this->added_terms as $new_key => $new_term) {
-            foreach($this->removed_terms as $old_key => $old_term) {
+        foreach($this->added_terms as $added_key => $added_term) {
+            foreach($this->removed_terms as $removed_key => $removed_term) {
                 foreach($this->c['translated_languages'] as $lang) {
-                    if (empty($lang)) continue;
-
                     // If this has any translation field the same, log as a renamed term
-                    if (strcmp($old_csv_data[$old_term][$lang], $new_csv_data[$new_term][$lang]) === 0) {
+                    if (($old_csv_data[$removed_term][$lang] === $new_csv_data[$added_term][$lang]) && !empty($old_csv_data[$removed_term][$lang])) {
                         // Save log to both terms
-                        $this->log_term_change($old_term, "term renamed", "", $old_term, $new_term);
-                        $this->log_term_change($new_term, "term renamed", "", $old_term, $new_term);
+                        $this->log_term_change($removed_term, "term renamed", "", $removed_term, $added_term);
+                        $this->log_term_change($added_term, "term renamed", "", $removed_term, $added_term);
                         // Log other changes
-                        $this->compare_terms($old_term, $new_term);
+                        $this->compare_terms($removed_term, $added_term);
                         // Remove from other indexes
-                        unset($this->removed_terms[$old_key]);
-                        unset($this->added_terms[$new_key]);
+                        unset($this->removed_terms[$removed_key]);
+                        unset($this->added_terms[$added_key]);
                         break 2;
                     }
                 }
@@ -62,9 +60,6 @@ class Dictionary_comparison {
             $this->compare_terms($term);
         }
 
-        pard(count($this->removed_terms), "Removed: ");
-        pard(count($this->added_terms), "Added: ");
-        pard(count($this->same_terms), "Same: ");
     }
 
     function compare_terms($term1, $term2 = null) {
@@ -79,7 +74,7 @@ class Dictionary_comparison {
         if (array_key_exists($term1, $old_csv_data) && array_key_exists($term2, $new_csv_data)) {
             foreach($old_csv_data[$term1] as $field=>$datum) {
                 // Find changed fields for this term
-                if (array_key_exists($field, $new_csv_data[$term2]) && strcmp($old_csv_data[$term1][$field], $new_csv_data[$term2][$field]) != 0) {
+                if (array_key_exists($field, $new_csv_data[$term2]) && strcmp($old_csv_data[$term1][$field], $new_csv_data[$term2][$field]) != 0 && $field!=='Word') {
                     $this->log_term_change($term2, "field updated", $field, $old_csv_data[$term1][$field], $new_csv_data[$term2][$field]);
                 }
                 
@@ -115,7 +110,7 @@ class Dictionary_comparison {
                 "{$old_data}&rsquo; to &lsquo;{$new_data}&rsquo;",
 
             'field removed' =>
-                "&lsquo;{$field}&rsquo; field removed, was &lsquo;".
+                "&lsquo;{$field}&rsquo; field removed, contained &lsquo;".
                 "{$old_data}&rsquo;",
 
             'field added' =>
@@ -134,7 +129,5 @@ class Dictionary_comparison {
                 "Term renamed from &lsquo;{$old_data}&rsquo; to &lsquo;{$new_data}&rsquo;",
         };
         $this->changes[] = $log;
-        //$this->c['log']->add($term."\n\t".$log['message']);
-        //pard($type.": ".$term);
     }
 }

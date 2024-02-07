@@ -29,6 +29,7 @@ global
 
     $old_csv_filename,
     $new_csv_data,
+    $old_csv_data,
 
     $debug_data,
     $debug_mode;
@@ -96,7 +97,7 @@ try {
     pard_end();
     
     // Update data files
-    Entry_update_controller::update_entries($data['previous'], $new_csv_filename);
+    Entry_update_controller::update_entries(old_csv_filename:$data['previous'], current_csv_filename:$new_csv_filename);
 
 
     pard_sec("Other stuff");
