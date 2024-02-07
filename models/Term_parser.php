@@ -44,6 +44,7 @@ class Term_parser
         'TranslationRus' => 'trans rus',
         'TranslationZho' => 'trans zho',
         'TranslationDeu' => 'trans deu',
+        'TransXRef' => 'TransXRef',
         'SearchTermsEng' => 'search terms eng',
         'StatusEng' => 'status eng',
         'Synonyms' => 'synonyms',
