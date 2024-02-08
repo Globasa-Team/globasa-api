@@ -589,6 +589,9 @@ class Term_parser
 
         foreach($raw['trans'] as $lang => $translations) {
             
+            $parsed['trans html'][$lang] = "";
+            $parsed['trans'][$lang] = [];
+
             if (empty($translations)) {
                 continue;
             }
@@ -597,7 +600,6 @@ class Term_parser
             $parsed['trans html'][$lang] = $this->pd->line($translations);
             
             // For each language, parse translations
-            $parsed['trans'][$lang] = [];
             $translations = html_entity_decode($translations);
             $start = 0;
             $len = strlen($translations);

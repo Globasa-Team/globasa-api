@@ -143,6 +143,11 @@ class Entry_update_controller {
     private static function insert_basic_entry(array $parsed) {
         global $basic_entries;
 
+        if (!isset($parsed['trans html'])) {
+            pard("Warning: missing trans html on ".$parsed['slug']);
+            return;
+        }
+
         foreach($parsed['trans html'] as $lang=>$translation) {
             $basic_entries[$lang][$parsed['slug']] = array();
             $basic_entries[$lang][$parsed['slug']]['class'] = $parsed['word class'];
