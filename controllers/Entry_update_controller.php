@@ -162,7 +162,7 @@ class Entry_update_controller {
      * Insert derived term data
      */
     public static function insert_derived_terms() {
-        global $cfg, $dict, $parse_report, $derived_data;
+        global $cfg, $dict, $import_report, $derived_data;
         pard("Derived terms");
 
         foreach($derived_data as $root=>$terms) {
@@ -172,7 +172,7 @@ class Entry_update_controller {
                 // Skip if word doesn't exist
                 if (!array_key_exists($root, $dict)) {
                     $cfg['log']->add("Attempted to link entry `{$root}` to `{$term}`, but it doesn't exist.");
-                    $parse_report[] = ['term'=>$root, 'msg'=>"Term missing. Was linking from `{$term}`."];
+                    $import_report[] = ['term'=>$root, 'msg'=>"Term missing. Was linking from `{$term}`."];
                     continue;
                 }
 
@@ -278,6 +278,20 @@ class Entry_update_controller {
     }
 
 
+    static function lint_entry(&$entry) {
+        global $import_report;
+
+        foreach($entry['trans html'] as $lang=>$translation) {
+            if (str_contains($translation, ":</em>")) {
+                $import_report[] = ['term'=>$entry['slug'], 'msg'=>"Linter Notice: {$lang} has colon inside italic rathre than outside"];
+            }
+        }
+        if ($entry['category'] === 'derived' || $entry['category'] === 'phrase') {
+            if (!isset($entry['etymology']['derived']) || empty($entry['etymology']['derived'])) {
+                $import_report[] = ['term'=>$entry['slug'], 'msg'=>'Linter Notice: category is derived or phrase but no derived etymology detected.'];
+            }
+        }
+    }
 
 
     static function parse_spreadsheet_data($term_stream) {
@@ -288,7 +302,6 @@ class Entry_update_controller {
 
         pard_counter_start("Parsing spreadsheet terms");
         while(($data = fgetcsv($term_stream)) !== false) {
-
             // Parse term if it exists
             if (empty($data) || empty($data[0]) ) {
                 continue;
@@ -502,11 +515,11 @@ class Entry_update_controller {
      */
     static function validate_and_count_category(string $cat, string $word) {
 
-        global $cfg, $parse_report, $category_count;
+        global $cfg, $import_report, $category_count;
 
         if (!in_array($cat, self::VALID_WORD_CATEGORIES)) {
             $cfg['log']->add("Word List Error: Invalid category `$cat` on term `$word`");
-            $parse_report[] = ['term'=>$word, 'msg'=>"Word List Error: Invalid category `$cat`"];
+            $import_report[] = ['term'=>$word, 'msg'=>"Word List Error: Invalid category `$cat`"];
         }
 
         self::validate_and_count($cat, $category_count);

@@ -3,9 +3,6 @@
 namespace globasa_api;
 
 use Exception;
-
-
-
 // Exceptions to the stress rules: one syllable words that have no stresses
 define('WORDS_TO_SKIP', [
     "am", "bax", "cel", "ci", "cis", "de", "di",
@@ -31,33 +28,6 @@ define('PAREN_UNDERSCORE_MARKDOWN_REGEX', '/[\[{\(_].*[\]}\)_]/U');
 
 class Term_parser
 {
-
-    const CONONICAL_FIELDS = array(
-        'Category' => 'category',
-        'Word' => 'term',
-        'WordClass' => 'word class',
-        'OfficialWord' => 'status',
-        'TranslationEng' => 'trans eng',
-        'TranslationEpo' => 'trans epo',
-        'TranslationSpa' => 'trans spa',
-        'TranslationFra' => 'trans fra',
-        'TranslationRus' => 'trans rus',
-        'TranslationZho' => 'trans zho',
-        'TranslationDeu' => 'trans deu',
-        'TransXRef' => 'TransXRef',
-        'SearchTermsEng' => 'search terms eng',
-        'StatusEng' => 'status eng',
-        'Synonyms' => 'synonyms',
-        'Antonyms' => 'antonyms',
-        'Example' => 'example',
-        'Tags' => 'tags',
-        'LexiliAsel' => 'etymology',
-        'See Also' => 'similar natlang',
-        'Similar Natlang' => 'similar natlang',
-        'LexiliEstatus' => 'etymology status', // depracated
-    );
-
-    private $map = [];
     private $csv_columns = null;
     public $lang_sources = [];
     private $pd = null;
@@ -76,9 +46,6 @@ class Term_parser
         global $cfg;
         $this->csv_columns = $fields;
         if (empty($fields)) return null;
-        foreach ($fields as $key => $field) {
-            $this->map[$key] = SELF::CONONICAL_FIELDS[$field];
-        }
         $this->log = $cfg['log'];
         $this->pd = $cfg['parsedown'];
     }
@@ -97,19 +64,21 @@ class Term_parser
         $parsed = [];
         $csv = [];
 
-        foreach ($data as $field => $datum) {
-            if ($this->map[$field] == null) {
+        foreach ($data as $index => $datum) {
+            $field = COLUMN_MAP[$this->csv_columns[$index]];
+            if (!isset($field)) {
+                pard($field, "bail:");
                 continue;
             }
-            if (str_starts_with($this->map[$field], 'trans')) {
-                $lang = explode(" ", $this->map[$field])[1];
+            if (str_starts_with($field, 'trans')) {
+                $lang = explode(" ", $field)[1];
                 $raw['trans'][$lang] = htmlentities($datum);
-            } else if (strcmp($this->map[$field], "status") == 0) {
+            } else if (strcmp($field, "status") == 0) {
                 $raw['status'] = filter_var($datum, FILTER_VALIDATE_BOOLEAN);
             } else {
-                $raw[$this->map[$field]] = htmlentities($datum);
+                $raw[$field] = htmlentities($datum);
             }
-            $csv[$this->csv_columns[$field]] = $datum;
+            $csv[$field] = $datum;
         }
         
         
@@ -149,7 +118,7 @@ class Term_parser
      * Find anomolies or errors not otherwise caught
      */
     private function lint($entry) {
-        global $parse_report;
+        global $import_report;
     }
 
     /**
@@ -186,10 +155,10 @@ class Term_parser
      */
     private function parse_etymology(array $raw, array &$parsed)
     {
-        global $parse_report;
+        global $import_report;
 
         if (empty($raw['etymology'])) {
-            $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Empty etymology"];
+            $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Empty etymology"];
             return;
         }
 
@@ -205,7 +174,7 @@ class Term_parser
             } else if (str_starts_with($cur, "https://") || str_starts_with($cur, "http://")) {
                 if (!empty($parsed['etymology']['link'])) {
                     $this->log->add("ERROR: Term `".$raw['term']."` has duplicate linked etymology.");
-                    $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate linked etymology."];
+                    $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate linked etymology."];
                 }
                 $parsed['etymology']['link'] = $this->parse_etymology_linked($cur);
             } else if (strcmp($cur, "a priori") === 0) {
@@ -214,7 +183,7 @@ class Term_parser
                 if (str_starts_with($cur, "Am oko " )) {
                     if (!empty($parsed['etymology']['am oko'])) {
                         $this->log->add("Error: Duplicate `am oko` in etymology.");
-                        $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate `am oko` in etymology."];
+                        $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate `am oko` in etymology."];
                     }
                     $parsed['etymology']['am oko'] = $this->parse_etymology_also_see($cur, 7);
                 }
@@ -223,21 +192,21 @@ class Term_parser
                 }
                 else {
                     $this->log->add("Error: Etymology starts with 'am ' but isn't.".$cur);
-                    $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"One etymology starts with 'am ' but isn't."];
+                    $import_report[] = ['term'=>$this->current_slug, 'msg'=>"One etymology starts with 'am ' but isn't."];
                 }
             } else if (str_starts_with($cur, "kwasilexi - ")) {
                 $parsed['etymology']['kwasilexi'] = $this->parse_etymology_natlang_freeform(substr($cur, 12), $parsed['slug']);
             } else if (str_contains($cur, "(")) {
                 if (!empty($parsed['etymology']['natlang'])) {
                     $this->log->add("ERROR: Term `".$raw['term']."` has duplicate natlang etymology.");
-                    $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate natlang etymology."];
+                    $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate natlang etymology."];
                 }
                 $parsed['etymology']['natlang'] = $this->parse_etymology_natlang_freeform($cur, $parsed['slug']);
             } else {
                 // Assume it's derived
                 if (!empty($parsed['etymology']['derived'])) {
                     $this->log->add("ERROR: Term `".$raw['term']."` has duplicate derived etymology.");
-                    $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate derived etymology."];
+                    $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate derived etymology."];
                 }
                 $parsed['etymology']['derived'] = $this->parse_etymology_derived($cur, $parsed['slug']);
             }
@@ -372,7 +341,7 @@ class Term_parser
      */
     private function parse_etymology_natlang_freeform(string $natlang_etymology, string $term, bool $mark_etymology = true)
     {
-        global $parse_report, $natlang_etymologies;
+        global $import_report, $natlang_etymologies;
 
         $len = strlen($natlang_etymology);
         $at_seperator = false;
@@ -415,7 +384,7 @@ class Term_parser
 
                 if ($len > $pos && $enclosure_level > 0) {
                     $this->log->add("Error: Term `{$term}` has malformed etymology, missing `)`");
-                    $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Malformed etymology, missing `)`"];
+                    $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Malformed etymology, missing `)`"];
                     $enclosure_end = $pos;
                 }
 
@@ -445,13 +414,13 @@ class Term_parser
                        str_contains($lang, ',') || str_contains($lang, '?')
                     ) {
                     $this->log->add("Etymology Error: Term `{$term}` has one of ():;-+,? in language name `$lang`. (Possibly caused by missing a comma from previous language?)");
-                    $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Natlang etymology has one of ():;-+,? in language name `{$lang}`. (Possibly caused by missing a comma from previous language?)"];
+                    $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Natlang etymology has one of ():;-+,? in language name `{$lang}`. (Possibly caused by missing a comma from previous language?)"];
                 }
 
 
                 if (empty($lang)) {
                     $this->log->add("Etymology Error: Term `{$term}` has blank language name in it's natlang etymology.");
-                    $parse_report[] = ['term'=>$this->current_slug, 'msg'=>"Blank language name natlang etymology"];
+                    $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Blank language name natlang etymology"];
                 }
 
                 $at_seperator = false;

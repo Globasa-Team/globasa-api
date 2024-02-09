@@ -20,7 +20,7 @@ global
     $derived_data,
     $tags,
 
-    $parse_report,
+    $import_report,
     $natlang_count,
     $stats,
     $natlang_etymologies,
@@ -49,7 +49,7 @@ $rhyme_data = [];
 $tags = [];
 $derived_data = [];
 
-$parse_report = [];
+$import_report = [];
 $natlang_count = [];
 $stats = [];
 $natlang_etymologies = [];

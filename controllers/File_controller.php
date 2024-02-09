@@ -5,7 +5,7 @@ class File_controller {
 
     public static function write_api2_files() {
 
-        global $parse_report, $rhyme_data;
+        global $import_report, $rhyme_data;
         pard_sec("Writing API files");
 
         self::save_entry_files();
@@ -19,7 +19,7 @@ class File_controller {
 
         self::save_stats_file();
 
-        self::save_report(data:$parse_report, name:"parse_report");
+        self::save_report(data:$import_report, name:"import_report");
         self::save_report(data:$rhyme_data, name:"rhyme_report");
 
         pard_end();

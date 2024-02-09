@@ -25,6 +25,33 @@ try {
     define("FULL_FILE_DELAY", 50000); // 50k microseconds = a twentieth of a second
     define("GLB_CODE", "art-x-globasa");
     define("GLB_ATTR", "lang=\"art-x-globasa\"");
+
+    // Map spreadsheet column to internal fields
+    define('COLUMN_MAP', array(
+        'Category' => 'category',
+        'Word' => 'term',
+        'WordClass' => 'word class',
+        'OfficialWord' => 'status',
+        'TranslationEng' => 'trans eng',
+        'TranslationEpo' => 'trans epo',
+        'TranslationSpa' => 'trans spa',
+        'TranslationFra' => 'trans fra',
+        'TranslationRus' => 'trans rus',
+        'TranslationZho' => 'trans zho',
+        'TranslationDeu' => 'trans deu',
+        'TransNote' => 'trans note',
+        'SearchTermsEng' => 'search terms eng',
+        'StatusEng' => 'status eng',
+        'Synonyms' => 'synonyms',
+        'Antonyms' => 'antonyms',
+        'Example' => 'example',
+        'Tags' => 'tags',
+        'LexiliAsel' => 'etymology',
+        'See Also' => 'similar natlang',
+        'Similar Natlang' => 'similar natlang',
+        'TransXRef' => 'trans note', // depracated
+        'LexiliEstatus' => 'etymology status', // depracated
+    ));
     
     require_once("{$app_path}/models/App_log.php");
     require_once("{$app_path}/vendor/parsedown-1.7.4/Parsedown.php");
