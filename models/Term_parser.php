@@ -92,6 +92,7 @@ class Term_parser
         $this->parse_basic_field('status', $raw, $parsed);
         $this->parse_basic_field('category', $raw, $parsed, true);
         $this->parse_basic_field('word class', $raw, $parsed, true);
+        $this->parse_basic_field('entry note', $raw, $parsed);
         
         $this->parse_translations($raw, $parsed);
         $this->set_natlang_terms($parsed, $raw);
