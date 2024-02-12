@@ -150,6 +150,7 @@ class Entry_update_controller {
 
         foreach($parsed['trans html'] as $lang=>$translation) {
             $basic_entries[$lang][$parsed['slug']] = array();
+            $basic_entries[$lang][$parsed['slug']]['term'] = $parsed['term'];
             $basic_entries[$lang][$parsed['slug']]['class'] = $parsed['word class'];
             $basic_entries[$lang][$parsed['slug']]['category'] = $parsed['category'];
             $basic_entries[$lang][$parsed['slug']]['translation'] = $translation;
@@ -240,6 +241,7 @@ class Entry_update_controller {
         global $standard_entries;
 
         $standard_entries[$entry['slug']] = [
+            'term'=>$entry['term'],
             'word class'=>$entry['word class'],
             'category'=>$entry['category'],
             'trans'=>$entry['trans'],
