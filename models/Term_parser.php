@@ -92,10 +92,10 @@ class Term_parser
         $this->parse_basic_field('status', $raw, $parsed);
         $this->parse_basic_field('category', $raw, $parsed, true);
         $this->parse_basic_field('word class', $raw, $parsed, true);
-        $this->parse_basic_field('entry note beta', $raw, $parsed);
         
         $this->parse_translations($raw, $parsed);
-        $this->set_natlang_terms($parsed, $raw);
+        $this->parse_entry_note(data:$raw, entry:$parsed);
+        $this->set_natlang_terms(parsed:$parsed, raw:$raw);
         
         $this->parse_etymology($raw, $parsed);
         $this->parse_list_field('tags', $raw, $parsed);
@@ -122,6 +122,9 @@ class Term_parser
         global $import_report;
     }
 
+
+
+
     /**
      * Parse basic field by getting the $raw data and copying it to $parsed.
      * 
@@ -135,6 +138,59 @@ class Term_parser
             $entry[$field] = trim($raw[$field]);
         else
             $entry[$field] = $raw[$field];
+    }
+
+
+
+    /**
+     * 
+     */
+    private function parse_entry_note(array &$entry, array &$data) {
+        global $dev_report, $import_report;
+        
+        if (empty($data['entry note'])) return;
+
+        $entry['entry note beta'] = $data['entry note'];
+        
+        // debug
+        pard($data['entry note'], $entry['slug']);
+        $dev_report[] = ["{$entry['slug']}: {$data['entry note']}"];
+
+        $notes = explode('.', $data['entry note']);
+        
+        //debug
+        foreach($notes as $note) {
+
+            if ($note==='Am oko tabellexi') {
+                $entry['entry notes'][$note] = true;
+                continue;
+            } elseif (!str_contains($note, ':')) {
+                $import_report[]=['term'=>$entry['slug'], 'msg'=>'Entry note error, content='.$note];
+                $entry['entry notes']['Nota'] = $this->pd->line($note);
+                continue;
+            }
+
+            [$keyword, $content] = explode(':', $note);
+
+            switch ($keyword) {
+                case 'Am oko':
+                case 'Kurto lexi cel':
+                case 'Am kompara fe':
+                case 'Yongudo sol ton':
+                    $entry['entry notes'][$keyword] = explode(', ', $content);
+                    break;
+                case 'Nota':
+                    $entry['entry notes'][$keyword] = $this->pd->line($content);
+                    break;
+                default:
+                    $import_report[]=['term'=>$entry['slug'], 'msg'=>'Entry note error, type='.$keyword];
+                    $entry['entry notes']['Nota'] = $this->pd->line($keyword.':'.$content);
+            }
+
+            
+
+
+        }
     }
 
 

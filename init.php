@@ -39,7 +39,7 @@ try {
         'TranslationRus' => 'trans rus',
         'TranslationZho' => 'trans zho',
         'TranslationDeu' => 'trans deu',
-        'TransNote' => 'entry note beta',
+        'TransNote' => 'entry note',
         'SearchTermsEng' => 'search terms eng',
         'StatusEng' => 'status eng',
         'Synonyms' => 'synonyms',
@@ -49,7 +49,7 @@ try {
         'LexiliAsel' => 'etymology',
         'See Also' => 'similar natlang',
         'Similar Natlang' => 'similar natlang',
-        'TransXRef' => 'entry note beta', // depracated
+        'TransXRef' => 'entry note', // depracated
         'LexiliEstatus' => 'etymology status', // depracated
     ));
     

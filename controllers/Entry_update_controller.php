@@ -281,7 +281,7 @@ class Entry_update_controller {
 
 
     static function lint_entry(&$entry) {
-        global $import_report;
+        global $import_report, $dev_report;
 
         foreach($entry['trans html'] as $lang=>$translation) {
             if (str_contains($translation, ":</em>")) {
@@ -291,6 +291,14 @@ class Entry_update_controller {
         if ($entry['category'] === 'derived' || $entry['category'] === 'phrase') {
             if (!isset($entry['etymology']['derived']) || empty($entry['etymology']['derived'])) {
                 $import_report[] = ['term'=>$entry['slug'], 'msg'=>'Linter Notice: category is derived or phrase but no derived etymology detected.'];
+            }
+        }
+
+        foreach($entry['trans'] as $lang=>$groups) {
+            foreach($groups as $trans) {
+                if (preg_match(WORD_CHARS_REGEX, $trans)==1) {
+                    $dev_report[] = ["{$entry['slug']} in {$lang} has non-word chars in `{$trans}`"];
+                }
             }
         }
     }

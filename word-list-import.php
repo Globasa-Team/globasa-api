@@ -20,12 +20,14 @@ global
     $derived_data,
     $tags,
 
-    $import_report,
     $natlang_count,
     $stats,
     $natlang_etymologies,
     $word_count,
     $category_count,
+
+    $import_report,
+    $dev_report,
 
     $old_csv_filename,
     $new_csv_data,
@@ -49,12 +51,14 @@ $rhyme_data = [];
 $tags = [];
 $derived_data = [];
 
-$import_report = [];
 $natlang_count = [];
 $stats = [];
 $natlang_etymologies = [];
 $word_count = 0;
 $category_count = [];
+
+$import_report = [];
+$dev_report = [];
 
 $old_csv_data = [];
 $new_csv_data = [];
