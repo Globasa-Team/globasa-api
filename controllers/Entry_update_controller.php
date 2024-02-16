@@ -130,6 +130,7 @@ class Entry_update_controller {
         self::insert_derived_terms();
         self::update_derived_etymology();
         self::update_entry_rhymes();
+        self::update_entry_notes();
         pard_end();
     }
 
@@ -422,6 +423,26 @@ class Entry_update_controller {
 
         // Write dictionary files
         File_controller::write_api2_files();
+    }
+
+    /**
+     * Update notes for all entries with cononical terms
+     */
+    private static function update_entry_notes() {
+        global $dict;
+
+        foreach($dict as $term=>$entry) {
+            foreach($entry['entry note'] as $keyword=>$data) {
+                if (
+                    $keyword==='Am oko' || $keyword==='Kurto lexi cel' ||
+                    $keyword==='Am kompara fe' || $keyword==='Yongudo sol ton'
+                ){
+                    foreach($data as $slug=>$null_data) {
+                        $dict[$term]['entry notes'][$keyword][$slug] = $dict[$slug]['term'];
+                    }
+                }
+            }
+        }
     }
 
 

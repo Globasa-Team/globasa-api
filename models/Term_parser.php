@@ -175,7 +175,9 @@ class Term_parser
                 case 'Kurto lexi cel':
                 case 'Am kompara fe':
                 case 'Yongudo sol ton':
-                    $entry['entry notes'][$keyword] = explode(', ', $content);
+                    foreach(explode(', ', $content) as $slug) {
+                        $entry['entry notes'][$keyword][slugify($slug)] = null;
+                    }
                     break;
                 case 'Nota':
                     $entry['entry notes'][$keyword] = $this->pd->line($content);
