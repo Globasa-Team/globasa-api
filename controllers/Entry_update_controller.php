@@ -294,13 +294,6 @@ class Entry_update_controller {
             }
         }
 
-        foreach($entry['trans'] as $lang=>$groups) {
-            foreach($groups as $trans) {
-                if (preg_match(WORD_CHARS_REGEX, $trans)==1) {
-                    $dev_report[] = ["{$entry['slug']} in {$lang} has non-word chars in `{$trans}`"];
-                }
-            }
-        }
     }
 
 
@@ -334,6 +327,8 @@ class Entry_update_controller {
             self::insert_examples($entry);
             self::validate_and_count_category($entry['category'], $entry['term']);
             self::update_rhyme_data($entry);
+
+            self::lint_entry($entry);
 
             $dict[$entry['slug']] = $entry;
             usleep(SMALL_IO_DELAY);

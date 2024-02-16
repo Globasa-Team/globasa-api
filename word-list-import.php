@@ -114,6 +114,8 @@ try {
     $cfg['log']->add("Script complete", 5);
     $cfg['log']->email_log($cfg);
     yaml_emit_file(DATA_FILENAME, ['previous'=>$new_csv_filename]);
+
+    pard($dev_report);
     pard_end();
 }
 catch (Throwable $t) {

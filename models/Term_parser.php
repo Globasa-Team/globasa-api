@@ -152,9 +152,7 @@ class Term_parser
 
         $entry['entry note beta'] = $data['entry note'];
         
-        // debug
-        pard($data['entry note'], $entry['slug']);
-        $dev_report[] = ["{$entry['slug']}: {$data['entry note']}"];
+        $dev_report[] = [$entry['slug'] => $data['entry note']];
 
         $notes = explode('.', $data['entry note']);
         
