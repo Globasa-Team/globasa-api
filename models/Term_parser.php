@@ -169,11 +169,12 @@ class Term_parser
             }
 
             [$keyword, $content] = explode(':', $note);
+            $content = trim($content);
 
             switch ($keyword) {
                 case 'Am oko':
                 case 'Kurto lexi cel':
-                case 'Am kompara fe':
+                case 'Am kompara mena fe':
                 case 'Yongudo sol ton':
                     foreach(explode(', ', $content) as $slug) {
                         $entry['entry notes'][$keyword][slugify($slug)] = null;
@@ -182,9 +183,12 @@ class Term_parser
                 case 'Nota':
                     $entry['entry notes'][$keyword] = $this->pd->line($content);
                     break;
+                case 'gramati':
+                    $entry['entry notes'][$keyword] = $content;
+                    break;
                 default:
                     $import_report[]=['term'=>$entry['slug'], 'msg'=>'Entry note error, type='.$keyword];
-                    $entry['entry notes']['Nota'] = $this->pd->line($keyword.':'.$content);
+                    $entry['entry notes']['Nota'] = $this->pd->line($keyword.': '.$content);
             }
 
             

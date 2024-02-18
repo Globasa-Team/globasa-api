@@ -432,11 +432,14 @@ class Entry_update_controller {
         global $dict;
 
         foreach($dict as $term=>$entry) {
-            foreach($entry['entry note'] as $keyword=>$data) {
+            if (!isset($entry['entry notes'])) continue;
+            pard($entry['entry notes']);
+            foreach($entry['entry notes'] as $keyword=>$data) {
                 if (
                     $keyword==='Am oko' || $keyword==='Kurto lexi cel' ||
-                    $keyword==='Am kompara fe' || $keyword==='Yongudo sol ton'
+                    $keyword==='Am kompara mena fe' || $keyword==='Yongudo sol ton'
                 ){
+                    pard($data, $keyword);
                     foreach($data as $slug=>$null_data) {
                         $dict[$term]['entry notes'][$keyword][$slug] = $dict[$slug]['term'];
                     }
