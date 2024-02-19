@@ -172,10 +172,9 @@ class Term_parser
             $content = trim($content);
 
             switch ($keyword) {
-                case 'Am oko':
-                case 'Kurto lexi cel':
-                case 'Am kompara mena fe':
-                case 'Yongudo sol ton':
+                case 'am oko':
+                case 'kurto lexi':
+                case 'kompara':
                     foreach(explode(', ', $content) as $slug) {
                         $entry['entry notes'][$keyword][slugify($slug)] = null;
                     }

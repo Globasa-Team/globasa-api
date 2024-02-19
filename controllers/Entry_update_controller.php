@@ -436,8 +436,8 @@ class Entry_update_controller {
             pard($entry['entry notes']);
             foreach($entry['entry notes'] as $keyword=>$data) {
                 if (
-                    $keyword==='Am oko' || $keyword==='Kurto lexi cel' ||
-                    $keyword==='Am kompara mena fe' || $keyword==='Yongudo sol ton'
+                    $keyword==='am oko' || $keyword==='kurto lexi' ||
+                    $keyword==='kompara'
                 ){
                     pard($data, $keyword);
                     foreach($data as $slug=>$null_data) {
