@@ -65,11 +65,10 @@ class Term_parser
         $csv = [];
 
         foreach ($data as $index => $datum) {
-            $field = COLUMN_MAP[$this->csv_columns[$index]];
-            if (!isset($field)) {
-                pard($field, "bail:");
+            if (!isset(COLUMN_MAP[$this->csv_columns[$index]])) {
                 continue;
             }
+            $field = COLUMN_MAP[$this->csv_columns[$index]];
             if (str_starts_with($field, 'trans')) {
                 $lang = explode(" ", $field)[1];
                 $raw['trans'][$lang] = htmlentities($datum);

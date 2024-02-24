@@ -124,13 +124,27 @@ class Entry_update_controller {
 
 
 
-    private static function finalize_entry_data() {
+    private static function finalize_all_data() {
         // Insert data that needed all entries to be loaded
         pard_sec("Finalize entries");
         self::insert_derived_terms();
         self::update_derived_etymology();
         self::update_entry_rhymes();
         self::update_entry_notes();
+
+        pard("Sorting");
+        global $tags, $dict, $min_entries, $basic_entries, $standard_entries, $term_indexes, $search_terms;
+
+        foreach($tags as $tag=>$data) {
+            ksort($tags[$tag]);
+        }
+
+        ksort($min_entries);
+        ksort($basic_entries);
+        ksort($standard_entries);
+        ksort($term_indexes);
+        ksort($search_terms);
+
         pard_end();
     }
 
@@ -411,7 +425,7 @@ class Entry_update_controller {
         
 
         // Add cross referenced data to entries
-        self::finalize_entry_data();
+        self::finalize_all_data();
 
         // Check for changes
         pard_sec("Post entry update");
@@ -433,13 +447,12 @@ class Entry_update_controller {
 
         foreach($dict as $term=>$entry) {
             if (!isset($entry['entry notes'])) continue;
-            pard($entry['entry notes']);
+            
             foreach($entry['entry notes'] as $keyword=>$data) {
                 if (
                     $keyword==='am oko' || $keyword==='kurto lexi' ||
                     $keyword==='kompara'
                 ){
-                    pard($data, $keyword);
                     foreach($data as $slug=>$null_data) {
                         $dict[$term]['entry notes'][$keyword][$slug] = $dict[$slug]['term'];
                     }
