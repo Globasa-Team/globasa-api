@@ -638,9 +638,11 @@ class Term_parser
                 if ($translations[$pos]==='(') {
                     // Skip to end of enclosure, $pos is ')'
                     $pos = strpos($translations, ')', $pos);
-                    if ($pos >= $len) {
-                        $pos = $len-1;
-                    }
+                }
+                
+                if ($translations[$pos]==='[') {
+                    // Skip to end of enclosure, $pos is ']'
+                    $pos = strpos($translations, ']', $pos);
                 }
 
                 if($translations[$pos]===',') {
