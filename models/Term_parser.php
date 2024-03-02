@@ -726,6 +726,8 @@ class Term_parser
 
         // included all parts, removing parentheses and underscores.
         $cur = trim(preg_replace('/[\(\)_]/U', '', $term));     // (_ ... _)
+        // Remove brackets for SPA gender
+        $cur = trim(preg_replace('/\[(.*)\]/U', '', $cur));     // [ ... ]
         $cur = strtolower(trim($cur));
         $parsed['search terms'][$lang][] = trim($cur);
 
