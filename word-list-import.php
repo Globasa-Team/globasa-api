@@ -103,7 +103,6 @@ try {
     // Update data files
     Entry_update_controller::update_entries(old_csv_filename:$data['previous'], current_csv_filename:$new_csv_filename);
 
-
     pard_sec("Other stuff");
 
     // Update i18n
@@ -111,11 +110,15 @@ try {
     I18n::update();
 
     // Finish up
+    // pard($import_report, "Parse report");
+    // pard($dev_report, "Developer report");
+    $cfg['log']->add_report($import_report, "Import Report");
+    $cfg['log']->add_report($dev_report, "Developer Report");
     $cfg['log']->add("Script complete", 5);
     $cfg['log']->email_log($cfg);
     yaml_emit_file(DATA_FILENAME, ['previous'=>$new_csv_filename]);
 
-    pard($dev_report);
+    
     pard_end();
 }
 catch (Throwable $t) {

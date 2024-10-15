@@ -2,6 +2,7 @@
 namespace globasa_api;
 use Exception;
 use Throwable;
+use TypeError;
 
 class Entry_update_controller {
 
@@ -71,7 +72,7 @@ class Entry_update_controller {
      * Calculate stats from the dictionary entries.
      */
     public static function calculate_stats(): void {
-        global $dict, $stats;
+        global $dict, $stats, $import_report;
 
         $max_examples = 0;
         $max_examples_term = "";
@@ -82,33 +83,39 @@ class Entry_update_controller {
 
         foreach($dict as $slug=>$entry) {
             
-            if (isset($entry['examples']) && count($entry['examples']) > $max_examples) {
-                $max_examples = count($entry['examples']);
-                $max_examples_term = $entry['slug'];
-            }
-
-            if ($entry['category'] === 'root' && array_key_exists('natlang', $entry['etymology']) ) {
-
-                // Calculate the total number of roots and roots for each source lang
-                $stats['natlang roots'] += 1;
-
-                foreach($entry['etymology']['natlang'] as $natlang => $data) {
-                    if (!array_key_exists($natlang, $stats['etymology source percent'])) {
-                        $stats['etymology source percent'][$natlang] = 0;
-                    }
-                    $stats['etymology source percent'][$natlang] += 1;
+            try {
+                if (isset($entry['examples']) && count($entry['examples']) > $max_examples) {
+                    $max_examples = count($entry['examples']);
+                    $max_examples_term = $entry['slug'];
                 }
-            } elseif ($entry['category'] === 'root' && array_key_exists('kwasilexi', $entry['etymology']) ) {
     
-                // Calculate the total number of roots and roots for each source lang
-                $stats['natlang roots'] += 1;
-
-                foreach($entry['etymology']['kwasilexi'] as $natlang => $data) {
-                    if (!array_key_exists($natlang, $stats['etymology source percent'])) {
-                        $stats['etymology source percent'][$natlang] = 0;
+                if ($entry['category'] === 'root' && array_key_exists('natlang', $entry['etymology']) ) {
+    
+                    // Calculate the total number of roots and roots for each source lang
+                    $stats['natlang roots'] += 1;
+    
+                    foreach($entry['etymology']['natlang'] as $natlang => $data) {
+                        if (!array_key_exists($natlang, $stats['etymology source percent'])) {
+                            $stats['etymology source percent'][$natlang] = 0;
+                        }
+                        $stats['etymology source percent'][$natlang] += 1;
                     }
-                    $stats['etymology source percent'][$natlang] += 1;
+                } elseif ($entry['category'] === 'root' && array_key_exists('kwasilexi', $entry['etymology']) ) {
+        
+                    // Calculate the total number of roots and roots for each source lang
+                    $stats['natlang roots'] += 1;
+    
+                    foreach($entry['etymology']['kwasilexi'] as $natlang => $data) {
+                        if (!array_key_exists($natlang, $stats['etymology source percent'])) {
+                            $stats['etymology source percent'][$natlang] = 0;
+                        }
+                        $stats['etymology source percent'][$natlang] += 1;
+                    }
                 }
+            } catch (TypeError $e) {
+                //$dev_report[];
+                $import_report[] = ['term'=>$slug, 'msg'=>"Major error in {$slug} entry. Found in calculate_stats()"];
+                pard_print_throwable($e, "Type error in term {$slug}", true);
             }
 
         }
@@ -298,6 +305,20 @@ class Entry_update_controller {
     static function lint_entry(&$entry) {
         global $import_report, $dev_report;
 
+
+        foreach(['term','word class','category','trans','etymology'] as $key) {
+            if (!array_key_exists($key, $entry)) {
+                $import_report[] = ['term'=>$entry['slug'], 'msg'=>"Linter Notice: {$key} is not just blank, but somehow a null"];
+            }
+        }
+
+        foreach($entry as $key=>$value) {
+            if ($value===null) {
+                pard($entry, "entry null value");
+                $import_report[] = ['term'=>$entry['slug'], 'msg'=>"Linter Notice: {$key} is not just blank, but somehow a null"];
+            }
+        }
+
         foreach($entry['trans html'] as $lang=>$translation) {
             if (str_contains($translation, ":</em>")) {
                 $import_report[] = ['term'=>$entry['slug'], 'msg'=>"Linter Notice: {$lang} has colon inside italic rathre than outside"];
@@ -314,7 +335,7 @@ class Entry_update_controller {
 
     static function parse_spreadsheet_data($term_stream) {
         global $new_csv_data, $dict, $debug_data;
-
+    
         // Download the official term list, processing each term.
         $tp = new Term_parser(fields:fgetcsv($term_stream));
 
@@ -351,6 +372,7 @@ class Entry_update_controller {
         }
         
         pard_counter_end();
+    
         pard_end();
     }
 
@@ -423,7 +445,6 @@ class Entry_update_controller {
         }
         fclose($term_stream);
         
-
         // Add cross referenced data to entries
         self::finalize_all_data();
 

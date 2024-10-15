@@ -46,6 +46,23 @@ class App_log {
         }
     }
 
+    public function add_report(array $report, string $title, int $l=0) {
+        $this->add($title, $l);
+        foreach($report as $data) {
+            if (is_array($data)) {
+                if(count($data) == 1) {
+                    foreach($data as $key=>$value) {
+                        $this->add("\t→".$key ."\t⇒ ". $value, $l);
+                    }
+                } else {
+                    $this->add("\t→".$data['term'] ."\t⇒ ". $data['msg'], $l);
+                }
+            } else {
+                $this->add("\t→".$data, $l);
+            }
+        }
+    }
+
     /**
      * Emails log to configured email addresses.
      * 
@@ -74,7 +91,12 @@ class App_log {
             (($usage["ru_stime.tv_usec"] - $this->start_usage["ru_stime.tv_usec"])/1000);
             
             $computer_time = "Also, this script's CPU execution time was system: {$sdelta} / user: {$udelta}.";
-        echo("Time >\t{$human_time}\nTime >\t{$computer_time}\n");
+        pard("Time >\t{$human_time}\nTime >\t{$computer_time}\n", "Computer Time");
+        pard($human_time, "Human Time");
+        pard($computer_time, "Computer Time");
+        pard($sdelta, "System time");
+        pard($udelta, "User time");
+        
         $message .= "- ".$human_time.PHP_EOL.PHP_EOL."- ".$computer_time.PHP_EOL.PHP_EOL;
 
         try {
@@ -102,10 +124,10 @@ class App_log {
             $mail->Body    = $message;
     
             $mail->send();
-            echo "Mail >\tMessage has been sent to ".implode(", ", $this->emails)."\n";
+            pard("Mail >\tMessage has been sent to ".implode(", ", $this->emails)."\n");
         } catch (Exception $e) {
-            echo "Message could not be sent to ".$email."\n";
-            echo "Mailer Error: {$mail->ErrorInfo}\n\n";
+            pard("Message could not be sent to ".$email."\n");
+            pard("Mailer Error: {$mail->ErrorInfo}\n\n");
         }
     }
 

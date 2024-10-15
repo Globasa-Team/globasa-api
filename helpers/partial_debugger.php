@@ -60,7 +60,11 @@ function pard(mixed $msg, string $label="", bool $error = false):void {
             }
             break;
         case "integer":
-        case "double":
+            echo "┣━ ".$label.number_format($msg).'(integer)'.PHP_EOL;
+            break;
+        case "float":
+            echo "┣━ ".$label.number_format($msg, 2).'(float)'.PHP_EOL;
+            break;
         case "boolean":
             echo "┣━ ".$label.strval($msg).'(bool)'.PHP_EOL;
             break;
@@ -73,7 +77,7 @@ function pard(mixed $msg, string $label="", bool $error = false):void {
             pard_print_object($msg);
             break;
         default:
-            echo "┣━ ".$label.DIM."type: ".gettype($msg).PHP_EOL;
+            echo "┣━ ".$label.DIM."other type: ".gettype($msg).PHP_EOL;
             break;
     }
     echo(TEXT_RESET);
@@ -94,6 +98,13 @@ function pard_app_finished():void {
     global $_pard_status;
     if (!$_pard_status) return;
     echo MAGENTA."\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n".TEXT_RESET;
+    
+    
+    // DEBUG: Memory Usage
+    pard(memory_get_usage(true), "Memory usage (real)");
+    pard(memory_get_usage(), "Memory usage");
+
+
 }
 
 
