@@ -145,17 +145,14 @@ class Term_parser
      * 
      */
     private function parse_entry_note(array &$entry, array &$data) {
-        global $dev_report, $import_report;
+        global $import_report;
         
         if (empty($data['entry note'])) return;
 
         $entry['entry note beta'] = $data['entry note'];
         
-        $dev_report[] = [$entry['slug'] => $data['entry note']];
-
         $notes = explode('.', $data['entry note']);
         
-        //debug
         foreach($notes as $note) {
 
             if ($note==='Am oko tabellexi') {
@@ -166,7 +163,7 @@ class Term_parser
                 $entry['entry notes']['Nota'] = $this->pd->line($note);
                 continue;
             }
-
+            
             [$keyword, $content] = explode(':', $note);
             $content = trim($content);
 
@@ -188,10 +185,7 @@ class Term_parser
                     $import_report[]=['term'=>$entry['slug'], 'msg'=>'Entry note error, type='.$keyword];
                     $entry['entry notes']['Nota'] = $this->pd->line($keyword.': '.$content);
             }
-
             
-
-
         }
     }
 
