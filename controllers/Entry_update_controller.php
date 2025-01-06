@@ -89,7 +89,7 @@ class Entry_update_controller {
                     $max_examples_term = $entry['slug'];
                 }
     
-                if ($entry['category'] === 'root' && array_key_exists('natlang', $entry['etymology']) ) {
+                if ($entry['category'] === 'root' && array_key_exists('etymology', $entry) && array_key_exists('natlang', $entry['etymology']) ) {
     
                     // Calculate the total number of roots and roots for each source lang
                     $stats['natlang roots'] += 1;
@@ -100,7 +100,7 @@ class Entry_update_controller {
                         }
                         $stats['etymology source percent'][$natlang] += 1;
                     }
-                } elseif ($entry['category'] === 'root' && array_key_exists('kwasilexi', $entry['etymology']) ) {
+                } elseif ($entry['category'] === 'root' && array_key_exists('etymology', $entry) && array_key_exists('kwasilexi', $entry['etymology']) ) {
         
                     // Calculate the total number of roots and roots for each source lang
                     $stats['natlang roots'] += 1;
@@ -261,6 +261,12 @@ class Entry_update_controller {
      */
     private static function insert_standard_entry(array $entry) {
         global $standard_entries;
+
+        if (!isset($entry['term'])) $entry['term'] = "";
+        if (!isset($entry['word class'])) $entry['word class'] = "";
+        if (!isset($entry['category'])) $entry['category'] = "";
+        if (!isset($entry['trans'])) $entry['trans'] = "";
+        if (!isset($entry['etymology'])) $entry['etymology'] = "";
 
         $standard_entries[$entry['slug']] = [
             'term'=>$entry['term'],

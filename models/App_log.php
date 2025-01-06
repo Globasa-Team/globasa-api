@@ -13,6 +13,7 @@ class App_log {
     private $debug = false;
     private $start_usage;
     private $level;
+    private $instance_name;
 
     /**
      * Creates log manager.
@@ -26,6 +27,7 @@ class App_log {
         } else {
             $this->level = 1;
         }
+        $this->instance_name = $config['instance_name'];
     }
 
     /**
@@ -112,15 +114,15 @@ class App_log {
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
             $mail->Port       = 465;                                    //TCP port to connect to 465; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
             //Recipients
-            $mail->setFrom($c['smtp_username'], 'Menalari Update');
+            $mail->setFrom($c['smtp_username'],  $this->instance_name.' Update');
             foreach($c['app_log_emails'] as $email) {
                 $mail->addAddress($email);     //Add a recipient
             }
     
             //Content
             $mail->isHTML(false);                                  //Set email format to HTML
-            $mail->Subject = 'Today\'s update';     
-            if ($c['dev']) $mail->Subject = "Dev update";
+            $mail->Subject = $this->instance_name.' update '.date("M d");     
+            if ($c['dev']) $mail->Subject = $this->instance_name." Import Script";
             $mail->Body    = $message;
     
             $mail->send();
