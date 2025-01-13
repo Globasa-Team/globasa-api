@@ -733,6 +733,13 @@ class Term_parser
             $cur = strtolower(trim($cur));
             $parsed['search terms'][$lang][] = trim($cur);
         }
+
+        // Add search term for clarifying notes, such as 
+        // `subordinate clause: where` for denloka hu
+        if (strpos($term, ':') !== false) {
+            $cur = substr($term, strpos($term, ':')+1);
+            $parsed['search terms'][$lang][] = trim($cur);
+        }
     }
 
 
