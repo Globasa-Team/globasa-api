@@ -30,6 +30,7 @@ try {
     define('COLUMN_MAP', array(
         'Category' => 'category',
         'Word' => 'term',
+        'slug_mod' => 'slug_mod',
         'WordClass' => 'word class',
         'OfficialWord' => 'status',
         'TranslationEng' => 'trans eng',

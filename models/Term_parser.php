@@ -815,7 +815,11 @@ class Term_parser
         $search_terms = [];
 
         $parsed['term'] = trim($raw['term']);
-        $parsed['slug'] = slugify($parsed['term']);
+        if (empty($raw['slug_mod'])) {
+            $parsed['slug'] = slugify($parsed['term']);
+        } else {
+            $parsed['slug'] = slugify($parsed['term']).'_'.$raw['slug_mod'];
+        }
 
         // If has optional part, remove and add to index
         if (strpos($parsed['slug'], "(") !== false) {
