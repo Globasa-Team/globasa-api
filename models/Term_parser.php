@@ -115,7 +115,7 @@ class Term_parser
 
 
     /**
-     * Find anomolies or errors not otherwise caught
+     * Find anomalies or errors not otherwise caught
      */
     private function lint($entry) {
         global $import_report;
@@ -133,7 +133,9 @@ class Term_parser
      */
     private function parse_basic_field($field, $raw, &$entry, $log_empty = false)
     {
-        if (is_string($raw[$field]))
+        if (!isset($raw[$field])) {
+            $entry[$field] = "";
+        } else if (is_string($raw[$field]))
             $entry[$field] = trim($raw[$field]);
         else
             $entry[$field] = $raw[$field];
