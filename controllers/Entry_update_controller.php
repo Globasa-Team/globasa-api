@@ -324,7 +324,6 @@ class Entry_update_controller {
 
         foreach($entry as $key=>$value) {
             if ($value===null) {
-                pard($entry, "entry null value");
                 $import_report[] = ['term'=>$entry['slug'], 'msg'=>"Linter Notice: {$key} is not just blank, but somehow a null"];
             }
         }
