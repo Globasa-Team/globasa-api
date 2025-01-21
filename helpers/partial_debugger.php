@@ -201,7 +201,7 @@ function pard_progress_increment(): void {
     global $_pard_progress_total, $_pard_progress_count, $_pard_progress_percent;
     $_pard_progress_count += 1;
 
-    $status = floor($_pard_progress_count/$_pard_progress_total*50);
+    $status = floor(50.0*$_pard_progress_count/$_pard_progress_total);
 
     if ($status>$_pard_progress_percent) {
         $_pard_progress_percent = $status;

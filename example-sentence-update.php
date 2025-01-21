@@ -3,7 +3,9 @@
 require_once("helpers/partial_debugger.php");
 
 global $examples, $globasa_index;
+global $_pard_status;
 
+$_pard_status = true;
 pard_sec("Start update");
 
 $cfg = yaml_parse_file('config-sentences.yaml');
@@ -14,18 +16,30 @@ $examples = [];
 
 pard_sec('loading files');
 
+pard_progress_start(count($source_files), "Processing source files");
 foreach($source_files as $filename) {
-    pard($filename);
+    // pard($filename);
     update_examples_from_file($filename);
+    pard_progress_increment();
 }
+pard_progress_end("done.");
 
-pard_sec('writing file');
-yaml_emit_file('examples.yaml', $examples);
+// pard_sec('writing file');
+// yaml_emit_file($cfg['api_path'].'/examples.yaml', $examples);
+// pard_end("written");
 
-pard_sec("written");
+pard_sec('writing files');
+pard($cfg['api_path'].'/examples/'.'...'.'.yaml');
+pard_progress_start(count($examples), 'Writing examples for each word');
 
+foreach($examples as $slug => $examples) {
+    yaml_emit_file($cfg['api_path'].'/examples/'.$slug.'.yaml', $examples);
+    pard_progress_increment();
+}
+pard_progress_end();
+pard_end("wrote all files");
 
-
+pard_app_finished();
 
 
 
@@ -112,6 +126,6 @@ function update_examples_from_file($filename) {
         }
 
     }
-    pard("Word count: ".count($examples));
+    // pard("Word count: ".count($examples));
     sleep(1);
 }
