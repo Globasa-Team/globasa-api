@@ -132,6 +132,10 @@ class Entry_update_controller {
 
 
     private static function finalize_all_data() {
+        global $debug_mode;
+
+        if ($debug_mode) return;
+
         // Insert data that needed all entries to be loaded
         pard_sec("Finalize entries");
         self::insert_derived_terms();
@@ -340,7 +344,7 @@ class Entry_update_controller {
 
 
     static function parse_spreadsheet_data($term_stream) {
-        global $new_csv_data, $dict, $debug_data;
+        global $new_csv_data, $dict, $debug_data, $debug_mode, $cfg;
     
         // Download the official term list, processing each term.
         $tp = new Term_parser(fields:fgetcsv($term_stream));
@@ -354,25 +358,27 @@ class Entry_update_controller {
             
             [$raw_entry, $entry, $csv_row] = $tp->parse_term($data);
 
-            $new_csv_data[$entry['slug']] = $csv_row;
-            $debug_data[$entry['slug']] = $raw_entry;
-            if (isset($entry['etymology'][')'])) unset($entry['etymology'][')']);
-            
-            // Insert entry in aggregate data
-            self::insert_term_index($entry);
-            self::insert_search_terms($entry);
-            self::insert_basic_entry($entry);
-            self::insert_minimum_entry($entry);
-            self::insert_standard_entry($entry);
-
-            self::insert_tags(parsed:$entry);
-            self::insert_examples($entry);
-            self::validate_and_count_category($entry['category'], $entry['term']);
-            self::update_rhyme_data($entry);
-
-            self::lint_entry($entry);
-
-            $dict[$entry['slug']] = $entry;
+            if (!$debug_mode || in_array($entry['slug'], $cfg['test_entries'])) {
+                $new_csv_data[$entry['slug']] = $csv_row;
+                $debug_data[$entry['slug']] = $raw_entry;
+                if (isset($entry['etymology'][')'])) unset($entry['etymology'][')']);
+                
+                // Insert entry in aggregate data
+                self::insert_term_index($entry);
+                self::insert_search_terms($entry);
+                self::insert_basic_entry($entry);
+                self::insert_minimum_entry($entry);
+                self::insert_standard_entry($entry);
+    
+                self::insert_tags(parsed:$entry);
+                self::insert_examples($entry);
+                self::validate_and_count_category($entry['category'], $entry['term']);
+                self::update_rhyme_data($entry);
+    
+                self::lint_entry($entry);
+    
+                $dict[$entry['slug']] = $entry;
+            }
             usleep(SMALL_IO_DELAY);
             pard_counter_next();
         }
@@ -432,13 +438,14 @@ class Entry_update_controller {
 
 
     static function update_entries(string $current_csv_filename, string $old_csv_filename) {
-        global $cfg, $old_csv_data;
+        global $cfg, $old_csv_data, $debug_mode;
 
         pard_sec("Update entries");
         
         // Load old
-        pard("Loading old CSV");
-        load_csv($old_csv_filename, $old_csv_data);
+        if (!$debug_mode) {
+            load_csv($old_csv_filename, $old_csv_data);
+        }
 
         // Load and parse new data
         pard("Loading current terms");
@@ -455,12 +462,14 @@ class Entry_update_controller {
         self::finalize_all_data();
 
         // Check for changes
-        pard_sec("Post entry update");
-        pard("Logging changes");
-        Entry_update_controller::log_changes();
-        pard("Calculating stats");
-        Entry_update_controller::calculate_stats();
-        pard_end();
+        if (!$debug_mode) {
+            pard_sec("Post entry update");
+            pard("Logging changes");
+            Entry_update_controller::log_changes();
+            pard("Calculating stats");
+            Entry_update_controller::calculate_stats();
+            pard_end();
+        }
 
         // Write dictionary files
         File_controller::write_api2_files();

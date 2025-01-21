@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Takes string and converst it to lower case ASCII, trim spaces,
+ * Takes string and converts it to lower case ASCII, trim spaces,
  * removing punctuation (except hyphens), stripping off accents.
  * 
  * Leaves spaces intact.
@@ -22,8 +22,12 @@ function slugify(string $text) {
         :: Lower();
     RULES;
     
-    return \Transliterator::createFromRules($rules)
-        ->transliterate(strtolower(trim($text)));
+    return str_replace(' ', '_', 
+                \Transliterator::createFromRules($rules)
+                    ->transliterate(
+                        strtolower(trim($text))
+                        )
+            );
     
 }
 

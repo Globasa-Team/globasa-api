@@ -785,7 +785,7 @@ class Term_parser
 
 
     /**
-     * Renders term variation for Globasa search index, and
+     * Renders term variation for the slug, worldlang search index, and
      * a smaller set for the mini def. This will add to the index:
      * the term as-is, the full term without brackets, the shortened term
      * without bracketted text, and all term fragments. Mini def will
@@ -812,38 +812,45 @@ class Term_parser
      */
     private function set_globasa_terms($raw, &$parsed)
     {
+        global $cfg;
+
         $search_terms = [];
+        $parsed['alt forms'] = [];
 
+        // Trim for entry term (source sensitive)
         $parsed['term'] = trim($raw['term']);
-        if (empty($raw['slug_mod'])) {
-            $parsed['slug'] = slugify($parsed['term']);
-        } else {
-            $parsed['slug'] = slugify($parsed['term']).'_'.$raw['slug_mod'];
-        }
 
-        // If has optional part, remove and add to index
-        if (strpos($parsed['slug'], "(") !== false) {
-            // Add to index the full term without brackets
-            $search_terms[] = trim(preg_replace(WORD_CHARS_REGEX, '', $parsed['slug']));
-            // Adds shortened term, removing bracketted text
-            $search_terms[] = trim(preg_replace(PAREN_UNDERSCORE_MARKDOWN_REGEX, '', $parsed['slug']));
-        }
-        
-        // Add these alt forms to the alt form list
-        $parsed['alt forms'] = $search_terms;
-
+        // Create full search index term (lower case)
+        $index = strtolower($parsed['term']);
         // Add full term to search terms
-        $search_terms[] = $parsed['slug'];
+        $search_terms[] = $index;
+
+        // Create slug, with modifier if needed
+        $parsed['slug'] = slugify($index) .
+                            (!empty($raw['slug_mod']) ? '_'.$raw['slug_mod'] : '');
+
+        // If has optional part in round brackets, remove and add to index.
+        // Also, add these alt forms to the alt form list.
+        if (strpos($index, "(") !== false) {
+            // Add the full term without brackets
+            $cur = trim(preg_replace(WORD_CHARS_REGEX, '', $index));
+            $search_terms[] = $cur;
+            $parsed['alt forms'][] = $cur;
+            // Adds shortened term, removing bracketed text
+            $cur = trim(preg_replace(PAREN_UNDERSCORE_MARKDOWN_REGEX, '', $index));
+            $search_terms[] = $cur;
+            $parsed['alt forms'][] = $cur;
+        }
 
         // Add all term fragments not in brackets
-        $terms = explode(' ', preg_replace(PAREN_UNDERSCORE_MARKDOWN_REGEX, '', $parsed['slug']));
+        $terms = explode(' ', preg_replace(PAREN_UNDERSCORE_MARKDOWN_REGEX, '', $index));
         foreach ($terms as $cur) {
             $term = trim($cur);
             if (empty($term)) continue;
             $search_terms[] = $term;
         }
 
-        $parsed['search terms']['glb'] = array_unique($search_terms);
+        $parsed['search terms'][$cfg['wl_code_short']] = array_unique($search_terms);
 
     }
 }

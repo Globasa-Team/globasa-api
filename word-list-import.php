@@ -81,23 +81,22 @@ try {
     if ($argv[1] === 'd') {
         pard("Debug Output Mode (only writing some entries)");
         $debug_mode = true;
+    } else {
+        $debug_mode = false;
     }
 
     if ($argv[1] === 'r' || $argv[1] === 'd') {
         pard("Reprocessing previous CSV file");
         $new_csv_filename = $data['previous'];
-    } elseif ($argv[1] === 'd') {
-        pard("Debug Output Mode (only writing some entries)");
-        $debug_mode = true;
     } else {
         $new_csv_filename = $argv[1];
         pard("Using: ".$new_csv_filename);
     }
 
-    pard("Loading examples.yaml");
-    $examples = yaml_parse_file('temp/examples.yaml');
+    // pard("Loading examples.yaml");
+    // $examples = yaml_parse_file('temp/examples.yaml');
     $cfg['log']->add("Environment: " . ($cfg['dev'] ? 'dev' : 'production'), 1);
-    pard($cfg['dev'], "Debug mode: ");
+    pard($debug_mode, "Debug mode: ");
     pard_end();
     
     // Update data files
