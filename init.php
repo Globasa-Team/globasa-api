@@ -32,6 +32,7 @@ try {
         'Word' => 'term',
         'slug_mod' => 'slug_mod',
         'WordClass' => 'word class',
+        'Class' => 'word class',
         'OfficialWord' => 'status',
         'TranslationEng' => 'trans eng',
         'TranslationEpo' => 'trans epo',
