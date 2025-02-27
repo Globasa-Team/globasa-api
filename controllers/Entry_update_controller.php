@@ -22,6 +22,7 @@ class Entry_update_controller {
     private static function add_entry_rhyme($entry, $rhyme) {
         global $dict;
         
+        /* Do not lists affixes, phrases, self  */
         if (
             $dict[$rhyme]['category'] === 'affix' ||  // 1i
             $dict[$rhyme]['category'] === 'phrase' || // 1ii
@@ -514,25 +515,26 @@ class Entry_update_controller {
 
             sort($ending_group);
 
-            foreach($ending_group as $entry) {
+            foreach($ending_group as $slug) {
 
-                if ($dict[$entry]['category'] === 'phrase') continue;
+                if ($dict[$slug]['category'] === 'phrase') continue;
                 
                 foreach($ending_group as $rhyme) {
-                    self::add_entry_rhyme($entry, $rhyme);
+                    self::add_entry_rhyme($slug, $rhyme);
                 }
 
-                if ($entry[0]==='-') {
-                    $alt = substr($entry, 1);
+                // Generate the alt form (root slug)
+                if ($slug[0]==='-') {
+                    $alt = substr($slug, 1);
                 } else {
-                    $alt = '-'.$entry;
+                    $alt = '-'.$slug;
                 }
 
                 // Fetch entry final morpheme
-                if (isset($dict[$entry]['etymology']['derived'])) {
-                    $final_morpheme = $dict[$entry]['etymology']['derived'][array_key_last($dict[$entry]['etymology']['derived'])];
+                if (isset($dict[$slug]['etymology']['derived'])) {
+                    $final_morpheme = $dict[$slug]['etymology']['derived'][array_key_last($dict[$slug]['etymology']['derived'])];
                 } else {
-                    $final_morpheme = $entry;
+                    $final_morpheme = $slug;
                 }
 
                 if ($final_morpheme[0]==='-') {
@@ -543,9 +545,9 @@ class Entry_update_controller {
 
                 
                 if(isset($dict[$alt])) {
-                    $dict[$entry]['rhyme exclusions'] = [$final_morpheme, $alt];
+                    $dict[$slug]['rhyme exclusions'] = [$final_morpheme, $alt];
                 } else {
-                    $dict[$entry]['rhyme exclusions'] = [$final_morpheme];
+                    $dict[$slug]['rhyme exclusions'] = [$final_morpheme];
                 }
                 
             }
