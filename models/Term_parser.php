@@ -634,11 +634,19 @@ class Term_parser
                 if ($translations[$pos]==='(') {
                     // Skip to end of enclosure, $pos is ')'
                     $pos = strpos($translations, ')', $pos);
+                    if ($pos===false) {
+                        $pos = $len;
+                        $this->log->add("ERROR: Term `".$parsed['term']."` is missing a closing ')' in translation.");
+                    }
                 }
                 
                 if ($translations[$pos]==='[') {
                     // Skip to end of enclosure, $pos is ']'
                     $pos = strpos($translations, ']', $pos);
+                    if ($pos===false) {
+                        $pos = $len;
+                        $this->log->add("ERROR: Term `".$parsed['term']."` is missing a closing ']' in translation.");
+                    }
                 }
 
                 if($translations[$pos]===',') {
