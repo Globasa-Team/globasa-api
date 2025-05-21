@@ -9,11 +9,6 @@ class Entry_update_controller {
     // Microseconds (1 millions of a second)
     const TINY_IO_DELAY = 5000; // 5k microseconds = a twohundredths of a second
 
-    const VALID_WORD_CATEGORIES = array(
-        'root', 'proper word', 'derived', 'phrase', 'affix'
-    );
-
-
 
     /**
      * 
@@ -590,13 +585,13 @@ class Entry_update_controller {
 
 
     /**
-     * Counts the category
+     * Counts the category     blank: empty(true) !allow(true)
      */
     static function validate_and_count_category(string $cat, string $word) {
 
         global $cfg, $import_report, $category_count;
 
-        if (!in_array($cat, self::VALID_WORD_CATEGORIES)) {
+        if (!in_array($cat, $cfg['valid_categories'])) {
             $cfg['log']->add("Word List Error: Invalid category `$cat` on term `$word`");
             $import_report[] = ['term'=>$word, 'msg'=>"Word List Error: Invalid category `$cat`"];
         }
