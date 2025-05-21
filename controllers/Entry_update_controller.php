@@ -15,7 +15,9 @@ class Entry_update_controller {
      * Rule 1 & 2: Assumes you are not sending any phrases or affixes as $rhyme!
      */
     private static function add_entry_rhyme($entry, $rhyme) {
-        global $dict;
+        global $cfg, $dict;
+
+        if (!$cfg['process_rhymes']) return;
         
         /* Do not lists affixes, phrases, self  */
         if (
@@ -499,7 +501,10 @@ class Entry_update_controller {
      * as done in `self::add_entry_rhyme()`
      */
     private static function update_entry_rhymes() {
-        global $rhyme_data, $dict;
+        global $cfg, $rhyme_data, $dict;
+
+        if (!$cfg['process_rhymes']) return;
+        
         pard("Update entry rhymes");
         pard_progress_start(count($rhyme_data), "rhyme groups");
 
