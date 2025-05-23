@@ -57,9 +57,9 @@ try {
     
     require_once("{$app_path}/models/App_log.php");
     require_once("{$app_path}/vendor/parsedown/Parsedown.php");
-    require_once("{$app_path}/vendor/phpmailer-6.8.0/src/Exception.php");
-    require_once("{$app_path}/vendor/phpmailer-6.8.0/src/PHPMailer.php");
-    require_once("{$app_path}/vendor/phpmailer-6.8.0/src/SMTP.php");
+    require_once("{$app_path}/vendor/PHPMailer/src/Exception.php");
+    require_once("{$app_path}/vendor/PHPMailer/src/PHPMailer.php");
+    require_once("{$app_path}/vendor/PHPMailer/src/SMTP.php");
     require_once("{$app_path}/helpers/fetch_files.php");
     require_once("{$app_path}/helpers/load_csv.php");
     require_once("{$app_path}/helpers/partial_debugger.php");

@@ -1,3 +1,6 @@
 [submodule "vendor/parsedown"]
 	path = vendor/parsedown
 	url = https://github.com/erusev/parsedown
+[submodule "vendor/PHPMailer"]
+	path = vendor/PHPMailer
+	url = https://github.com/PHPMailer/PHPMailer
