@@ -16,9 +16,9 @@ class I18n {
         }
         //What does this do on failure? Empty file? No file found?
 
-        $columnNames = fgetcsv($lang_resource_csv);
+        $columnNames = fgetcsv($lang_resource_csv, escape:"");
         $label_id = ''; // Should be set on first loop
-        while (($text_data = fgetcsv($lang_resource_csv)) !== false) {
+        while (($text_data = fgetcsv($lang_resource_csv, escape:"")) !== false) {
             foreach ($text_data as $key=>$datum) {
                 // Key is label id when in first position.
                 if ($key == 0) {

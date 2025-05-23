@@ -344,10 +344,10 @@ class Entry_update_controller {
         global $new_csv_data, $dict, $debug_data, $debug_mode, $cfg;
     
         // Download the official term list, processing each term.
-        $tp = new Term_parser(fields:fgetcsv($term_stream));
+        $tp = new Term_parser(fields:fgetcsv($term_stream, escape:""));
 
         pard_counter_start("Parsing spreadsheet terms");
-        while(($data = fgetcsv($term_stream)) !== false) {
+        while(($data = fgetcsv($term_stream, escape:"")) !== false) {
             // Parse term if it exists
             if (empty($data) || empty($data[0]) ) {
                 continue;

@@ -7,10 +7,10 @@ function load_csv($file, &$csv_data)
         die("Failed to open dictionary CSV");
     }
     //TODO: What does this do on failure? Empty file? No file found?
-    $columnNames = fgetcsv($dictionaryCSV);
+    $columnNames = fgetcsv($dictionaryCSV, escape:"");
 
     pard_counter_start("Load old CSV data");
-    while (($word = fgetcsv($dictionaryCSV)) !== false) {
+    while (($word = fgetcsv($dictionaryCSV, escape:"")) !== false) {
         $newWord = null;
         foreach ($word as $key=>$datum) {
             if (!isset(COLUMN_MAP[$columnNames[$key]])) {

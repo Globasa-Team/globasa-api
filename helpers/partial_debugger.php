@@ -86,12 +86,12 @@ function pard(mixed $msg, string $label="", bool $error = false):void {
 function pard_app_start():void {
     global $_pard_status;
     if (!$_pard_status) return;
-    echo MAGENTA."\n\n
-        ┏┓      ┏┓      
-        ┣┫┏┓┏┓  ┗┓╋┏┓┏┓╋
-        ┛┗┣┛┣┛  ┗┛┗┗┻┛ ┗
-          ┛ ┛           
-\n".TEXT_RESET;
+    echo MAGENTA."
+    ┏┓      ┏┓      
+    ┣┫┏┓┏┓  ┗┓╋┏┓┏┓╋
+    ┛┗┣┛┣┛  ┗┛┗┗┻┛ ┗
+      ┛ ┛           
+".TEXT_RESET;
 }
 
 function pard_app_finished():void {
@@ -99,12 +99,9 @@ function pard_app_finished():void {
     if (!$_pard_status) return;
     echo MAGENTA."\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n".TEXT_RESET;
     
-    
     // DEBUG: Memory Usage
     pard(memory_get_usage(true), "Memory usage (real)");
     pard(memory_get_usage(), "Memory usage");
-
-
 }
 
 
@@ -151,7 +148,7 @@ function pard_end(): void {
     echo ("┸ ".DIM.$_pard_section.TEXT_RESET.PHP_EOL);
 }
 
-function pard_pause(string $msg = null):void {
+function pard_pause(string $msg = ''):void {
     global $_pard_status;
     if (!$_pard_status) return;
     
