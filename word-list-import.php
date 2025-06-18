@@ -69,12 +69,10 @@ $debug_mode = false;
 // Initialize local data
 $new_csv_filename = "";
 
-
-
+$app_path = __DIR__;
+require_once("{$app_path}/init.php");
 try {
     // Startup
-    $app_path = __DIR__;
-    require_once("{$app_path}/init.php");
     pard_app_start();
     pard_sec("Initiation");
 
