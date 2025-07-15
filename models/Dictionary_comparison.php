@@ -24,13 +24,13 @@ class Dictionary_comparison {
         $this->same_terms = array_intersect($old_terms, $new_terms);
         $this->removed_terms = array_diff($old_terms, $new_terms);
         $this->added_terms = array_diff($new_terms, $old_terms);
-
+        
         // look for renamed terms, & log.
         foreach($this->added_terms as $added_key => $added_term) {
             foreach($this->removed_terms as $removed_key => $removed_term) {
                 foreach($this->c['translated_languages'] as $lang) {
                     // If this has any translation field the same, log as a renamed term
-                    if (($old_csv_data[$removed_term][$lang] === $new_csv_data[$added_term][$lang]) && !empty($old_csv_data[$removed_term][$lang])) {
+                    if (!empty($old_csv_data[$removed_term][$lang]) && ($old_csv_data[$removed_term][$lang] === $new_csv_data[$added_term][$lang])) {
                         // Save log to both terms
                         $this->log_term_change($removed_term, "term renamed", "", $removed_term, $added_term);
                         $this->log_term_change($added_term, "term renamed", "", $removed_term, $added_term);

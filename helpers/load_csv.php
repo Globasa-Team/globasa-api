@@ -2,6 +2,8 @@
 
 function load_csv($file, &$csv_data)
 {
+    global $cfg;
+
     $dictionaryCSV = fopen($file, 'r');
     if ($dictionaryCSV === false) {
         die("Failed to open dictionary CSV");
@@ -21,6 +23,13 @@ function load_csv($file, &$csv_data)
         }
         $wordIndex = slugify($word[0]);
         if (empty($wordIndex)) continue; // Skip blank lines
+        if (!empty($newWord['slug_mod'])) {
+            $wordIndex .= '_'.slugify($newWord['slug_mod']);
+        }
+        if (!empty($csv_data[$wordIndex])) {
+            $cfg['log']->add("Error: word index already exists: ".$wordIndex);
+        }
+
         $csv_data[$wordIndex] = $newWord;
         usleep(SMALL_IO_DELAY);
         pard_counter_next();
