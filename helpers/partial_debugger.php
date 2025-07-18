@@ -42,16 +42,17 @@ function pard(mixed $msg, string $label="", bool $error = false):void {
     global $_pard_status;
     if (!$_pard_status) return;
     if ($error) echo(RED);
+    if (!empty($label)) $label = GRAY.$label.': '.TEXT_RESET;
 
     switch (gettype($msg)) {
         case "string":
             if (strlen($msg) < PARD_LENGTH) {
-                echo "┣━ ".$label.$msg.PHP_EOL;
+                echo("┠─ ".$label.$msg.PHP_EOL);
             } else {
                 $first = true;
                 foreach(explode("\n",wordwrap($msg)) as $line) {
                     if ($first) {
-                        echo "┣━ ".$label.$line.PHP_EOL;
+                        echo("┠─ ".$label.': '.$line.PHP_EOL);
                         $first = false;
                     } else {
                         echo "┃  ".$line.PHP_EOL;
@@ -60,31 +61,32 @@ function pard(mixed $msg, string $label="", bool $error = false):void {
             }
             break;
         case "integer":
-            echo "┣━ ".$label.number_format($msg).'(integer)'.PHP_EOL;
+            echo "┠─ ".$label.number_format($msg).GRAY.'(integer)'.TEXT_RESET.PHP_EOL;
             break;
         case "float":
-            echo "┣━ ".$label.number_format($msg, 2).'(float)'.PHP_EOL;
+            echo "┠─ ".$label.number_format($msg, 2).GRAY.'(float)'.TEXT_RESET.PHP_EOL;
             break;
         case "boolean":
-            echo "┣━ ".$label.strval($msg).'(bool)'.PHP_EOL;
+            echo "┠─ ".$label.strval($msg).GRAY.'(bool)'.TEXT_RESET.PHP_EOL;
             break;
         case 'array':
-            echo("┣━┯".$label."(array)".PHP_EOL);
+            echo("┠─┬".$label.GRAY."(array)".TEXT_RESET.PHP_EOL);
             pard_print_array($msg);
             break;
         case 'object':
-            echo("┣━┯".$label.DIM."(object ".get_debug_type($msg).")".TEXT_RESET.PHP_EOL);
+            echo("┠─┬".$label.GRAY."(object ".get_debug_type($msg).")".TEXT_RESET.PHP_EOL);
             pard_print_object($msg);
             break;
         default:
-            echo "┣━ ".$label.DIM."other type: ".gettype($msg).PHP_EOL;
+            echo "┠─ ".$label.GRAY."other type: ".gettype($msg).TEXT_RESET.PHP_EOL;
             break;
     }
     echo(TEXT_RESET);
 }
 
-function pard_app_start():void {
+function pard_app_start(?int $status = null):void {
     global $_pard_status;
+    if ($status !== null) $_pard_status = $status;
     if (!$_pard_status) return;
     echo MAGENTA."
     ┏┓      ┏┓      
@@ -114,7 +116,7 @@ function pard_counter_end():void {
     global $_pard_status;
     if (!$_pard_status) return;
 
-    echo("\r".C0.'3'.CUR_FOR.'[DONE]'.PHP_EOL.C0.CUR_SHOW);
+    echo("\r".C0.'3'.CUR_FOR.TEXT_RESET.'[DONE]'.TEXT_RESET.PHP_EOL.C0.CUR_SHOW);
 }
 
 function pard_counter_next():void {
@@ -131,7 +133,7 @@ function pard_counter_start(string $msg=""):void {
     
     global $_pard_counter;
     $_pard_counter = 0;
-    echo "┣━ [0000] ".$msg.C0.CUR_HIDE;
+    echo "┠─ [0000] ".$msg.C0.CUR_HIDE;
 }
 
 
@@ -145,14 +147,18 @@ function pard_end(): void {
     if($_pard_section===null) {
         $_pard_section = "";
     }
-    echo ("┸ ".DIM.$_pard_section.TEXT_RESET.PHP_EOL);
+    echo ("┸ ".GRAY.$_pard_section.TEXT_RESET.PHP_EOL);
+}
+
+function pard_header(string $msg) {
+    echo(PHP_EOL.MAGENTA.$msg.TEXT_RESET.PHP_EOL);
 }
 
 function pard_pause(string $msg = ''):void {
     global $_pard_status;
     if (!$_pard_status) return;
     
-    echo("┣━ ".$msg.PHP_EOL." (pause) [");
+    echo("┠─ ".$msg.PHP_EOL." (pause) [");
     fgetc(STDIN);
     pard("] GO!".PHP_EOL);
 }
@@ -188,7 +194,7 @@ function pard_progress_end(string $msg=""):void {
     global $_pard_status;
     if (!$_pard_status) return;
     
-    echo " done ".$msg.PHP_EOL;
+    echo "\r".C0.'53'.CUR_FOR.GRAY.' '.(empty($msg)?"done":$msg).TEXT_RESET.PHP_EOL;
 }
 
 function pard_progress_increment(): void {
@@ -201,8 +207,9 @@ function pard_progress_increment(): void {
     $status = floor(50.0*$_pard_progress_count/$_pard_progress_total);
 
     if ($status>$_pard_progress_percent) {
+        $inc = $status - $_pard_progress_percent;
         $_pard_progress_percent = $status;
-        echo("▓");
+        echo(str_repeat("▓", $inc));
     }
 
 }
@@ -214,8 +221,8 @@ function pard_progress_start(int $total, string $msg=""):void {
     $_pard_progress_total = $total;
     $_pard_progress_count = 0;
     $_pard_progress_percent = 0;
-    echo("┣━ ".$msg.": ".$total.PHP_EOL);
-    echo("┃  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░\r".C0.'3'.CUR_FOR).C0.CUR_HIDE;
+    echo("┠─ ".$msg.": ".$total.PHP_EOL);
+    echo("┃  ".str_repeat('░',50)."\r".C0.'3'.CUR_FOR).C0.CUR_HIDE;
 }
 
 function pard_sec(string $name=""):void {
@@ -223,7 +230,7 @@ function pard_sec(string $name=""):void {
     if (!$_pard_status) return;
     
     $_pard_section = $name;
-    echo(PHP_EOL.HLON." ".$name." ".TEXT_RESET.PHP_EOL);
+    echo(PHP_EOL.HLON." ".$name." ".TEXT_RESET.' '.PHP_EOL);
 }
 
 
@@ -244,6 +251,6 @@ function pard_step_start(string $msg):void {
     global $_pard_status;
     if (!$_pard_status) return;
     
-    echo("┣━ steps: ".$msg.PHP_EOL);
+    echo("┠─ steps: ".$msg.PHP_EOL);
     echo("┃  ");
 }
