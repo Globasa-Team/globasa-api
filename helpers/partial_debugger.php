@@ -74,8 +74,9 @@ function m(mixed $msg, string $label="", bool $error = false):void {
         case "integer":
             echo "┠─ ".$label.number_format($msg).GRAY.'(integer)'.TEXT_RESET.PHP_EOL;
             break;
+        case "double":
         case "float":
-            echo "┠─ ".$label.number_format($msg, 2).GRAY.'(float)'.TEXT_RESET.PHP_EOL;
+            echo "┠─ ".$label.number_format($msg, 2).GRAY.'('.gettype($msg).')'.TEXT_RESET.PHP_EOL;
             break;
         case "boolean":
             echo "┠─ ".$label.strval($msg).GRAY.'(bool)'.TEXT_RESET.PHP_EOL;
@@ -115,11 +116,13 @@ function app_start(?bool $status = null):void {
 function app_finished():void {
     global $_pard_status;
     if (!$_pard_status) return;
-    echo MAGENTA."\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n".TEXT_RESET;
+    echo(MAGENTA."\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n".TEXT_RESET);
     
-    // DEBUG: Memory Usage
-    m(memory_get_usage(true), "Memory usage (real)");
-    m(memory_get_usage(), "Memory usage");
+    $m_limit = ini_get("memory_limit");
+    $m_peak = round(memory_get_peak_usage()/1048576);
+    $m_usage = round(memory_get_usage()/1048576);
+    m("{$m_usage} (max {$m_limit})", "Memory usage");
+    m($m_peak." M", "Peak memory usage");
 }
 
 
@@ -163,6 +166,7 @@ function end(): void {
     if($_pard_section===null) {
         $_pard_section = "";
     }
+    m(memory_get_peak_usage(), "Peak test");
     echo ("┸ ".GRAY.$_pard_section.TEXT_RESET.PHP_EOL);
 }
 
