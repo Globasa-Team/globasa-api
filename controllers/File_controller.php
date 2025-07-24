@@ -6,7 +6,7 @@ class File_controller {
     public static function write_api2_files() {
 
         global $import_report, $rhyme_data, $dev_report;
-        pard_sec("Writing API files");
+        \pard\sec("Writing API files");
 
         self::save_entry_files();
         self::save_search_term_files();
@@ -23,14 +23,14 @@ class File_controller {
         self::save_report(data:$rhyme_data, name:"rhyme_report");
         self::save_report(data:$dev_report, name:"dev_report");
 
-        pard_end();
+        \pard\end();
     }
 
     
     private static function save_basic_files() {
         global $cfg, $basic_entries;
 
-        pard("save_basic_files");
+        \pard\m("save_basic_files");
 
         foreach($basic_entries as $lang=>$dict) {
             ksort($dict);
@@ -51,7 +51,7 @@ class File_controller {
         global $cfg, $dict;
 
         $first = "";
-        pard_step_start("Saving entry files");
+        \pard\step_start("Saving entry files");
         foreach($dict as $key=>$entry) {
             if ($entry['slug'][0] !== $first) {
 
@@ -61,12 +61,12 @@ class File_controller {
                 }
 
                 $first = $entry['slug'][0];
-                pard_step($first);
+                \pard\step($first);
             }
             
             self::save_entry_file($entry);
         }
-        pard_step_end();
+        \pard\step_end();
     }
 
     private static function save_entry_file(array &$parsed) {
@@ -106,7 +106,7 @@ class File_controller {
     private static function save_search_term_files() {
         global $cfg, $search_terms;
 
-        pard("save_search_term_files ");
+        \pard\m("save_search_term_files ");
 
         foreach($search_terms as $lang=>$index) {
             ksort($index);
@@ -130,7 +130,7 @@ class File_controller {
      */
     private static function save_min_files() {
         global $cfg, $min_entries;
-        pard("save_min_files ");
+        \pard\m("save_min_files ");
 
         foreach ($min_entries as $lang=>$data) {
             ksort($data);
@@ -152,7 +152,7 @@ class File_controller {
      */
     private static function save_natlang_etymologies_files() {
         global $cfg, $natlang_etymologies;
-        pard("save_natlang_etymologies_files ");
+        \pard\m("save_natlang_etymologies_files ");
 
         foreach ($natlang_etymologies as $lang=>$terms) {
             ksort($terms);
@@ -169,7 +169,7 @@ class File_controller {
      */
     private static function save_report(array $data, string $name) {
         global $cfg;
-        pard("Saving report: ".$name);
+        \pard\m("Saving report: ".$name);
 
         yaml_emit_file($cfg['api_path'] . "/reports/{$name}.yaml", $data, YAML_UTF8_ENCODING);
 
@@ -190,7 +190,7 @@ class File_controller {
     private static function save_stats_file() {
         global $cfg, $dict, $stats, $category_count, $natlang_etymologies, $cfg;
 
-        pard("save_stats_file");
+        \pard\m("save_stats_file");
         $natlang_count = [];
         /**
          * Calculate natlang etymology counts
@@ -217,7 +217,7 @@ class File_controller {
      */
     private static function save_tag_file() {
         global $cfg, $tags;
-        pard("save_tag_file");
+        \pard\m("save_tag_file");
 
         ksort($tags);
 
@@ -235,7 +235,7 @@ class File_controller {
 
     private static function save_term_index_file() {
         global $cfg, $term_index;
-        pard("save_term_index_file");
+        \pard\m("save_term_index_file");
         
         ksort($term_index);
 

@@ -72,7 +72,7 @@ try {
     require_once("{$app_path}/controllers/File_controller.php");
 }
 catch (Throwable $t) {
-    pard_print_throwable($t);
+    \pard\print_throwable($t);
     die();
 }
 
@@ -90,13 +90,13 @@ try {
         $cfg['log']->add("Development Environment");
         ini_set('display_errors', '1');
         ini_set('display_startup_errors', '1');
-        pard_status(true);
+        \pard\status(true);
     }
     else {
-        pard_status(false);
+        \pard\status(false);
     }
 }
 catch (Throwable $t) {
-    pard_print_throwable($t);
+    \pard\print_throwable($t);
     die();
 }

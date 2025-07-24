@@ -43,7 +43,7 @@ class App_log {
             
             // Display only if in debug mode
             if ($this->debug) {
-                pard(html_entity_decode($m));
+                \pard\m(html_entity_decode($m));
             }
         }
     }
@@ -93,11 +93,11 @@ class App_log {
             (($usage["ru_stime.tv_usec"] - $this->start_usage["ru_stime.tv_usec"])/1000);
             
             $computer_time = "Also, this script's CPU execution time was system: {$sdelta} / user: {$udelta}.";
-        pard("Time >\t{$human_time}\nTime >\t{$computer_time}\n", "Computer Time");
-        pard($human_time, "Human Time");
-        pard($computer_time, "Computer Time");
-        pard($sdelta, "System time");
-        pard($udelta, "User time");
+        \pard\m("Time >\t{$human_time}\nTime >\t{$computer_time}\n", "Computer Time");
+        \pard\m($human_time, "Human Time");
+        \pard\m($computer_time, "Computer Time");
+        \pard\m($sdelta, "System time");
+        \pard\m($udelta, "User time");
         
         $message .= "- ".$human_time.PHP_EOL.PHP_EOL."- ".$computer_time.PHP_EOL.PHP_EOL;
 
@@ -126,10 +126,10 @@ class App_log {
             $mail->Body    = $message;
     
             $mail->send();
-            pard("Mail >\tMessage has been sent to ".implode(", ", $this->emails)."\n");
+            \pard\m(implode(", ", $this->emails), "Mail sent");
         } catch (Exception $e) {
-            pard("Message could not be sent to ".$email."\n");
-            pard("Mailer Error: {$mail->ErrorInfo}\n\n");
+            \pard\m("Message could not be sent to ".$email."\n", "Mailer Error");
+            \pard\m("{$mail->ErrorInfo}", "Mailer Error");
         }
     }
 

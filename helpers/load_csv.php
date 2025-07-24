@@ -11,7 +11,7 @@ function load_csv($file, &$csv_data)
     //TODO: What does this do on failure? Empty file? No file found?
     $columnNames = fgetcsv($dictionaryCSV, escape:"");
 
-    pard_counter_start("Load old CSV data");
+    \pard\counter_start("Load old CSV data");
     while (($word = fgetcsv($dictionaryCSV, escape:"")) !== false) {
         $newWord = null;
         foreach ($word as $key=>$datum) {
@@ -32,7 +32,7 @@ function load_csv($file, &$csv_data)
 
         $csv_data[$wordIndex] = $newWord;
         usleep(SMALL_IO_DELAY);
-        pard_counter_next();
+        \pard\counter_next();
     }
-    pard_counter_end();
+    \pard\counter_end();
 }

@@ -75,7 +75,7 @@ class Entry_update_controller {
         $max_examples = 0;
         $max_examples_term = "";
 
-        pard("calculate stats");
+        \pard\m("calculate stats");
         $stats['etymology source percent'] = [];
         $stats['natlang roots'] = 0;
 
@@ -113,7 +113,7 @@ class Entry_update_controller {
             } catch (TypeError $e) {
                 //$dev_report[];
                 $import_report[] = ['term'=>$slug, 'msg'=>"Major error in {$slug} entry. Found in calculate_stats()"];
-                pard_print_throwable($e, "Type error in term {$slug}", true);
+                \pard\print_throwable($e, "Type error in term {$slug}", true);
             }
 
         }
@@ -124,7 +124,7 @@ class Entry_update_controller {
         }
         arsort($stats['etymology source percent']);
 
-        pard("Most examples: ".$max_examples_term." with ".$max_examples);
+        \pard\m("Most examples: ".$max_examples_term." with ".$max_examples);
     }
 
 
@@ -135,13 +135,13 @@ class Entry_update_controller {
         if ($debug_mode) return;
 
         // Insert data that needed all entries to be loaded
-        pard_sec("Finalize entries");
+        \pard\sec("Finalize entries");
         self::insert_derived_terms();
         self::update_derived_etymology();
         self::update_entry_rhymes();
         self::update_entry_notes();
 
-        pard("Sorting");
+        \pard\m("Sorting");
         global $tags, $dict, $min_entries, $basic_entries, $standard_entries, $term_indexes, $search_terms;
 
         foreach($tags as $tag=>$data) {
@@ -154,7 +154,7 @@ class Entry_update_controller {
         ksort($term_indexes);
         ksort($search_terms);
 
-        pard_end();
+        \pard\end();
     }
 
 
@@ -168,7 +168,7 @@ class Entry_update_controller {
         global $basic_entries;
 
         if (!isset($parsed['trans html'])) {
-            pard("Warning: missing trans html on ".$parsed['slug']);
+            \pard\m("Warning: missing trans html on ".$parsed['slug']);
             return;
         }
 
@@ -188,7 +188,7 @@ class Entry_update_controller {
      */
     public static function insert_derived_terms() {
         global $cfg, $dict, $import_report, $derived_data;
-        pard("Derived terms");
+        \pard\m("Derived terms");
 
         foreach($derived_data as $root=>$terms) {
             // For each root, find all derived terms
@@ -346,7 +346,7 @@ class Entry_update_controller {
         // Download the official term list, processing each term.
         $tp = new Term_parser(fields:fgetcsv($term_stream, escape:""));
 
-        pard_counter_start("Parsing spreadsheet terms");
+        \pard\counter_start("Parsing spreadsheet terms");
         while(($data = fgetcsv($term_stream, escape:"")) !== false) {
             // Parse term if it exists
             if (empty($data) || empty($data[0]) ) {
@@ -377,12 +377,12 @@ class Entry_update_controller {
                 $dict[$entry['slug']] = $entry;
             }
             usleep(SMALL_IO_DELAY);
-            pard_counter_next();
+            \pard\counter_next();
         }
         
-        pard_counter_end();
+        \pard\counter_end();
     
-        pard_end();
+        \pard\end();
     }
 
 
@@ -408,7 +408,7 @@ class Entry_update_controller {
      */
     private static function update_derived_etymology() {
         global $dict;
-        pard("Derived etymology");
+        \pard\m("Derived etymology");
 
 
         foreach($dict as $slug=>$entry) {
@@ -437,7 +437,7 @@ class Entry_update_controller {
     static function update_entries(string $current_csv_filename, string $old_csv_filename) {
         global $cfg, $old_csv_data, $debug_mode;
 
-        pard_sec("Update entries");
+        \pard\sec("Update entries");
         
         // Load old
         if (!$debug_mode) {
@@ -445,7 +445,7 @@ class Entry_update_controller {
         }
 
         // Load and parse new data
-        pard("Loading current terms");
+        \pard\m("Loading current terms");
         $term_stream = fopen($current_csv_filename, "r")
             or throw new Exception("Failed to open ".$current_csv_filename);
         self::parse_spreadsheet_data($term_stream);
@@ -460,12 +460,12 @@ class Entry_update_controller {
 
         // Check for changes
         if (!$debug_mode) {
-            pard_sec("Post entry update");
-            pard("Logging changes");
+            \pard\sec("Post entry update");
+            \pard\m("Logging changes");
             Entry_update_controller::log_changes();
-            pard("Calculating stats");
+            \pard\m("Calculating stats");
             Entry_update_controller::calculate_stats();
-            pard_end();
+            \pard\end();
         }
 
         // Write dictionary files
@@ -505,8 +505,8 @@ class Entry_update_controller {
 
         if (!$cfg['process_rhymes']) return;
         
-        pard("Update entry rhymes");
-        pard_progress_start(count($rhyme_data), "rhyme groups");
+        \pard\m("Update entry rhymes");
+        \pard\progress_start(count($rhyme_data), "rhyme groups");
 
         // Go through each rhyme group to copy rhyming terms in to entry
         foreach($rhyme_data as $ending_group) {
@@ -551,10 +551,10 @@ class Entry_update_controller {
                 }
                 
             }
-            pard_progress_increment();
+            \pard\progress_increment();
             usleep(100);
         }
-        pard_progress_end();
+        \pard\progress_end();
     }
 
 

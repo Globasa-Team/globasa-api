@@ -73,42 +73,53 @@ $app_path = __DIR__;
 require_once("{$app_path}/init.php");
 try {
     // Startup
-    pard_app_start();
-    pard_sec("Initiation");
-
-    if ($argv[1] === 'd') {
-        pard("Debug Output Mode (only writing some entries)");
-        $debug_mode = true;
+    \pard\app_start();
+    \pard\sec("Initiation");
+    if (count($argv) > 1) {
+        \pard\m('Parsing parameters');
+        
+        if ($argv[1] === 'd') {
+            \pard\m("Debug Output Mode (only writing some entries)");
+            $debug_mode = true;
+        } else {
+            $debug_mode = false;
+        }
+    
+        if ($argv[1] === 'r' || $argv[1] === 'd') {
+            \pard\m("Reprocessing previous CSV file");
+            $new_csv_filename = $data['previous'];
+        } else {
+            $new_csv_filename = $argv[1];
+            \pard\m("Using: ".$new_csv_filename);
+        }
     } else {
         $debug_mode = false;
+        \pard\m('No arguments. Exiting.');
+        \pard\end();
+        \pard\app_finished();
+        echo("\nUsage: php [-d display_errors=on] word-list-import.php [r][d][filename]\n\n");
+        exit(0);
     }
 
-    if ($argv[1] === 'r' || $argv[1] === 'd') {
-        pard("Reprocessing previous CSV file");
-        $new_csv_filename = $data['previous'];
-    } else {
-        $new_csv_filename = $argv[1];
-        pard("Using: ".$new_csv_filename);
-    }
 
-    // pard("Loading examples.yaml");
+    // \pard\m("Loading examples.yaml");
     // $examples = yaml_parse_file('temp/examples.yaml');
     $cfg['log']->add("Environment: " . ($cfg['dev'] ? 'dev' : 'production'), 1);
-    pard($debug_mode, "Debug mode: ");
-    pard_end();
+    \pard\m($debug_mode, "Debug mode: ");
+    \pard\end();
     
     // Update data files
     Entry_update_controller::update_entries(old_csv_filename:$data['previous'], current_csv_filename:$new_csv_filename);
 
-    pard_sec("Other stuff");
+    \pard\sec("Other stuff");
 
     // Update i18n
     $cfg['log']->add("Updating I18n", 5);
     I18n::update();
 
     // Finish up
-    // pard($import_report, "Parse report");
-    // pard($dev_report, "Developer report");
+    // \pard\m($import_report, "Parse report");
+    // \pard\m($dev_report, "Developer report");
     $cfg['log']->add_report($import_report, "Import Report");
     $cfg['log']->add_report($dev_report, "Developer Report");
     $cfg['log']->add("Script complete", 5);
@@ -116,9 +127,9 @@ try {
     yaml_emit_file(DATA_FILENAME, ['previous'=>$new_csv_filename]);
 
     
-    pard_end();
+    \pard\end();
 }
 catch (Throwable $t) {
-    pard_print_throwable($t);
+    \pard\print_throwable($t);
 }
-pard_app_finished();
+\pard\app_finished();

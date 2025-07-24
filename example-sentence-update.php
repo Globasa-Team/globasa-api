@@ -1,25 +1,87 @@
 <?php
+/**
+ * Parse example sentences
+ * 
+ * Takes in sources along with the language index, creates an index on every
+ * found term, with examples passages organized by priority as an int.
+ * 
+ *  1. Override passages
+ *  2. Curated passages
+ *  3. Full-text extracts
+ * 
+ * It outputs an example sentence YAML in format:
+ * 1:
+ *  -
+ *   text: "To sen yukwe, na xorkone yu."
+ *   cite: "Common Phrases and Expressions"
+ *  -
+ *   text: "Triunfayen sen royayen hu da nilwatu teslimu."
+ *   cite: "Nelson Mandela"
+ *  -
+ *   text: "Moy insan xencu huru ji egal fe sungen ji haki."
+ *   cite:
+ *    eng: "Universal Declaration of Human Rights"
+ *    fre: "Déclaration universelle des droits de l'homme"
+ *    spa: "Declaración Universal de Derechos Humanos"
+ * 2:
+ *  ...
+ * 3:
+ *  ...
+ */
+declare(strict_types=1);
+ini_set('log_errors', 1);
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
 require_once("helpers/partial_debugger.php");
+pard\app_start(true);
+
+function customExceptionHandler (\Throwable $e){
+    if (filter_var(ini_get('display_errors'),FILTER_VALIDATE_BOOLEAN)) {
+        pard\print_throwable($e);
+    } else {
+        error_log($e->getMessage());
+        // echo "<h1>500 Internal Server Error</h1>";
+    }
+    exit;
+}
+
+set_exception_handler('customExceptionHandler');
+
+set_error_handler(function ($level, $message, $file = '', $line = 0){
+    throw new ErrorException($message, 0, $level, $file, $line);
+});
+
+register_shutdown_function(function (){
+    $error = error_get_last();
+    // Handle as exception if there was an error
+    if ($error !== null) {
+        $e = new ErrorException(
+            $error['message'], 0, $error['type'], $error['file'], $error['line']
+        );
+        customExceptionHandler($e);
+    }
+});
+
+
+
 
 define("UNICODE_LDQOU", "\u{201C}");
 
 global $examples, $globasa_index;
 
-
-
-pard_app_start(true);
-pard_sec("Initiating script");
-pard('Load config-sentences.yaml');
+pard\sec("Initiating script");
+pard\m('Load config-sentences.yaml');
 $cfg = yaml_parse_file('config-sentences.yaml');
-pard("load Globasa index");
+pard\m("load Globasa index");
 $globasa_index = yaml_parse_file($cfg['globasa-index']);
 $examples = [];
-pard_end("initiation complete");
+pard\end("initiation complete");
 
 
 load_examples();
 write_examples();
-pard_app_finished();
+pard\app_finished();
 
 
 /**
@@ -27,18 +89,18 @@ pard_app_finished();
  */
 function load_examples(): void {
     global $cfg;
-    pard_sec('Process input files');
-    pard('load list of documents');
+    pard\sec('Process input files');
+    pard\m('load list of documents');
     $source_files = file($cfg['doxo-documents'],  FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
-    pard_progress_start(count($source_files), "Processing source markdown documents");
+    pard\progress_start(count($source_files), "Processing source markdown documents");
     foreach($source_files as $filename) {
         sleep(1);
         parse_markdown_sources($filename);
-        pard_progress_increment();
+        pard\progress_increment();
     }
-    pard_progress_end("Processed");
-    pard_end("Processed all files");
+    pard\progress_end("Processed");
+    pard\end("Processed all files");
 }
 
 
@@ -80,7 +142,7 @@ function parse_markdown_sources(string $filename) {
                 // str_starts_with($para, '<')
                 // str_starts_with($para, '') ||
             ) {
-                // pard(substr($para, 0, 70), 'skipped: ');
+                // pard\m(substr($para, 0, 70), 'skipped: ');
                 continue;
             }
 
@@ -88,7 +150,7 @@ function parse_markdown_sources(string $filename) {
         if (str_contains($para, "<")) {
             // FIXME: don't just ignore these lines
             // used for poetry
-            pard($para, 'poetry? ');
+            pard\m($para, 'poetry? ');
             continue;
         }
 
@@ -115,7 +177,7 @@ function parse_markdown_sources(string $filename) {
             }
         }
     }
-    // pard("Word count: ".count($examples));
+    // pard\m("Word count: ".count($examples));
     
 }
 
@@ -125,15 +187,15 @@ function parse_markdown_sources(string $filename) {
  */
 function write_examples(): void {
     global $cfg, $examples;
-    pard_sec('writing files');
-    // pard("skipping"); // DEBUG
-    pard_progress_start(count($examples), 'Writing examples for each word');
+    pard\sec('writing files');
+    // pard\m("skipping"); // DEBUG
+    pard\progress_start(count($examples), 'Writing examples for each word');
     
     foreach($examples as $slug => $examples) {
         usleep(100000);
         yaml_emit_file($cfg['api_path'].'/examples/'.$slug.'.yaml', $examples);
-        pard_progress_increment();
+        pard\progress_increment();
     }
-    pard_progress_end();
-    pard_end("wrote all files");
+    pard\progress_end();
+    pard\end("wrote all files");
 }
