@@ -105,7 +105,7 @@ try {
     // \pard\m("Loading examples.yaml");
     // $examples = yaml_parse_file('temp/examples.yaml');
     $cfg['log']->add("Environment: " . ($cfg['dev'] ? 'dev' : 'production'), 1);
-    \pard\m($debug_mode, "Debug mode: ");
+    \pard\m($debug_mode, "Debug mode");
     \pard\end();
     
     // Update data files
