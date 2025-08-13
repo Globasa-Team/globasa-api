@@ -506,9 +506,8 @@ class Term_parser
             $phrase[] = $this->add_ipa_stresses(strtolower($cur));
         }
         $parsed['ipa'] = preg_replace(REPLACE_GLB_REGEX, REPLACE_IPA, implode(" ", $phrase));
-        $parsed['ipa link'] = "http://ipa-reader.xyz/?text=" . $parsed['ipa'] . "&voice=Ewa";
+        $parsed['ipa link'] = "https://ipa-reader.com/?voice=Ewa&text=" . $parsed['ipa'];
     }
-
 
 
     /**
