@@ -57,13 +57,21 @@ function m(mixed $msg, string $label="", bool $error = false):void {
 
     switch (gettype($msg)) {
         case "string":
+                $msg = str_replace(
+                    ["\n"],
+                    GRAY.'↲'.TEXT_RESET,
+                    $msg);
+                $msg = str_replace(
+                    ["\r"],
+                    GRAY.'↲'.TEXT_RESET,
+                    $msg);
             if (strlen($msg) < PARD_LENGTH) {
                 echo("┠─ ".$label.$msg.PHP_EOL);
             } else {
                 $first = true;
                 foreach(explode("\n",wordwrap($msg)) as $line) {
                     if ($first) {
-                        echo("┠─ ".$label.': '.$line.PHP_EOL);
+                        echo("┠─ ".$label.$line.PHP_EOL);
                         $first = false;
                     } else {
                         echo "┃  ".$line.PHP_EOL;
@@ -116,7 +124,7 @@ function app_start(?bool $status = null):void {
 function app_finished():void {
     global $_pard_status;
     if (!$_pard_status) return;
-    echo(MAGENTA."\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n".TEXT_RESET);
+    echo(TEXT_RESET."\n\n");
     
     $m_limit = ini_get("memory_limit");
     $m_peak = round(memory_get_peak_usage()/1048576);
@@ -245,7 +253,7 @@ function progress_start(int $total, string $msg=""):void {
     $_pard_progress_total = $total;
     $_pard_progress_count = 0;
     $_pard_progress_percent = 0;
-    echo("┠─ ".$msg.": ".$total.PHP_EOL);
+    echo("┠─ ".GRAY.$msg.TEXT_RESET.": ".$total.PHP_EOL);
     echo("┃  ".str_repeat('░',50)."\r".C0.'3'.CUR_FOR).C0.CUR_HIDE;
 }
 
