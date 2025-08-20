@@ -3,37 +3,11 @@
 /**
  * Parse example sentences
  * 
- * Takes in sources along with the language index, creates an index on every
- * found term, with examples passages organized by priority as an int.
+ * Takes in source documents and parses content to create sentences
+ * listing for each term.
  * 
- *  1. Override passages
- *  2. Curated passages
- *  3. Full-text extracts
- * 
- * It outputs an example sentence YAML in format:
- * 1:
- *  -
- *   text: "To sen yukwe, na xorkone yu."
- *   cite: "Common Phrases and Expressions"
- *  -
- *   text: "Triunfayen sen royayen hu da nilwatu teslimu."
- *   cite: "Nelson Mandela"
- *  -
- *   text: "Moy insan xencu huru ji egal fe sungen ji haki."
- *   cite:
- *    eng: "Universal Declaration of Human Rights"
- *    fre: "Déclaration universelle des droits de l'homme"
- *    spa: "Declaración Universal de Derechos Humanos"
- * 2:
- *  ...
- * 3:
- *  ...
- * 
- * 
- * 
- * 
- * 
- * 
+ * Limitations: homonyms, and with auxilary documents english words
+ * that are also in the worldlang index.
  */
 
 declare(strict_types=1);
@@ -89,7 +63,7 @@ register_shutdown_function(function () {
 /*******************************
  * INIT
  * *****************************
- */
+*/
 
 define("OVERRIDE_PRIORITY", 1);
 define("CURATED_PASS_PRIORITY", 2);
@@ -98,13 +72,18 @@ define("AUXILARY_PRIORITY", 4);
 
 define("UNICODE_LDQOU", "\u{201C}");
 
-global $examples, $globasa_index;
+require_once("vendor/parsedown/Parsedown.php");
+
+global $examples, $wld_index, $pd;
+
+
 
 \pard\sec("Initiating script");
+$pd = new \Parsedown();
 \pard\m('Load config-sentences.yaml');
 $cfg = yaml_parse_file('test/config-examples.yaml');
-\pard\m("load Globasa index");
-$globasa_index = yaml_parse_file($cfg['globasa_index']);
+\pard\m("load term index");
+$wld_index = yaml_parse_file($cfg['worldlang_index']);
 $examples = [];
 \pard\end("initiation complete");
 
@@ -123,13 +102,15 @@ example_sentences();
  */
 function add_examples(string $e, array $terms, array $c, int $p)
 {
-    global $examples, $globasa_index;
+    global $examples, $wld_index, $pd;
 
     array_unique($terms);
+    $e = $pd->line(mb_trim($e));
+    
     foreach ($terms as $t) {
 
         $t = strtolower($t);
-        if (!array_key_exists($t, $globasa_index))
+        if (!array_key_exists($t, $wld_index))
             continue;
 
         $examples[$t][$p][] = [
@@ -229,6 +210,10 @@ function parse_markdown_filestream($fp, array $c, int $p): void
         if (!\IntlChar::isalpha($first_char) && !in_array($first_char, ["'", '"', UNICODE_LDQOU, '>']))
             continue;
 
+        /* Strip out markdown quote formatting */
+        if (str_starts_with($line, '>')) {
+            $line = mb_substr($line, 1);
+        }
 
         if (str_contains($line, "<")) {
             // FIXME: don't just ignore these lines
@@ -263,7 +248,7 @@ function parse_passages(string $source, int $priority): void
 
 
 /**
- * Parses a Globasa sentence and adds the sentence as
+ * Parses a worldlang sentence and adds the sentence as
  * and examples sentence for each term present.
  */
 function parse_sentence(string $s, array $c, int $p)
@@ -324,6 +309,8 @@ function process_passage_sources(string $source_data, int $priority)
     \pard\progress_end("Files loaded");
 }
 
+
+
 /**
  * Adds citation data to the provided sources array.
  */
@@ -362,6 +349,8 @@ function update_citations(array &$sources, string $title_prefix)
     }
 }
 
+
+
 /**
  * Write out example API files for each term.
  */
@@ -370,9 +359,13 @@ function write_examples(): void
     global $cfg, $examples;
     \pard\progress_start(count($examples), 'Writing examples for each entry');
 
+    if (!file_exists($cfg['examples_output'])) {
+		mkdir($cfg['examples_output'], 0744);
+	}
+
     foreach ($examples as $slug => $data) {
         usleep(20000);
-        yaml_emit_file($cfg['examples_output'] . "{$slug}_1.yaml", $data);
+        yaml_emit_file($cfg['examples_output'] . "{$slug}.yaml", $data);
         \pard\progress_increment();
     }
     \pard\progress_end("Files written");
