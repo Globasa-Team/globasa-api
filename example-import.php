@@ -80,8 +80,8 @@ global $examples, $wld_index, $pd;
 
 \pard\sec("Initiating script");
 $pd = new \Parsedown();
-\pard\m('Load config-sentences.yaml');
-$cfg = yaml_parse_file('test/config-examples.yaml');
+\pard\m('Load configuration');
+$cfg = yaml_parse_file('config-example.yaml');
 \pard\m("load term index");
 $wld_index = yaml_parse_file($cfg['worldlang_index']);
 $examples = [];

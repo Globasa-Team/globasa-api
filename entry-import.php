@@ -70,7 +70,7 @@ $debug_mode = false;
 $new_csv_filename = "";
 
 $app_path = __DIR__;
-require_once("{$app_path}/init.php");
+require_once("{$app_path}/init-entry.php");
 try {
     // Startup
     \pard\app_start();

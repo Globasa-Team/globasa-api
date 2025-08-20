@@ -3,12 +3,12 @@ error_log
 debug.log
 
 # Ignore configs
-config.php
 config*.yaml
-data.yaml
+data*.yaml
 
 # Ignore temp/debug files
 temp/
+test/
 
 # PHPUnit
 /.phpunit.cache

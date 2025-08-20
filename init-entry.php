@@ -8,7 +8,7 @@ try {
     ini_set('display_startup_errors', '0');
     error_reporting(E_ALL);
     
-    define("CONFIG_FILENAME", "config.yaml");
+    define("CONFIG_FILENAME", "config-entry.yaml");
     define("OFFICIAL_WORDS_CSV_FILENAME", "words-official.csv");
     define("OFFICIAL_WORDS_TSV_FILENAME", "words-official.tsv");
     define("OFFICIAL_WORDS_CSV_BACKUP_FILENAME", "-words-official.csv");
@@ -20,7 +20,7 @@ try {
     define("I18N_CSV_FILENAME", "i18n.csv");
     define("I18N_YAML_FILENAME", "i18n.yaml");
     define("I18N_CSV_BACKUP_FILENAME", "-i18n.csv");
-    define("DATA_FILENAME", "data.yaml");
+    define("DATA_FILENAME", "data-entry.yaml");
     define("SMALL_IO_DELAY", 5000); // 5k microseconds = a twohundredths of a second
     define("FULL_FILE_DELAY", 50000); // 50k microseconds = a twentieth of a second
     define("GLB_CODE", "art-x-globasa");
