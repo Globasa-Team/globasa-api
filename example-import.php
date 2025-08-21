@@ -104,7 +104,7 @@ function add_examples(string $e, array $terms, array $c, int $p)
 {
     global $examples, $wld_index, $pd;
 
-    array_unique($terms);
+    $terms = array_unique($terms);
     $e = $pd->line(mb_trim($e));
     
     foreach ($terms as $t) {
