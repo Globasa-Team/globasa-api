@@ -341,7 +341,7 @@ function update_citations(array &$sources, string $title_prefix)
                     $i = 7;
                     $j = null;
                 }
-                $sources['cite']['text'][$lang] = $title_prefix . ' ' . mb_trim(str_replace("''", "'", mb_substr($line, $i, $j)));
+                $sources['cite']['text'][$lang] = $title_prefix . ': ' . mb_trim(str_replace("''", "'", mb_substr($line, $i, $j)));
                 break;
             }
         }
