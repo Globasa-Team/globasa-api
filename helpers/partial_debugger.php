@@ -87,7 +87,7 @@ function m(mixed $msg, string $label="", bool $error = false):void {
             echo "┠─ ".$label.number_format($msg, 2).GRAY.'('.gettype($msg).')'.TEXT_RESET.PHP_EOL;
             break;
         case "boolean":
-            echo "┠─ ".$label.strval($msg).GRAY.'(bool)'.TEXT_RESET.PHP_EOL;
+            echo "┠─ ".$label.($msg?'true':'false').GRAY.'(bool)'.TEXT_RESET.PHP_EOL;
             break;
         case 'array':
             echo("┠─┬".$label.GRAY."(array)".TEXT_RESET.PHP_EOL);
