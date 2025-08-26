@@ -208,6 +208,25 @@ function print_array(array $arr, int $i=1):void {
     }
 }
 
+function print_array_inline(array $arr, string $msg):void {
+    global $_pard_status;
+    if (!$_pard_status) return;
+    print("┠─ ".GRAY.$msg.': '.TEXT_RESET.PHP_EOL);
+    foreach($arr as $item) {
+        if (is_array($item)) {
+            print("┃ ┊ ");
+            foreach($item as $key=>$datum)
+                print("[{$key}:{$datum}]");
+            print(PHP_EOL);
+        } else {
+            print("┃ ┊ ".$item.PHP_EOL);
+        }
+    }
+    if (!count($arr)) {
+        print("┃ ┊ (empty array)".PHP_EOL);
+    }
+}
+
 function print_object(object $obj, int $i=0) {
     print_r($obj);
 }
