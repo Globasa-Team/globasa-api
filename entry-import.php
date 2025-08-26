@@ -1,7 +1,6 @@
 <?php
-
+// declare(strict_types=1);
 namespace globasa_api;
-
 use Throwable;
 
 global
@@ -33,6 +32,8 @@ global
     $new_csv_data,
     $old_csv_data,
 
+    $verbose_mode,
+
     $debug_data,
     $debug_mode;
 
@@ -63,6 +64,9 @@ $dev_report = [];
 $old_csv_data = [];
 $new_csv_data = [];
 
+$comparison_option = true;
+$verbose_mode = false;
+
 $debug_data = [];
 $debug_mode = false;
 
@@ -71,40 +75,49 @@ $new_csv_filename = "";
 
 $app_path = __DIR__;
 require_once("{$app_path}/init-entry.php");
+$opt = getopt(OPT_SHORT, OPT_LONG);
+
+// Startup
+if (key_exists('v', $opt)) {
+    $verbose_mode = true;
+}
+
+\pard\app_start($verbose_mode);
+\pard\sec("Initiation");
+\pard\m('Parsing parameters');
+\pard\m($verbose_mode, "Option verbose");
+
+if (key_exists('d', $opt)) {
+    $debug_mode = true;
+    \pard\m("only writing some entries", "Option debug");
+}
+if (key_exists('p', $opt) && isset($cfg['api_path_production'])) {
+    \pard\m("Using output from last API run", "Option input");
+    $new_csv_filename = $cfg['api_path_production'] . "/word-list.csv";
+}
+if (key_exists('a', $opt)) {
+    \pard\m("Using output from last API run", "Option input");
+    $new_csv_filename = $cfg['api_path'] . "/word-list.csv";
+}
+if (key_exists('l', $opt)) {
+    \pard\m("Reprocessing last CSV file", 'Option input');
+    $new_csv_filename = $data['previous'];
+}
+if (key_exists('s', $opt)) {
+    \pard\m("Skipping old CSV comparison", 'Option');
+    $comparison_option = false;
+}
+if (key_exists('file', $opt)) {
+    $new_csv_filename = $opt['file'];
+}
+\pard\m($new_csv_filename, "New CSV file");
+if (empty($new_csv_filename)) {
+    print("No input file specified\n");
+    exit(0);
+}
+
 try {
-    // Startup
-    \pard\app_start();
-    \pard\sec("Initiation");
-    if (count($argv) > 1) {
-        \pard\m('Parsing parameters');
-        
-        if ($argv[1] === 'd') {
-            \pard\m("Debug Output Mode (only writing some entries)");
-            $debug_mode = true;
-        } else {
-            $debug_mode = false;
-        }
-    
-        if ($argv[1] === 'r' || $argv[1] === 'd') {
-            \pard\m("Reprocessing previous CSV file");
-            $new_csv_filename = $data['previous'];
-        } else {
-            $new_csv_filename = $argv[1];
-            \pard\m("Using: ".$new_csv_filename);
-        }
-    } else {
-        $debug_mode = false;
-        \pard\m('No arguments. Exiting.');
-        \pard\end();
-        \pard\app_finished();
-        echo("\nUsage: php [-d display_errors=on] word-list-import.php [r][d][filename]\n\n");
-        exit(0);
-    }
-
-
-    // \pard\m("Loading examples.yaml");
-    // $examples = yaml_parse_file('temp/examples.yaml');
-    $cfg['log']->add("Environment: " . ($cfg['dev'] ? 'dev' : 'production'), 1);
+    $cfg['log']->add("Environment: " . ($cfg['dev'] ? 'dev' : 'production'));
     \pard\m($debug_mode, "Debug mode");
     \pard\end();
     
@@ -112,24 +125,21 @@ try {
     Entry_update_controller::update_entries(old_csv_filename:$data['previous'], current_csv_filename:$new_csv_filename);
 
     \pard\sec("Other stuff");
-
     // Update i18n
     $cfg['log']->add("Updating I18n", 5);
     I18n::update();
 
     // Finish up
-    // \pard\m($import_report, "Parse report");
-    // \pard\m($dev_report, "Developer report");
+    \pard\print_array_inline($import_report, "Parse report");
     $cfg['log']->add_report($import_report, "Import Report");
+    \pard\print_array_inline($dev_report, "Developer report");
     $cfg['log']->add_report($dev_report, "Developer Report");
     $cfg['log']->add("Script complete", 5);
     $cfg['log']->email_log($cfg);
     yaml_emit_file(DATA_FILENAME, ['previous'=>$new_csv_filename]);
-
     
     \pard\end();
-}
-catch (Throwable $t) {
+} catch (Throwable $t) {
     \pard\print_throwable($t);
 }
 \pard\app_finished();

@@ -1,60 +1,63 @@
 <?php
+// declare(strict_types=1);
 namespace globasa_api;
 use Throwable;
 
-try {
-    ini_set('log_errors', 1);
-    ini_set('display_errors', '0');
-    ini_set('display_startup_errors', '0');
-    error_reporting(E_ALL);
-    
-    define("CONFIG_FILENAME", "config-entry.yaml");
-    define("OFFICIAL_WORDS_CSV_FILENAME", "words-official.csv");
-    define("OFFICIAL_WORDS_TSV_FILENAME", "words-official.tsv");
-    define("OFFICIAL_WORDS_CSV_BACKUP_FILENAME", "-words-official.csv");
-    define("OFFICIAL_WORDS_TSV_BACKUP_FILENAME", "-words-official.tsv");
-    define("UNOFFICIAL_WORDS_CSV_FILENAME", "words-unofficial.csv");
-    define("UNOFFICIAL_WORDS_TSV_FILENAME", "words-unofficial.tsv");
-    define("UNOFFICIAL_WORDS_CSV_BACKUP_FILENAME", "-words-unofficial.csv");
-    define("UNOFFICIAL_WORDS_TSV_BACKUP_FILENAME", "-words-unofficial.tsv");
-    define("I18N_CSV_FILENAME", "i18n.csv");
-    define("I18N_YAML_FILENAME", "i18n.yaml");
-    define("I18N_CSV_BACKUP_FILENAME", "-i18n.csv");
-    define("DATA_FILENAME", "data-entry.yaml");
-    define("SMALL_IO_DELAY", 5000); // 5k microseconds = a twohundredths of a second
-    define("FULL_FILE_DELAY", 50000); // 50k microseconds = a twentieth of a second
-    define("GLB_CODE", "art-x-globasa");
-    define("GLB_ATTR", "lang=\"art-x-globasa\"");
+ini_set('log_errors', 1);
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+error_reporting(E_ALL);
 
-    // Map spreadsheet column to internal fields
-    define('COLUMN_MAP', array(
-        'Category' => 'category',
-        'Word' => 'term',
-        'slug_mod' => 'slug_mod',
-        'WordClass' => 'word class',
-        'Class' => 'word class',
-        'OfficialWord' => 'status',
-        'TranslationEng' => 'trans eng',
-        'TranslationEpo' => 'trans epo',
-        'TranslationSpa' => 'trans spa',
-        'TranslationFra' => 'trans fra',
-        'TranslationRus' => 'trans rus',
-        'TranslationZho' => 'trans zho',
-        'TranslationDeu' => 'trans deu',
-        'TransNote' => 'entry note',
-        'SearchTermsEng' => 'search terms eng',
-        'StatusEng' => 'status eng',
-        'Synonyms' => 'synonyms',
-        'Antonyms' => 'antonyms',
-        'Example' => 'example',
-        'Tags' => 'tags',
-        'LexiliAsel' => 'etymology',
-        'See Also' => 'similar natlang',
-        'Similar Natlang' => 'similar natlang',
-        'TransXRef' => 'entry note', // depracated
-        'LexiliEstatus' => 'etymology status', // depracated
-    ));
-    
+define("OPT_SHORT", 'avsrdp');
+define("OPT_LONG", array('file:'));
+define("CONFIG_FILENAME", "config-entry.yaml");
+define("OFFICIAL_WORDS_CSV_FILENAME", "words-official.csv");
+define("OFFICIAL_WORDS_TSV_FILENAME", "words-official.tsv");
+define("OFFICIAL_WORDS_CSV_BACKUP_FILENAME", "-words-official.csv");
+define("OFFICIAL_WORDS_TSV_BACKUP_FILENAME", "-words-official.tsv");
+define("UNOFFICIAL_WORDS_CSV_FILENAME", "words-unofficial.csv");
+define("UNOFFICIAL_WORDS_TSV_FILENAME", "words-unofficial.tsv");
+define("UNOFFICIAL_WORDS_CSV_BACKUP_FILENAME", "-words-unofficial.csv");
+define("UNOFFICIAL_WORDS_TSV_BACKUP_FILENAME", "-words-unofficial.tsv");
+define("I18N_CSV_FILENAME", "i18n.csv");
+define("I18N_YAML_FILENAME", "i18n.yaml");
+define("I18N_CSV_BACKUP_FILENAME", "-i18n.csv");
+define("DATA_FILENAME", "data-entry.yaml");
+define("SMALL_IO_DELAY", 5000); // 5k microseconds = a twohundredths of a second
+define("FULL_FILE_DELAY", 50000); // 50k microseconds = a twentieth of a second
+define("GLB_CODE", "art-x-globasa");
+define("GLB_ATTR", "lang=\"art-x-globasa\"");
+
+// Map spreadsheet column to internal fields
+define('COLUMN_MAP', array(
+    'Category' => 'category',
+    'Word' => 'term',
+    'slug_mod' => 'slug_mod',
+    'WordClass' => 'word class',
+    'Class' => 'word class',
+    'OfficialWord' => 'status',
+    'TranslationEng' => 'trans eng',
+    'TranslationEpo' => 'trans epo',
+    'TranslationSpa' => 'trans spa',
+    'TranslationFra' => 'trans fra',
+    'TranslationRus' => 'trans rus',
+    'TranslationZho' => 'trans zho',
+    'TranslationDeu' => 'trans deu',
+    'TransNote' => 'entry note',
+    'SearchTermsEng' => 'search terms eng',
+    'StatusEng' => 'status eng',
+    'Synonyms' => 'synonyms',
+    'Antonyms' => 'antonyms',
+    'Example' => 'example',
+    'Tags' => 'tags',
+    'LexiliAsel' => 'etymology',
+    'See Also' => 'similar natlang',
+    'Similar Natlang' => 'similar natlang',
+    'TransXRef' => 'entry note', // depracated
+    'LexiliEstatus' => 'etymology status', // depracated
+));
+
+try {
     require_once("{$app_path}/models/App_log.php");
     require_once("{$app_path}/vendor/parsedown/Parsedown.php");
     require_once("{$app_path}/vendor/PHPMailer/src/Exception.php");
@@ -72,8 +75,9 @@ try {
     require_once("{$app_path}/controllers/File_controller.php");
 }
 catch (Throwable $t) {
-    \pard\print_throwable($t);
-    die();
+    error_log($t->getMessage());
+    print($t->getMessage());
+    exit(1);
 }
 
 try {
@@ -87,16 +91,12 @@ try {
     
     if ($cfg['dev']) {
         $cfg['log']->setDebug();
-        $cfg['log']->add("Development Environment");
         ini_set('display_errors', '1');
         ini_set('display_startup_errors', '1');
-        \pard\status(true);
-    }
-    else {
-        \pard\status(false);
     }
 }
 catch (Throwable $t) {
-    \pard\print_throwable($t);
-    die();
+    error_log($t->getMessage());
+    print($t->getMessage());
+    exit(1);
 }

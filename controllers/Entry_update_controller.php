@@ -75,7 +75,7 @@ class Entry_update_controller {
         $max_examples = 0;
         $max_examples_term = "";
 
-        \pard\m("calculate stats");
+        \pard\m("Calculate stats");
         $stats['etymology source percent'] = [];
         $stats['natlang roots'] = 0;
 
@@ -112,8 +112,8 @@ class Entry_update_controller {
                 }
             } catch (TypeError $e) {
                 //$dev_report[];
-                $import_report[] = ['term'=>$slug, 'msg'=>"Major error in {$slug} entry. Found in calculate_stats()"];
-                \pard\print_throwable($e, "Type error in term {$slug}", true);
+                $import_report[] = ['term'=>$slug, 'msg'=>"Major error in `{$slug}` entry. Found in calculate_stats()"];
+                \pard\print_throwable($e, "Type error in term `{$slug}`", true);
             }
 
         }
@@ -310,33 +310,29 @@ class Entry_update_controller {
     }
 
 
-    static function lint_entry(&$entry) {
+    static function lint_entry(&$entry): void {
         global $import_report, $dev_report;
 
-
-        foreach(['term','word class','category','trans','etymology'] as $key) {
+        foreach(['term','word class','category','trans'] as $key) {
             if (!array_key_exists($key, $entry)) {
-                $import_report[] = ['term'=>$entry['slug'], 'msg'=>"Linter Notice: {$key} is not just blank, but somehow a null"];
+                $import_report[] = ['term'=>$entry['slug'], 'msg'=>"Invalid: `{$key}` is not just blank, but somehow a null"];
             }
         }
-
         foreach($entry as $key=>$value) {
             if ($value===null) {
-                $import_report[] = ['term'=>$entry['slug'], 'msg'=>"Linter Notice: {$key} is not just blank, but somehow a null"];
+                $import_report[] = ['term'=>$entry['slug'], 'msg'=>"Invalid: `{$key}` is not just blank, but somehow a null"];
             }
         }
-
         foreach($entry['trans html'] as $lang=>$translation) {
             if (str_contains($translation, ":</em>")) {
-                $import_report[] = ['term'=>$entry['slug'], 'msg'=>"Linter Notice: {$lang} has colon inside italic rathre than outside"];
+                $import_report[] = ['term'=>$entry['slug'], 'msg'=>"Invalid: `{$lang}` has colon inside italic rathre than outside"];
             }
         }
         if ($entry['category'] === 'derived' || $entry['category'] === 'phrase') {
             if (!isset($entry['etymology']['derived']) || empty($entry['etymology']['derived'])) {
-                $import_report[] = ['term'=>$entry['slug'], 'msg'=>'Linter Notice: category is derived or phrase but no derived etymology detected.'];
+                $import_report[] = ['term'=>$entry['slug'], 'msg'=>'Invalid: category is derived or phrase but no derived etymology detected.'];
             }
         }
-
     }
 
 
@@ -391,7 +387,10 @@ class Entry_update_controller {
      * Compare the new and old word list and log any changes.
      */
     static function log_changes() {
-        global $cfg;
+        global $cfg, $comparison_option;
+        
+        \pard\m("Logging changes");
+        if (!$comparison_option) return;
         // Find changes
         $comparison = new Dictionary_comparison();
         // Log changes
@@ -435,12 +434,12 @@ class Entry_update_controller {
 
 
     static function update_entries(string $current_csv_filename, string $old_csv_filename) {
-        global $cfg, $old_csv_data, $debug_mode;
+        global $cfg, $old_csv_data, $debug_mode, $comparison_option;
 
         \pard\sec("Update entries");
         
         // Load old
-        if (!$debug_mode) {
+        if ($comparison_option) {
             load_csv($old_csv_filename, $old_csv_data);
         }
 
@@ -461,15 +460,14 @@ class Entry_update_controller {
         // Check for changes
         if (!$debug_mode) {
             \pard\sec("Post entry update");
-            \pard\m("Logging changes");
             Entry_update_controller::log_changes();
-            \pard\m("Calculating stats");
             Entry_update_controller::calculate_stats();
             \pard\end();
         }
 
         // Write dictionary files
-        File_controller::write_api2_files();
+        if ($comparison_option)
+            File_controller::write_api2_files();
     }
 
     /**
@@ -517,7 +515,10 @@ class Entry_update_controller {
 
             foreach($ending_group as $slug) {
 
-                if ($dict[$slug]['category'] === 'phrase') continue;
+                if ($dict[$slug]['category'] === 'phrase') {
+                    \pard\progress_increment();
+                    continue;
+                }
                 
                 foreach($ending_group as $rhyme) {
                     self::add_entry_rhyme($slug, $rhyme);
@@ -542,14 +543,12 @@ class Entry_update_controller {
                 } else {
                     $alt = '-'.$final_morpheme;
                 }
-
                 
                 if(isset($dict[$alt])) {
                     $dict[$slug]['rhyme exclusions'] = [$final_morpheme, $alt];
                 } else {
                     $dict[$slug]['rhyme exclusions'] = [$final_morpheme];
                 }
-                
             }
             \pard\progress_increment();
             usleep(100);
