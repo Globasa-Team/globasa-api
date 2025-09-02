@@ -104,6 +104,7 @@ if (key_exists('a', $opt)) {
 if (key_exists('l', $opt)) {
     \pard\m("Reprocessing last CSV file", 'Option input');
     $new_csv_filename = $data['previous'];
+    $comparison_option = false;
 }
 if (key_exists('c', $opt)) {
     \pard\m("Skipping old CSV comparison", 'Option');
@@ -111,7 +112,7 @@ if (key_exists('c', $opt)) {
 }
 if (key_exists('w', $opt)) {
     \pard\m("Skipping file writing", 'Option');
-    $comparison_option = false;
+    $write_files = false;
 }
 if (key_exists('file', $opt)) {
     $new_csv_filename = $opt['file'];
