@@ -280,16 +280,18 @@ class Term_parser
      * Gets the list of terms with on of the also see word lists.
      */
     private function parse_etymology_also_see(string $etymology, int $skip):array {
+        global $dict;
 
-        $result = explode(",", substr($etymology, $skip));
-        foreach($result as $key => $data) {
-            if ( empty($result[$key]) ) {
-                continue;
+        $result = array();
+        $references = explode(",", substr($etymology, $skip));
+        foreach($references as $data) {
+            if ( empty($data) ) continue;
+            
+            $slug = trim($data);
+            if (str_ends_with($slug, '.')) {
+                $slug = substr($slug, 0, -1);
             }
-            $result[$key] = trim($data);
-            if (str_ends_with($result[$key], '.')) {
-                $result[$key] = substr($result[$key], 0, -1);
-            }
+            $result[$slug] = $slug;
         }
         return $result;
     }
@@ -297,7 +299,17 @@ class Term_parser
 
 
     /**
-     * Parse derived etymology for derived, affix or phrase terms.
+     * Parse derived etymology for derived, affix or phrase terms. Derived
+     * etymology is a string of term slugs seperated by + or , characters.
+     * White space is ignored.
+     * 
+     * Eg. "term1 + term2, term3"
+     * 
+     * Some terms may be a phrase with spaces seperating components. Ideally,
+     * they would always be slugs. The term is sluggified.
+     * 
+     * Returns an array of each component. Eg:
+     *  ["term1", "+", "term2", ",", "term3"]
      * 
      * @param string   $derived_etymology     the derived etymology string
      * @return string  formatted derived etymology string
@@ -829,14 +841,22 @@ class Term_parser
         // Trim for entry term (source sensitive)
         $parsed['term'] = trim($raw['term']);
 
+        // Create slug, with modifier if needed
+        $parsed['slug_mod'] = !empty($raw['slug_mod']) ? slugify($raw['slug_mod']) : '';
+        $parsed['slug'] = slugify($parsed['term']) .
+        (!empty($parsed['slug_mod']) ? '_'.$parsed['slug_mod'] : '');
+        
+        // Generate specified term
+        if (!empty($parsed['slug_mod'])) {
+            $parsed['term_spec'] = "{$parsed['term']} ({$parsed['slug_mod']})";
+        } else {
+            $parsed['term_spec'] = $parsed['term'];
+        }
+
         // Create full search index term (lower case)
         $index = strtolower($parsed['term']);
         // Add full term to search terms
         $search_terms[] = $index;
-
-        // Create slug, with modifier if needed
-        $parsed['slug'] = slugify($index) .
-                            (!empty($raw['slug_mod']) ? '_'.$raw['slug_mod'] : '');
 
         // If has optional part in round brackets, remove and add to index.
         // Also, add these alt forms to the alt form list.
