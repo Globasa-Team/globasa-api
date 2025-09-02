@@ -455,7 +455,7 @@ class Entry_update_controller
 
     static function update_entries(string $current_csv_filename, string $old_csv_filename)
     {
-        global $cfg, $old_csv_data, $debug_mode, $comparison_option;
+        global $cfg, $old_csv_data, $debug_mode, $comparison_option, $write_file;
 
         \pard\sec("Update entries");
 
@@ -487,7 +487,7 @@ class Entry_update_controller
         }
 
         // Write dictionary files
-        if ($comparison_option)
+        if ($write_file)
             File_controller::write_api2_files();
     }
 

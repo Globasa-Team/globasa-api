@@ -33,6 +33,7 @@ global
     $old_csv_data,
 
     $verbose_mode,
+    $write_files,
 
     $debug_data,
     $debug_mode;
@@ -66,6 +67,7 @@ $new_csv_data = [];
 
 $comparison_option = true;
 $verbose_mode = false;
+$write_files = true;
 
 $debug_data = [];
 $debug_mode = false;
@@ -103,8 +105,12 @@ if (key_exists('l', $opt)) {
     \pard\m("Reprocessing last CSV file", 'Option input');
     $new_csv_filename = $data['previous'];
 }
-if (key_exists('s', $opt)) {
+if (key_exists('c', $opt)) {
     \pard\m("Skipping old CSV comparison", 'Option');
+    $comparison_option = false;
+}
+if (key_exists('w', $opt)) {
+    \pard\m("Skipping file writing", 'Option');
     $comparison_option = false;
 }
 if (key_exists('file', $opt)) {

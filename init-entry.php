@@ -8,7 +8,7 @@ ini_set('display_errors', '0');
 ini_set('display_startup_errors', '0');
 error_reporting(E_ALL);
 
-define("OPT_SHORT", 'avsrdp');
+define("OPT_SHORT", 'acdlpvw');
 define("OPT_LONG", array('file:'));
 define("CONFIG_FILENAME", "config-entry.yaml");
 define("OFFICIAL_WORDS_CSV_FILENAME", "words-official.csv");
