@@ -26,6 +26,35 @@ define('GLOBAL_VOWEL_REGEX', "/[aeiou]/i");
 define('WORD_CHARS_REGEX', '/[^A-Za-z0-9 \-]/');
 define('PAREN_UNDERSCORE_MARKDOWN_REGEX', '/[\[{\(_].*[\]}\)_]/U');
 
+// Map spreadsheet column to internal fields
+define('COLUMN_MAP', array(
+    'Category' => 'category',
+    'Word' => 'term',
+    'slug_mod' => 'slug_mod',
+    'WordClass' => 'word class',
+    'Class' => 'word class',
+    'OfficialWord' => 'status',
+    'TranslationEng' => 'trans eng',
+    'TranslationEpo' => 'trans epo',
+    'TranslationSpa' => 'trans spa',
+    'TranslationFra' => 'trans fra',
+    'TranslationRus' => 'trans rus',
+    'TranslationZho' => 'trans zho',
+    'TranslationDeu' => 'trans deu',
+    'TransNote' => 'entry note',
+    'SearchTermsEng' => 'search terms eng',
+    'StatusEng' => 'status eng',
+    'Synonyms' => 'synonyms',
+    'Antonyms' => 'antonyms',
+    'Example' => 'example',
+    'Tags' => 'tags',
+    'LexiliAsel' => 'etymology',
+    'See Also' => 'similar natlang',
+    'Similar Natlang' => 'similar natlang',
+    'TransXRef' => 'entry note', // depracated
+    'LexiliEstatus' => 'etymology status', // depracated
+));
+
 class Term_parser
 {
     private $csv_columns = null;
