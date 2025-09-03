@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace globasa_api;
+namespace WorldlangDict\API;
 
 class Word
 {
