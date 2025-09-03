@@ -1,15 +1,54 @@
 <?php
 
-namespace globasa_api;
+namespace WorldlangDict\API;
 
 use Exception;
 // Exceptions to the stress rules: one syllable words that have no stresses
 define('WORDS_TO_SKIP', [
-    "am", "bax", "cel", "ci", "cis", "de", "di",
-    "dur", "e", "el", "em", "ex", "fal", "fe", "fol", "ger", "har", "hoy",
-    "hu", "in", "ji", "kam", "ki", "kom", "ku", "kwas", "le", "mas", "na",
-    "nor", "of", "or", "pas", "per", "por", "pro", "su", "tas", "tem", "ton",
-    "tras", "wey", "xa", "yon"
+    "am",
+    "bax",
+    "cel",
+    "ci",
+    "cis",
+    "de",
+    "di",
+    "dur",
+    "e",
+    "el",
+    "em",
+    "ex",
+    "fal",
+    "fe",
+    "fol",
+    "ger",
+    "har",
+    "hoy",
+    "hu",
+    "in",
+    "ji",
+    "kam",
+    "ki",
+    "kom",
+    "ku",
+    "kwas",
+    "le",
+    "mas",
+    "na",
+    "nor",
+    "of",
+    "or",
+    "pas",
+    "per",
+    "por",
+    "pro",
+    "su",
+    "tas",
+    "tem",
+    "ton",
+    "tras",
+    "wey",
+    "xa",
+    "yon"
 ]);
 
 define('REPLACE_GLB_REGEX', ['/c/', '/j/', '/r/', '/x/', '/y/', '/h/']);
@@ -108,23 +147,23 @@ class Term_parser
             }
             $csv[$field] = $datum;
         }
-        
-        
-        
+
+
+
         if (empty($raw['term'])) return;
 
         $this->set_globasa_terms($raw, $parsed);
         $this->current_slug = $parsed['slug'];
         $this->create_ipa($raw, $parsed);
-        
+
         $this->parse_basic_field('status', $raw, $parsed);
         $this->parse_basic_field('category', $raw, $parsed, true);
         $this->parse_basic_field('word class', $raw, $parsed, true);
-        
+
         $this->parse_translations($raw, $parsed);
-        $this->parse_entry_note(data:$raw, entry:$parsed);
-        $this->set_natlang_terms(parsed:$parsed, raw:$raw);
-        
+        $this->parse_entry_note(data: $raw, entry: $parsed);
+        $this->set_natlang_terms(parsed: $parsed, raw: $raw);
+
         $this->parse_etymology($raw, $parsed);
         $this->parse_list_field('tags', $raw, $parsed);
         $this->parse_list_field('synonyms', $raw, $parsed);
@@ -146,7 +185,8 @@ class Term_parser
     /**
      * Find anomalies or errors not otherwise caught
      */
-    private function lint($entry) {
+    private function lint($entry)
+    {
         global $import_report;
     }
 
@@ -175,26 +215,27 @@ class Term_parser
     /**
      * 
      */
-    private function parse_entry_note(array &$entry, array &$data) {
+    private function parse_entry_note(array &$entry, array &$data)
+    {
         global $import_report;
-        
+
         if (empty($data['entry note'])) return;
 
         $entry['entry note beta'] = $data['entry note'];
-        
-        $notes = explode('.', $data['entry note']);
-        
-        foreach($notes as $note) {
 
-            if ($note==='Am oko tabellexi') {
+        $notes = explode('.', $data['entry note']);
+
+        foreach ($notes as $note) {
+
+            if ($note === 'Am oko tabellexi') {
                 $entry['entry notes'][$note] = true;
                 continue;
             } elseif (!str_contains($note, ':')) {
-                $import_report[]=['term'=>$entry['slug'], 'msg'=>'Entry note error, content='.$note];
+                $import_report[] = ['term' => $entry['slug'], 'msg' => 'Entry note error, content=' . $note];
                 $entry['entry notes']['Nota'] = $this->pd->line($note);
                 continue;
             }
-            
+
             [$keyword, $content] = explode(':', $note);
             $content = trim($content);
 
@@ -202,7 +243,7 @@ class Term_parser
                 case 'am oko':
                 case 'kurto lexi':
                 case 'kompara':
-                    foreach(explode(', ', $content) as $slug) {
+                    foreach (explode(', ', $content) as $slug) {
                         $entry['entry notes'][$keyword][slugify($slug)] = null;
                     }
                     break;
@@ -213,10 +254,9 @@ class Term_parser
                     $entry['entry notes'][$keyword] = $content;
                     break;
                 default:
-                    $import_report[]=['term'=>$entry['slug'], 'msg'=>'Entry note error, type='.$keyword];
-                    $entry['entry notes']['Nota'] = $this->pd->line($keyword.': '.$content);
+                    $import_report[] = ['term' => $entry['slug'], 'msg' => 'Entry note error, type=' . $keyword];
+                    $entry['entry notes']['Nota'] = $this->pd->line($keyword . ': ' . $content);
             }
-            
         }
     }
 
@@ -242,12 +282,12 @@ class Term_parser
         global $import_report;
 
         if (empty($raw['etymology'])) {
-            $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Empty etymology"];
+            $import_report[] = ['term' => $this->current_slug, 'msg' => "Empty etymology"];
             return;
         }
 
         $etymologies = explode(". ", $raw['etymology']);
-        foreach($etymologies as $cur) {
+        foreach ($etymologies as $cur) {
 
             $cur = trim($cur);
             //
@@ -257,40 +297,38 @@ class Term_parser
                 continue;
             } else if (str_starts_with($cur, "https://") || str_starts_with($cur, "http://")) {
                 if (!empty($parsed['etymology']['link'])) {
-                    $this->log->add("ERROR: Term `".$raw['term']."` has duplicate linked etymology.");
-                    $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate linked etymology."];
+                    $this->log->add("ERROR: Term `" . $raw['term'] . "` has duplicate linked etymology.");
+                    $import_report[] = ['term' => $this->current_slug, 'msg' => "Duplicate linked etymology."];
                 }
                 $parsed['etymology']['link'] = $this->parse_etymology_linked($cur);
             } else if (strcmp($cur, "a priori") === 0) {
                 $parsed['etymology']['a priori'] = true;
-            } else if (str_starts_with($cur, "Am " )) {
-                if (str_starts_with($cur, "Am oko " )) {
+            } else if (str_starts_with($cur, "Am ")) {
+                if (str_starts_with($cur, "Am oko ")) {
                     if (!empty($parsed['etymology']['am oko'])) {
                         $this->log->add("Error: Duplicate `am oko` in etymology.");
-                        $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate `am oko` in etymology."];
+                        $import_report[] = ['term' => $this->current_slug, 'msg' => "Duplicate `am oko` in etymology."];
                     }
                     $parsed['etymology']['am oko'] = $this->parse_etymology_also_see($cur, 7);
-                }
-                else if (str_starts_with($cur, "Am kompara: " )) {
+                } else if (str_starts_with($cur, "Am kompara: ")) {
                     $parsed['etymology']['am kompara'] = $this->parse_etymology_also_see($cur, 12);
-                }
-                else {
-                    $this->log->add("Error: Etymology starts with 'am ' but isn't.".$cur);
-                    $import_report[] = ['term'=>$this->current_slug, 'msg'=>"One etymology starts with 'am ' but isn't."];
+                } else {
+                    $this->log->add("Error: Etymology starts with 'am ' but isn't." . $cur);
+                    $import_report[] = ['term' => $this->current_slug, 'msg' => "One etymology starts with 'am ' but isn't."];
                 }
             } else if (str_starts_with($cur, "kwasilexi - ")) {
                 $parsed['etymology']['kwasilexi'] = $this->parse_etymology_natlang_freeform(substr($cur, 12), $parsed['slug']);
             } else if (str_contains($cur, "(")) {
                 if (!empty($parsed['etymology']['natlang'])) {
-                    $this->log->add("ERROR: Term `".$raw['term']."` has duplicate natlang etymology.");
-                    $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate natlang etymology."];
+                    $this->log->add("ERROR: Term `" . $raw['term'] . "` has duplicate natlang etymology.");
+                    $import_report[] = ['term' => $this->current_slug, 'msg' => "Duplicate natlang etymology."];
                 }
                 $parsed['etymology']['natlang'] = $this->parse_etymology_natlang_freeform($cur, $parsed['slug']);
             } else {
                 // Assume it's derived
                 if (!empty($parsed['etymology']['derived'])) {
-                    $this->log->add("ERROR: Term `".$raw['term']."` has duplicate derived etymology.");
-                    $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Duplicate derived etymology."];
+                    $this->log->add("ERROR: Term `" . $raw['term'] . "` has duplicate derived etymology.");
+                    $import_report[] = ['term' => $this->current_slug, 'msg' => "Duplicate derived etymology."];
                 }
                 $parsed['etymology']['derived'] = $this->parse_etymology_derived($cur, $parsed['slug']);
             }
@@ -308,14 +346,15 @@ class Term_parser
     /**
      * Gets the list of terms with on of the also see word lists.
      */
-    private function parse_etymology_also_see(string $etymology, int $skip):array {
+    private function parse_etymology_also_see(string $etymology, int $skip): array
+    {
         global $dict;
 
         $result = array();
         $references = explode(",", substr($etymology, $skip));
-        foreach($references as $data) {
-            if ( empty($data) ) continue;
-            
+        foreach ($references as $data) {
+            if (empty($data)) continue;
+
             $slug = trim($data);
             if (str_ends_with($slug, '.')) {
                 $slug = substr($slug, 0, -1);
@@ -371,18 +410,18 @@ class Term_parser
                 $phrase .= ' ';
             }
             $phrase .= $word;
-            
+
             if ($stop) {
                 // Finished phrase!
 
                 // add to etymology result
                 $etymology_array[] = $phrase;
                 $etymology_array[] = $stop;
-                
+
                 // Record for backlinking
                 $slug = slugify($phrase);
                 $derived_data[$slug][] = $this->current_slug;
-                
+
                 $phrase = '';
                 $stop = '';
             }
@@ -425,7 +464,7 @@ class Term_parser
 
 
 
-    
+
 
 
 
@@ -480,7 +519,7 @@ class Term_parser
 
                 if ($len > $pos && $enclosure_level > 0) {
                     $this->log->add("Error: Term `{$term}` has malformed etymology, missing `)`");
-                    $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Malformed etymology, missing `)`"];
+                    $import_report[] = ['term' => $this->current_slug, 'msg' => "Malformed etymology, missing `)`"];
                     $enclosure_end = $pos;
                 }
 
@@ -495,7 +534,7 @@ class Term_parser
                     $natlang_etymologies[$lang][] = $this->current_slug;
                 } else {
                     // No enclusre, no example to save.
-                    $lang = trim(substr($natlang_etymology, $lang_start, $pos-$lang_start));
+                    $lang = trim(substr($natlang_etymology, $lang_start, $pos - $lang_start));
                     // record language, unless it's etc (ji max to).
                     if (strcmp($lang, "ji max to") !== 0) {
                         $result[$lang] = "";
@@ -504,19 +543,20 @@ class Term_parser
                 }
 
                 // Error check the language name
-                if (   str_contains($lang, '(') || str_contains($lang, ')') ||
-                       str_contains($lang, ':') || str_contains($lang, ';') ||
-                       str_contains($lang, '-') || str_contains($lang, '+') ||
-                       str_contains($lang, ',') || str_contains($lang, '?')
-                    ) {
+                if (
+                    str_contains($lang, '(') || str_contains($lang, ')') ||
+                    str_contains($lang, ':') || str_contains($lang, ';') ||
+                    str_contains($lang, '-') || str_contains($lang, '+') ||
+                    str_contains($lang, ',') || str_contains($lang, '?')
+                ) {
                     $this->log->add("Etymology Error: Term `{$term}` has one of ():;-+,? in language name `$lang`. (Possibly caused by missing a comma from previous language?)");
-                    $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Natlang etymology has one of ():;-+,? in language name `{$lang}`. (Possibly caused by missing a comma from previous language?)"];
+                    $import_report[] = ['term' => $this->current_slug, 'msg' => "Natlang etymology has one of ():;-+,? in language name `{$lang}`. (Possibly caused by missing a comma from previous language?)"];
                 }
 
 
                 if (empty($lang)) {
                     $this->log->add("Etymology Error: Term `{$term}` has blank language name in it's natlang etymology.");
-                    $import_report[] = ['term'=>$this->current_slug, 'msg'=>"Blank language name natlang etymology"];
+                    $import_report[] = ['term' => $this->current_slug, 'msg' => "Blank language name natlang etymology"];
                 }
 
                 $at_seperator = false;
@@ -524,7 +564,6 @@ class Term_parser
                 $enclosure_start = 0;
                 $enclosure_end = 0;
             }
-            
         }
 
         ksort($result);
@@ -649,86 +688,87 @@ class Term_parser
      * @param array  $raw      $raw['trans'] the list of natlang terms
      * @param array  $parsed   the parsed entry being built
      */
-    private function parse_translations(array &$raw, array &$parsed) {
+    private function parse_translations(array &$raw, array &$parsed)
+    {
 
-        foreach($raw['trans'] as $lang => $translations) {
-            
+        foreach ($raw['trans'] as $lang => $translations) {
+
             $parsed['trans html'][$lang] = "";
             $parsed['trans'][$lang] = [];
 
             if (empty($translations)) {
                 continue;
             }
-            
+
             // For each language, save rich text string output
             $parsed['trans html'][$lang] = $this->pd->line($translations);
-            
+
             // For each language, parse translations
             $translations = html_entity_decode($translations);
             $start = 0;
             $len = strlen($translations);
             $group_terms = [];
-            
-            for($pos = 0; $pos < $len; $pos++) {
-                
-                if ($translations[$pos]==='(') {
+
+            for ($pos = 0; $pos < $len; $pos++) {
+
+                if ($translations[$pos] === '(') {
                     // Skip to end of enclosure, $pos is ')'
                     $pos = strpos($translations, ')', $pos);
-                    if ($pos===false) {
+                    if ($pos === false) {
                         $pos = $len;
-                        $this->log->add("ERROR: Term `".$parsed['term']."` is missing a closing ')' in translation.");
-                    }
-                }
-                
-                if ($translations[$pos]==='[') {
-                    // Skip to end of enclosure, $pos is ']'
-                    $pos = strpos($translations, ']', $pos);
-                    if ($pos===false) {
-                        $pos = $len;
-                        $this->log->add("ERROR: Term `".$parsed['term']."` is missing a closing ']' in translation.");
+                        $this->log->add("ERROR: Term `" . $parsed['term'] . "` is missing a closing ')' in translation.");
                     }
                 }
 
-                if($translations[$pos]===',') {
+                if ($translations[$pos] === '[') {
+                    // Skip to end of enclosure, $pos is ']'
+                    $pos = strpos($translations, ']', $pos);
+                    if ($pos === false) {
+                        $pos = $len;
+                        $this->log->add("ERROR: Term `" . $parsed['term'] . "` is missing a closing ']' in translation.");
+                    }
+                }
+
+                if ($translations[$pos] === ',') {
                     // save single term
-                    $term = trim(substr($translations, $start, $pos-$start));
+                    $term = trim(substr($translations, $start, $pos - $start));
                     $group_terms[] = $this->pd->line($term);
-                    self::set_natlang_term_from_translation(parsed:$parsed, lang:$lang, term:$term);
-                    $start = $pos+1;
-                } elseif($translations[$pos]===';') {
+                    self::set_natlang_term_from_translation(parsed: $parsed, lang: $lang, term: $term);
+                    $start = $pos + 1;
+                } elseif ($translations[$pos] === ';') {
                     // end of group, save current group of terms
                     // save single term
-                    $term = trim(substr($translations, $start, $pos-$start));
+                    $term = trim(substr($translations, $start, $pos - $start));
                     $group_terms[] = $this->pd->line($term);
                     $parsed['trans'][$lang][] = $group_terms;
                     $group_terms = [];
-                    $start = $pos+1;
-                    self::set_natlang_term_from_translation(parsed:$parsed, lang:$lang, term:$term);
-                } elseif($pos >= $len-1) {
+                    $start = $pos + 1;
+                    self::set_natlang_term_from_translation(parsed: $parsed, lang: $lang, term: $term);
+                } elseif ($pos >= $len - 1) {
                     // end of translations, save current group of terms
                     // save single term
                     $term = trim(substr($translations, $start));
                     $group_terms[] = $this->pd->line($term);
                     $parsed['trans'][$lang][] = $group_terms;
                     $group_terms = [];
-                    $start = $pos+1;
-                    self::set_natlang_term_from_translation(parsed:$parsed, lang:$lang, term:$term);
+                    $start = $pos + 1;
+                    self::set_natlang_term_from_translation(parsed: $parsed, lang: $lang, term: $term);
                 }
             }
         }
     }
 
 
-    
+
 
     /**
      * Parse natlang terms and render them for search terms.
      */
     private function set_natlang_terms(array &$parsed, array $raw)
     {
-        self::set_natlang_terms_manual(raw:$raw, parsed:$parsed);
-        
-        foreach($parsed['search terms'] as $lang=>$lang_terms) {
+        self::set_natlang_terms_manual(raw: $raw, parsed: $parsed);
+
+        foreach ($parsed['search terms'] as $lang => $lang_terms) {
             $parsed['search terms'][$lang] = array_values(array_unique($lang_terms));
         }
     }
@@ -739,11 +779,11 @@ class Term_parser
     private function set_natlang_terms_manual(array $raw, array &$parsed)
     {
         // Parse manual search terms (English only)
-        if(empty($raw['search terms eng'])) {
+        if (empty($raw['search terms eng'])) {
             return;
         }
 
-        foreach(explode(", ", $raw['search terms eng']) as $term) {
+        foreach (explode(", ", $raw['search terms eng']) as $term) {
             $parsed['search terms']['eng'][] = $term;
         }
 
@@ -754,9 +794,10 @@ class Term_parser
     /**
      * Parse single term and add to search terms
      */
-    private function set_natlang_term_from_translation(array &$parsed, string $lang, string $term) {
+    private function set_natlang_term_from_translation(array &$parsed, string $lang, string $term)
+    {
 
-        if(empty($term)) return;
+        if (empty($term)) return;
 
         // Remove notes
         $term = preg_replace('/\(_(.+)_\)/U', '', $term);     // (_ ... _)
@@ -787,7 +828,7 @@ class Term_parser
         // Add search term for clarifying notes, such as 
         // `subordinate clause: where` for denloka hu
         if (strpos($term, ':') !== false) {
-            $cur = substr($term, strpos($term, ':')+1);
+            $cur = substr($term, strpos($term, ':') + 1);
             $parsed['search terms'][$lang][] = trim($cur);
         }
     }
@@ -797,9 +838,10 @@ class Term_parser
      * Parse translation for search terms
      */
     // TODO: remove?
-    private function set_natlang_terms_from_translation(array $parsed, array &$search_terms) {
+    private function set_natlang_terms_from_translation(array $parsed, array &$search_terms)
+    {
 
-        if(!isset($parsed['trans'])) return;
+        if (!isset($parsed['trans'])) return;
 
         foreach ($parsed['trans'] as $lang => $lang_trans) {
             foreach ($lang_trans as $trans_group) {
@@ -829,7 +871,6 @@ class Term_parser
                     }
                 }
             }
-            
         }
     }
 
@@ -873,8 +914,8 @@ class Term_parser
         // Create slug, with modifier if needed
         $parsed['slug_mod'] = !empty($raw['slug_mod']) ? slugify($raw['slug_mod']) : '';
         $parsed['slug'] = slugify($parsed['term']) .
-        (!empty($parsed['slug_mod']) ? '_'.$parsed['slug_mod'] : '');
-        
+            (!empty($parsed['slug_mod']) ? '_' . $parsed['slug_mod'] : '');
+
         // Generate specified term
         if (!empty($parsed['slug_mod'])) {
             $parsed['term_spec'] = "{$parsed['term']} ({$parsed['slug_mod']})";
@@ -909,6 +950,5 @@ class Term_parser
         }
 
         $parsed['search terms'][$cfg['wl_code_short']] = array_unique($search_terms);
-
     }
 }

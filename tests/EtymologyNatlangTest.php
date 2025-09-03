@@ -1,8 +1,8 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use globasa_api\Term_parser;
-use globasa_api\App_log;
+use WorldlangDict\API\Term_parser;
+use WorldlangDict\API\App_log;
 
 require_once(__DIR__ . "/../models/Term_parser.php");
 require_once(__DIR__ . "/../models/App_log.php");
@@ -10,13 +10,14 @@ require_once(__DIR__ . "/../vendor/parsedown/Parsedown.php");
 
 final class EtymologyNatlangTest extends TestCase
 {
-    var $csv_headers = ["Word", "Category", "WordClass", "OfficialWord", "TranslationEng",                   "SearchTermsEng", "TranslationEpo", "TranslationSpa",     "TranslationDeu",                                        "Synonyms", "Antonyms", "Example", "Tags", "LexiliAsel",                                                                             "TranslationFra", "TranslationRus", "TranslationZho"];
-    var $csv_data =    ["a",   "root",    "il",       "TRUE",        "ah (_denotes surprise or wonder_)", "",              "ha",            "ah",                 "ah (_Ausdruck der Überraschung oder der Verwunderung_)", "",        "",        "",       "",    "Putunhwa (啊 “a”), Englisa (ah), Doycisa (ah), Espanisa (ah), Rusisa (ах “akh”, a “a”)", "ah",            "а",             "啊"];
-    var $csv_data_2 =  ["hala",    "root",   "n/f.oj",      "TRUE",        "solution; solve",                     "",              "solvo; solvi",  "soluciÃ³n; resolver", "",                                                      "",        "",        "",       "",    "Arabisa (Ø­Ù„ â€œhalaâ€), Hindisa (à¤¹à¤² â€œhalâ€), Parsisa (Ø­Ù„ â€œhalâ€), Turkisa (halletmek)", "",  "",              ""];
+    var $csv_headers = ["Word", "Category", "WordClass", "OfficialWord", "TranslationEng", "SearchTermsEng", "TranslationEpo", "TranslationSpa", "TranslationDeu", "Synonyms", "Antonyms", "Example", "Tags", "LexiliAsel",                                                                             "TranslationFra", "TranslationRus", "TranslationZho"];
+    var $csv_data = ["a", "root", "il", "TRUE", "ah (_denotes surprise or wonder_)", "", "ha", "ah", "ah (_Ausdruck der Überraschung oder der Verwunderung_)", "", "", "", "", "Putunhwa (啊 “a”), Englisa (ah), Doycisa (ah), Espanisa (ah), Rusisa (ах “akh”, a “a”)", "ah", "а", "啊"];
+    var $csv_data_2 =  ["hala", "root", "n/f.oj", "TRUE", "solution; solve", "", "solvo; solvi",  "soluciÃ³n; resolver", "", "", "", "", "", "Arabisa (Ø­Ù„ â€œhalaâ€), Hindisa (à¤¹à¤² â€œhalâ€), Parsisa (Ø­Ù„ â€œhalâ€), Turkisa (halletmek)", "",  "", ""];
     var $tp = null;
     var $cfg = null;
-    
-    public function setUp(): void {
+
+    public function setUp(): void
+    {
         global $cfg;
         $cfg['report_level'] = 0;
         $cfg['instance_name'] = 'PHPUnitTest';
@@ -24,7 +25,6 @@ final class EtymologyNatlangTest extends TestCase
         $cfg['parsedown'] = new Parsedown;
         $this->cfg = $cfg;
         $this->tp = new Term_parser($this->csv_headers);
-        
     }
 
     public function testClassCreatesInstanceSuccessfully(): void
@@ -88,7 +88,8 @@ final class EtymologyNatlangTest extends TestCase
         $this->assertEquals(expected: ['Englisa(, Rusisa, Klingon test' => ''], actual: $parsed['etymology']['natlang']);
         $this->assertEquals(
             expected: "- Etymology Error: Term `a` has one of ():;-+,? in language name `Englisa(, Rusisa, Klingon test`. (Possibly caused by missing a comma from previous language?)",
-            actual: $this->cfg['log']->get_last_message());
+            actual: $this->cfg['log']->get_last_message()
+        );
     }
 
 

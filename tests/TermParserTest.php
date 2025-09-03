@@ -1,16 +1,31 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use globasa_api\Term_parser;
+use WorldlangDict\API\Term_parser;
 
 require_once(__DIR__ . "/../models/Term_parser.php");
 
 final class TermParserTest extends TestCase
 {
-    var $csv_headers = ["Word", "Category", "WordClass", "OfficialWord", "TranslationEng",
-                    "SearchTermsEng", "TranslationEpo", "TranslationSpa", "TranslationDeu",
-                    "Synonyms", "Antonyms", "Example", "Tags", "LexiliAsel",
-                    "TranslationFra", "TranslationRus", "TranslationZho"];
+    var $csv_headers = [
+        "Word",
+        "Category",
+        "WordClass",
+        "OfficialWord",
+        "TranslationEng",
+        "SearchTermsEng",
+        "TranslationEpo",
+        "TranslationSpa",
+        "TranslationDeu",
+        "Synonyms",
+        "Antonyms",
+        "Example",
+        "Tags",
+        "LexiliAsel",
+        "TranslationFra",
+        "TranslationRus",
+        "TranslationZho"
+    ];
 
     public function testClassCreatesInstanceSuccessfully(): void
     {

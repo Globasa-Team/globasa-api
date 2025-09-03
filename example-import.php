@@ -63,7 +63,7 @@ register_shutdown_function(function () {
 /*******************************
  * INIT
  * *****************************
-*/
+ */
 
 define("OVERRIDE_PRIORITY", 1);
 define("CURATED_PASS_PRIORITY", 2);
@@ -106,7 +106,7 @@ function add_examples(string $e, array $terms, array $c, int $p)
 
     $terms = array_unique($terms);
     $e = $pd->line(mb_trim($e));
-    
+
     foreach ($terms as $t) {
 
         $t = strtolower($t);
@@ -360,8 +360,8 @@ function write_examples(): void
     \pard\progress_start(count($examples), 'Writing examples for each entry');
 
     if (!file_exists($cfg['examples_output'])) {
-		mkdir($cfg['examples_output'], 0744);
-	}
+        mkdir($cfg['examples_output'], 0744);
+    }
 
     foreach ($examples as $slug => $data) {
         usleep(20000);

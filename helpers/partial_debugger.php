@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Partial Solution Command Line Interface debugger.
  * 
@@ -6,6 +7,7 @@
  */
 
 declare(strict_types=1);
+
 namespace pard;
 
 define('COL', "\033[");
@@ -20,7 +22,7 @@ define('HLON', "\033[7m");
 define('HLOFF', "\033[40m");
 define('EHLON', "\033[41m");
 define('TEST', "\033[7m");
-define('TEXT_RESET',"\033(B\e[m");
+define('TEXT_RESET', "\033(B\e[m");
 
 // C0 Control Code
 define('C0', "\033[");
@@ -49,259 +51,281 @@ define('PARD_LENGTH', 50);
 /**
  * Display message
  */
-function m(mixed $msg, string $label="", bool $error = false):void {
+function m(mixed $msg, string $label = "", bool $error = false): void
+{
     global $_pard_status;
     if (!$_pard_status) return;
-    if ($error) echo(RED);
-    if (!empty($label)) $label = GRAY.$label.': '.TEXT_RESET;
+    if ($error) echo (RED);
+    if (!empty($label)) $label = GRAY . $label . ': ' . TEXT_RESET;
 
     switch (gettype($msg)) {
         case "string":
-                $msg = str_replace(
-                    ["\n"],
-                    GRAY.'↲'.TEXT_RESET,
-                    $msg);
-                $msg = str_replace(
-                    ["\r"],
-                    GRAY.'↲'.TEXT_RESET,
-                    $msg);
+            $msg = str_replace(
+                ["\n"],
+                GRAY . '↲' . TEXT_RESET,
+                $msg
+            );
+            $msg = str_replace(
+                ["\r"],
+                GRAY . '↲' . TEXT_RESET,
+                $msg
+            );
             if (strlen($msg) < PARD_LENGTH) {
-                echo("┠─ ".$label.$msg.PHP_EOL);
+                echo ("┠─ " . $label . $msg . PHP_EOL);
             } else {
                 $first = true;
-                foreach(explode("\n",wordwrap($msg)) as $line) {
+                foreach (explode("\n", wordwrap($msg)) as $line) {
                     if ($first) {
-                        echo("┠─ ".$label.$line.PHP_EOL);
+                        echo ("┠─ " . $label . $line . PHP_EOL);
                         $first = false;
                     } else {
-                        echo "┃  ".$line.PHP_EOL;
+                        echo "┃  " . $line . PHP_EOL;
                     }
                 }
             }
             break;
         case "integer":
-            echo "┠─ ".$label.number_format($msg).GRAY.'(integer)'.TEXT_RESET.PHP_EOL;
+            echo "┠─ " . $label . number_format($msg) . GRAY . '(integer)' . TEXT_RESET . PHP_EOL;
             break;
         case "double":
         case "float":
-            echo "┠─ ".$label.number_format($msg, 2).GRAY.'('.gettype($msg).')'.TEXT_RESET.PHP_EOL;
+            echo "┠─ " . $label . number_format($msg, 2) . GRAY . '(' . gettype($msg) . ')' . TEXT_RESET . PHP_EOL;
             break;
         case "boolean":
-            echo "┠─ ".$label.($msg?'true':'false').GRAY.'(bool)'.TEXT_RESET.PHP_EOL;
+            echo "┠─ " . $label . ($msg ? 'true' : 'false') . GRAY . '(bool)' . TEXT_RESET . PHP_EOL;
             break;
         case 'array':
-            echo("┠─┬".$label.GRAY."(array)".TEXT_RESET.PHP_EOL);
+            echo ("┠─┬" . $label . GRAY . "(array)" . TEXT_RESET . PHP_EOL);
             print_array($msg);
             break;
         case 'Error':
         case 'Exception':
-            echo("┠─┬".$label.GRAY.'('.gettype($msg).')'.TEXT_RESET.PHP_EOL);
+            echo ("┠─┬" . $label . GRAY . '(' . gettype($msg) . ')' . TEXT_RESET . PHP_EOL);
             print_array($msg);
             m("TEST END");
         case 'object':
-            echo("┠─┬".$label.GRAY."(object ".get_debug_type($msg).")".TEXT_RESET.PHP_EOL);
+            echo ("┠─┬" . $label . GRAY . "(object " . get_debug_type($msg) . ")" . TEXT_RESET . PHP_EOL);
             print_object($msg);
             break;
         default:
-            echo "┠─ ".$label.GRAY."other type: ".gettype($msg).TEXT_RESET.PHP_EOL;
+            echo "┠─ " . $label . GRAY . "other type: " . gettype($msg) . TEXT_RESET . PHP_EOL;
             break;
     }
-    echo(TEXT_RESET);
+    echo (TEXT_RESET);
 }
 
-function app_start(?bool $status = null):void {
+function app_start(?bool $status = null): void
+{
     global $_pard_status;
     if ($status !== null) $_pard_status = $status;
     if (!$_pard_status) return;
-    echo MAGENTA."
+    echo MAGENTA . "
     ┏┓      ┏┓      
     ┣┫┏┓┏┓  ┗┓╋┏┓┏┓╋
     ┛┗┣┛┣┛  ┗┛┗┗┻┛ ┗
       ┛ ┛           
-".TEXT_RESET;
+" . TEXT_RESET;
 }
 
-function app_finished():void {
+function app_finished(): void
+{
     global $_pard_status;
     if (!$_pard_status) return;
-    echo(TEXT_RESET."\n\n");
-    
+    echo (TEXT_RESET . "\n\n");
+
     $m_limit = ini_get("memory_limit");
-    $m_peak = round(memory_get_peak_usage()/1048576);
-    $m_usage = round(memory_get_usage()/1048576);
+    $m_peak = round(memory_get_peak_usage() / 1048576);
+    $m_usage = round(memory_get_usage() / 1048576);
     m("{$m_usage} (max {$m_limit})", "Memory usage");
-    m($m_peak." M", "Peak memory usage");
+    m($m_peak . " M", "Peak memory usage");
 }
 
 
-function status(bool $status):void {
+function status(bool $status): void
+{
     global $_pard_status;
     $_pard_status = $status;
 }
 
-function counter_end():void {
+function counter_end(): void
+{
     global $_pard_status;
     if (!$_pard_status) return;
 
-    echo("\r".C0.'3'.CUR_FOR.TEXT_RESET.'[DONE]'.TEXT_RESET.PHP_EOL.C0.CUR_SHOW);
+    echo ("\r" . C0 . '3' . CUR_FOR . TEXT_RESET . '[DONE]' . TEXT_RESET . PHP_EOL . C0 . CUR_SHOW);
 }
 
-function counter_next():void {
+function counter_next(): void
+{
     global $_pard_status, $_pard_counter;
     if (!$_pard_status) return;
     $_pard_counter += 1;
     if (!($_pard_counter % 10 === 0)) return;
-    echo("\r".C0.'3'.CUR_FOR.sprintf("[%4d]", $_pard_counter));
+    echo ("\r" . C0 . '3' . CUR_FOR . sprintf("[%4d]", $_pard_counter));
 }
 
-function counter_start(string $msg=""):void {
+function counter_start(string $msg = ""): void
+{
     global $_pard_status;
     if (!$_pard_status) return;
-    
+
     global $_pard_counter;
     $_pard_counter = 0;
-    echo "┠─ [0000] ".$msg.C0.CUR_HIDE;
+    echo "┠─ [0000] " . $msg . C0 . CUR_HIDE;
 }
 
 
 /**
  * End pard section
  */
-function end(): void {
+function end(): void
+{
     global $_pard_section, $_pard_status;
     if (!$_pard_status) return;
-    
-    if($_pard_section===null) {
+
+    if ($_pard_section === null) {
         $_pard_section = "";
     }
     m(memory_get_peak_usage(), "Peak test");
-    echo ("┸ ".GRAY.$_pard_section.TEXT_RESET.PHP_EOL);
+    echo ("┸ " . GRAY . $_pard_section . TEXT_RESET . PHP_EOL);
 }
 
-function header(string $msg) {
-    echo(PHP_EOL.MAGENTA.$msg.TEXT_RESET.PHP_EOL);
+function header(string $msg)
+{
+    echo (PHP_EOL . MAGENTA . $msg . TEXT_RESET . PHP_EOL);
 }
 
-function pause(string $msg = ''):void {
+function pause(string $msg = ''): void
+{
     global $_pard_status;
     if (!$_pard_status) return;
-    
-    echo("┠─ ".$msg.PHP_EOL." (pause) [");
+
+    echo ("┠─ " . $msg . PHP_EOL . " (pause) [");
     fgetc(STDIN);
-    m("] GO!".PHP_EOL);
+    m("] GO!" . PHP_EOL);
 }
 
-function print_array(array $arr, int $i=1):void {
+function print_array(array $arr, int $i = 1): void
+{
     global $_pard_status;
     if (!$_pard_status) return;
 
-    foreach($arr as $key=>$data) {
+    foreach ($arr as $key => $data) {
         if (is_array($data)) {
-            echo("┃ ".str_repeat("┊ ", $i).$key.":".PHP_EOL);
-            print_array($data, $i+1);
+            echo ("┃ " . str_repeat("┊ ", $i) . $key . ":" . PHP_EOL);
+            print_array($data, $i + 1);
         } else {
-            echo("┃ ".str_repeat("┊ ", $i).$key.": ".$data.PHP_EOL);
+            echo ("┃ " . str_repeat("┊ ", $i) . $key . ": " . $data . PHP_EOL);
         }
     }
     if (!count($arr)) {
-        echo("┃ ".str_repeat("┊ ", $i)."(empty array)".PHP_EOL);
+        echo ("┃ " . str_repeat("┊ ", $i) . "(empty array)" . PHP_EOL);
     }
 }
 
-function print_array_inline(array $arr, string $msg):void {
+function print_array_inline(array $arr, string $msg): void
+{
     global $_pard_status;
     if (!$_pard_status) return;
-    print("┠─ ".GRAY.$msg.': '.TEXT_RESET.PHP_EOL);
-    foreach($arr as $item) {
+    print("┠─ " . GRAY . $msg . ': ' . TEXT_RESET . PHP_EOL);
+    foreach ($arr as $item) {
         if (is_array($item)) {
             print("┃ ┊ ");
-            foreach($item as $key=>$datum)
+            foreach ($item as $key => $datum)
                 print("[{$key}:{$datum}]");
             print(PHP_EOL);
         } else {
-            print("┃ ┊ ".$item.PHP_EOL);
+            print("┃ ┊ " . $item . PHP_EOL);
         }
     }
     if (!count($arr)) {
-        print("┃ ┊ (empty array)".PHP_EOL);
+        print("┃ ┊ (empty array)" . PHP_EOL);
     }
 }
 
-function print_object(object $obj, int $i=0) {
+function print_object(object $obj, int $i = 0)
+{
     print_r($obj);
 }
 
-function print_throwable(\Throwable $t) {
+function print_throwable(\Throwable $t)
+{
     $path_skip = strlen($_SERVER['PWD']) + 1;
 
-    echo("\n".EHLON." ERROR ".$t->getCode()." (Throwable) ".HLOFF.RED."\n");
-    echo("┃ ┊ Line ".$t->getLine().": ".substr($t->getFile(), $path_skip)."\n");
-    echo("┃ ┊ Message: ".$t->getMessage()."\n");
-    echo("┃ ┊ Stack trace:\n");
+    echo ("\n" . EHLON . " ERROR " . $t->getCode() . " (Throwable) " . HLOFF . RED . "\n");
+    echo ("┃ ┊ Line " . $t->getLine() . ": " . substr($t->getFile(), $path_skip) . "\n");
+    echo ("┃ ┊ Message: " . $t->getMessage() . "\n");
+    echo ("┃ ┊ Stack trace:\n");
     print_array($t->getTrace(), 2);
 }
 
-function progress_end(string $msg=""):void {
+function progress_end(string $msg = ""): void
+{
     global $_pard_status;
     if (!$_pard_status) return;
-    
-    echo "\r".C0.'53'.CUR_FOR.GRAY.' '.(empty($msg)?"done":$msg).TEXT_RESET.PHP_EOL;
+
+    echo "\r" . C0 . '53' . CUR_FOR . GRAY . ' ' . (empty($msg) ? "done" : $msg) . TEXT_RESET . PHP_EOL;
 }
 
-function progress_increment(): void {
+function progress_increment(): void
+{
     global $_pard_status;
     if (!$_pard_status) return;
-    
+
     global $_pard_progress_total, $_pard_progress_count, $_pard_progress_percent;
     $_pard_progress_count += 1;
 
-    $status = intval(floor(50.0*$_pard_progress_count/$_pard_progress_total));
+    $status = intval(floor(50.0 * $_pard_progress_count / $_pard_progress_total));
 
-    if ($status>$_pard_progress_percent) {
+    if ($status > $_pard_progress_percent) {
         $inc = $status - $_pard_progress_percent;
         $_pard_progress_percent = $status;
-        echo(str_repeat("▓", $inc));
+        echo (str_repeat("▓", $inc));
     }
-
 }
 
-function progress_start(int $total, string $msg=""):void {
+function progress_start(int $total, string $msg = ""): void
+{
     global $_pard_progress_total, $_pard_progress_count, $_pard_progress_percent, $_pard_status;
     if (!$_pard_status) return;
-    
+
     $_pard_progress_total = $total;
     $_pard_progress_count = 0;
     $_pard_progress_percent = 0;
-    echo("┠─ ".GRAY.$msg.TEXT_RESET.": ".$total.PHP_EOL);
-    echo("┃  ".str_repeat('░',50)."\r".C0.'3'.CUR_FOR).C0.CUR_HIDE;
+    echo ("┠─ " . GRAY . $msg . TEXT_RESET . ": " . $total . PHP_EOL);
+    echo ("┃  " . str_repeat('░', 50) . "\r" . C0 . '3' . CUR_FOR) . C0 . CUR_HIDE;
 }
 
-function sec(string $name=""):void {
+function sec(string $name = ""): void
+{
     global $_pard_section, $_pard_status;
     if (!$_pard_status) return;
-    
+
     $_pard_section = $name;
-    echo(PHP_EOL.HLON." ".$name." ".TEXT_RESET.' '.PHP_EOL);
+    echo (PHP_EOL . HLON . " " . $name . " " . TEXT_RESET . ' ' . PHP_EOL);
 }
 
 
-function step(string $name="."):void {
+function step(string $name = "."): void
+{
     global $_pard_status;
     if (!$_pard_status) return;
-    
-    echo("╏".$name);
+
+    echo ("╏" . $name);
 }
 
-function step_end():void {
+function step_end(): void
+{
     global $_pard_status;
     if (!$_pard_status) return;
-    
-    echo("☑".PHP_EOL.C0.CUR_SHOW);
+
+    echo ("☑" . PHP_EOL . C0 . CUR_SHOW);
 }
-function step_start(string $msg):void {
+function step_start(string $msg): void
+{
     global $_pard_status;
     if (!$_pard_status) return;
-    
-    echo("┠─ steps: ".$msg.PHP_EOL);
-    echo("┃  ");
+
+    echo ("┠─ steps: " . $msg . PHP_EOL);
+    echo ("┃  ");
 }

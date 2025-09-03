@@ -1,6 +1,7 @@
 <?php
 // declare(strict_types=1);
-namespace globasa_api;
+namespace WorldlangDict\API;
+
 use Throwable;
 
 ini_set('log_errors', 1);
@@ -27,23 +28,22 @@ define("SMALL_IO_DELAY", 5000); // 5k microseconds = a twohundredths of a second
 define("FULL_FILE_DELAY", 50000); // 50k microseconds = a twentieth of a second
 
 try {
-    require_once(__DIR__."/models/App_log.php");
-    require_once(__DIR__."/vendor/parsedown/Parsedown.php");
-    require_once(__DIR__."/vendor/PHPMailer/src/Exception.php");
-    require_once(__DIR__."/vendor/PHPMailer/src/PHPMailer.php");
-    require_once(__DIR__."/vendor/PHPMailer/src/SMTP.php");
-    require_once(__DIR__."/helpers/fetch_files.php");
-    require_once(__DIR__."/helpers/load_csv.php");
-    require_once(__DIR__."/helpers/partial_debugger.php");
-    require_once(__DIR__."/helpers/slugify.php");
-    require_once(__DIR__."/models/Dictionary_log.php");
-    require_once(__DIR__."/models/Dictionary_comparison.php");
-    require_once(__DIR__."/models/Term_parser.php");
-    require_once(__DIR__."/controllers/I18n.php");
-    require_once(__DIR__."/controllers/Entry_update_controller.php");
-    require_once(__DIR__."/controllers/File_controller.php");
-}
-catch (Throwable $t) {
+    require_once(__DIR__ . "/models/App_log.php");
+    require_once(__DIR__ . "/vendor/parsedown/Parsedown.php");
+    require_once(__DIR__ . "/vendor/PHPMailer/src/Exception.php");
+    require_once(__DIR__ . "/vendor/PHPMailer/src/PHPMailer.php");
+    require_once(__DIR__ . "/vendor/PHPMailer/src/SMTP.php");
+    require_once(__DIR__ . "/helpers/fetch_files.php");
+    require_once(__DIR__ . "/helpers/load_csv.php");
+    require_once(__DIR__ . "/helpers/partial_debugger.php");
+    require_once(__DIR__ . "/helpers/slugify.php");
+    require_once(__DIR__ . "/models/Dictionary_log.php");
+    require_once(__DIR__ . "/models/Dictionary_comparison.php");
+    require_once(__DIR__ . "/models/Term_parser.php");
+    require_once(__DIR__ . "/controllers/I18n.php");
+    require_once(__DIR__ . "/controllers/Entry_update_controller.php");
+    require_once(__DIR__ . "/controllers/File_controller.php");
+} catch (Throwable $t) {
     error_log($t->getMessage());
     print($t->getMessage());
     exit(1);
@@ -57,14 +57,13 @@ try {
     $cfg['log']->setEmails($cfg["app_log_emails"]);
     $cfg['app_path'] = $app_path;
     $cfg['parsedown'] = new \Parsedown();
-    
+
     if ($cfg['dev']) {
         $cfg['log']->setDebug();
         ini_set('display_errors', '1');
         ini_set('display_startup_errors', '1');
     }
-}
-catch (Throwable $t) {
+} catch (Throwable $t) {
     error_log($t->getMessage());
     print($t->getMessage());
     exit(1);

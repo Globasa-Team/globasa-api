@@ -1,11 +1,15 @@
 <?php
-namespace globasa_api;
+
+namespace WorldlangDict\API;
+
 use Exception;
 use Throwable;
 
-class I18n {
+class I18n
+{
 
-    public static function update() {
+    public static function update()
+    {
         global $cfg;
 
         $lang_resource = [];
@@ -16,10 +20,10 @@ class I18n {
         }
         //What does this do on failure? Empty file? No file found?
 
-        $columnNames = fgetcsv($lang_resource_csv, escape:"");
+        $columnNames = fgetcsv($lang_resource_csv, escape: "");
         $label_id = ''; // Should be set on first loop
-        while (($text_data = fgetcsv($lang_resource_csv, escape:"")) !== false) {
-            foreach ($text_data as $key=>$datum) {
+        while (($text_data = fgetcsv($lang_resource_csv, escape: "")) !== false) {
+            foreach ($text_data as $key => $datum) {
                 // Key is label id when in first position.
                 if ($key == 0) {
                     $label_id = $datum;
@@ -31,5 +35,4 @@ class I18n {
         }
         yaml_emit_file($cfg['api_path'] . DIRECTORY_SEPARATOR . I18N_YAML_FILENAME, $lang_resource);
     }
-
 }

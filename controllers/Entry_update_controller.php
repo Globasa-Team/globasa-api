@@ -1,6 +1,6 @@
 <?php
 
-namespace globasa_api;
+namespace WorldlangDict\API;
 
 use Exception;
 use Throwable;
@@ -28,7 +28,7 @@ class Entry_update_controller
         /* Do not lists affixes, phrases, self  */
         if (
             $dict[$rhyme_slug]['category'] === 'affix' ||  // 1i
-            $dict[$rhyme_slug]['category'] === 'phrase'||  // 1ii
+            $dict[$rhyme_slug]['category'] === 'phrase' ||  // 1ii
             $entry_slug === $rhyme_slug                    // 2iii
         ) return;
 
@@ -423,13 +423,13 @@ class Entry_update_controller
         foreach ($dict as $slug => $entry) {
             if (isset($entry['etymology']['derived'])) {
                 foreach ($entry['etymology']['derived'] as $part) {
-                    if (strcmp($part, '+')===0 || strcmp($part,',')===0 || !isset($dict[$part])) {
+                    if (strcmp($part, '+') === 0 || strcmp($part, ',') === 0 || !isset($dict[$part])) {
                         // if it's not an entry, just append it
                         $dict[$slug]['etymology']['derived trans'][] = ['text' => $part];
                     } else {
                         $dict[$slug]['etymology']['derived trans'][] = [
                             'slug' => $part,
-                            'text' => $dict[$part]['term'] . (!empty($dict[$part]['slug_mod'])?' ('.$dict[$part]['slug_mod'].')':''),
+                            'text' => $dict[$part]['term'] . (!empty($dict[$part]['slug_mod']) ? ' (' . $dict[$part]['slug_mod'] . ')' : ''),
                             'word class' => $dict[$part]['word class'],
                             'trans' => $dict[$part]['trans html']
                         ];
@@ -437,7 +437,7 @@ class Entry_update_controller
                 }
             }
             if (isset($entry['etymology']['am oko'])) {
-                foreach ($entry['etymology']['am oko'] as $ref_slug=>$data) {
+                foreach ($entry['etymology']['am oko'] as $ref_slug => $data) {
                     if (isset($dict[$ref_slug])) {
                         $dict[$slug]['etymology']['am oko'][$ref_slug] = $dict[$ref_slug]['term_spec'];
                         if (str_contains($slug, '_')) {
@@ -448,7 +448,6 @@ class Entry_update_controller
                     }
                 }
             }
-
         }
     }
 

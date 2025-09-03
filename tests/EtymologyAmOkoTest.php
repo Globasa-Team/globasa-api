@@ -1,8 +1,8 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use globasa_api\Term_parser;
-use globasa_api\App_log;
+use WorldlangDict\API\Term_parser;
+use WorldlangDict\API\App_log;
 
 require_once(__DIR__ . "/../models/Term_parser.php");
 require_once(__DIR__ . "/../models/App_log.php");
@@ -21,7 +21,8 @@ final class EtymologyAmOkoTest extends TestCase
     ];
     // var $cfg;
 
-    public function setUp(): void {
+    public function setUp(): void
+    {
         global $cfg;
         $cfg = array();
         // $cfg['report_level'] = 0;
@@ -31,7 +32,6 @@ final class EtymologyAmOkoTest extends TestCase
         $cfg['log'] = new App_log($cfg);
         // $this->cfg = $cfg;
         $this->tp = new Term_parser($this->csv_headers);
-        
     }
 
     public function testAmOko(): void

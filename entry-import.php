@@ -1,6 +1,7 @@
 <?php
 // declare(strict_types=1);
-namespace globasa_api;
+namespace WorldlangDict\API;
+
 use Throwable;
 
 global
@@ -127,9 +128,9 @@ try {
     $cfg['log']->add("Environment: " . ($cfg['dev'] ? 'dev' : 'production'));
     \pard\m($debug_mode, "Debug mode");
     \pard\end();
-    
+
     // Update data files
-    Entry_update_controller::update_entries(old_csv_filename:$data['previous'], current_csv_filename:$new_csv_filename);
+    Entry_update_controller::update_entries(old_csv_filename: $data['previous'], current_csv_filename: $new_csv_filename);
 
     \pard\sec("Other stuff");
     // Update i18n
@@ -143,8 +144,8 @@ try {
     $cfg['log']->add_report($dev_report, "Developer Report");
     $cfg['log']->add("Script complete", 5);
     $cfg['log']->email_log($cfg);
-    yaml_emit_file(DATA_FILENAME, ['previous'=>$new_csv_filename]);
-    
+    yaml_emit_file(DATA_FILENAME, ['previous' => $new_csv_filename]);
+
     \pard\end();
 } catch (Throwable $t) {
     \pard\print_throwable($t);
