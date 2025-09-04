@@ -4,9 +4,9 @@ use PHPUnit\Framework\TestCase;
 use WorldlangDict\API\Term_parser;
 use WorldlangDict\API\App_log;
 
-require_once(__DIR__ . "/../models/Term_parser.php");
-require_once(__DIR__ . "/../models/App_log.php");
-require_once(__DIR__ . "/../helpers/slugify.php");
+require_once(__DIR__ . "/../../models/Term_parser.php");
+require_once(__DIR__ . "/../../models/App_log.php");
+require_once(__DIR__ . "/../../helpers/slugify.php");
 
 final class EtymologyAmOkoTest extends TestCase
 {
