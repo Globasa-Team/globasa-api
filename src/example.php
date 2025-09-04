@@ -220,10 +220,11 @@ function parse_paragraph(string $para, array $c, int $pri)
     {
         $sentence = $itr->current();
         $itr->next();
-        if (!$itr->valid()) trigger_error("Missing deliminator when parsing example paragraph.");
-        $sentence .= $itr->current();
+        if ($itr->valid()) {
+            $sentence .= $itr->current();
+            $itr->next();
+        }
         parse_sentence($sentence, $c, $pri);
-        $itr->next();
     }
 }
 
