@@ -12,7 +12,7 @@
 
 declare(strict_types=1);
 
-namespace worldlang\examples;
+namespace WorldlangDict\Examples;
 
 mb_internal_encoding('UTF-8');
 mb_http_output('UTF-8');
@@ -27,7 +27,6 @@ ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 require_once("helpers/partial_debugger.php");
-\pard\app_start(true);
 
 function customExceptionHandler(\Throwable $e)
 {
@@ -38,7 +37,7 @@ function customExceptionHandler(\Throwable $e)
     }
 }
 
-set_exception_handler('worldlang\examples\customExceptionHandler');
+set_exception_handler('WorldlangDict\Examples\customExceptionHandler');
 
 set_error_handler(function ($level, $message, $file = '', $line = 0) {
     throw new \ErrorException($message, 0, $level, $file, $line);
@@ -77,26 +76,6 @@ require_once("vendor/parsedown/Parsedown.php");
 global $examples, $wld_index, $pd;
 
 
-
-\pard\sec("Initiating script");
-$pd = new \Parsedown();
-\pard\m('Load configuration');
-$cfg = yaml_parse_file('config-example.yaml');
-\pard\m("load term index");
-$wld_index = yaml_parse_file($cfg['worldlang_index']);
-$examples = [];
-\pard\end("initiation complete");
-
-
-/**************************
- * Start
- * ************************
- */
-example_sentences();
-\pard\app_finished();
-
-
-
 /**
  * Take example and add it to all $terms.
  */
@@ -126,7 +105,7 @@ function add_examples(string $e, array $terms, array $c, int $p)
  * Process example source data and generate
  * dictionary example data output.
  */
-function example_sentences(): void
+function import_example_sentences(): void
 {
     global $cfg;
     global $examples;
@@ -222,12 +201,29 @@ function parse_markdown_filestream($fp, array $c, int $p): void
             continue;
         }
 
-        // Split paragraph in to sentences
-        $sentences = preg_split('/(?<=[.?!;:])\s+/', $line, -1, PREG_SPLIT_NO_EMPTY);
+        parse_paragraph($line, $c, $p);
+    }
+}
 
-        foreach ($sentences as $s) {
-            parse_sentence($s, $c, $p);
-        }
+
+/**
+ * Break aparent $para by punctuation
+ * 
+ * Not semicolons
+ */     
+function parse_paragraph(string $para, array $c, int $pri)
+{
+    $split = preg_split('/([.?!].?)\s/u', $para, 0, PREG_SPLIT_DELIM_CAPTURE);
+    $itr=new \ArrayObject($split)->getIterator();
+
+    while( $itr->valid() )
+    {
+        $sentence = $itr->current();
+        $itr->next();
+        if (!$itr->valid()) trigger_error("Missing deliminator when parsing example paragraph.");
+        $sentence .= $itr->current();
+        parse_sentence($sentence, $c, $pri);
+        $itr->next();
     }
 }
 
@@ -254,8 +250,8 @@ function parse_passages(string $source, int $priority): void
 function parse_sentence(string $s, array $c, int $p)
 {
     // Remove all punctuation
-    $data = mb_trim(preg_replace("/[[:punct:]]/u", "", $s));
-    add_examples($s, explode(" ", $data), $c, $p);
+    $data = explode(" ",mb_trim(preg_replace("/[[:punct:]]/u", "", $s)));
+    add_examples($s, $data, $c, $p);
 }
 
 

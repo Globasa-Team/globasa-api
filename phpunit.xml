@@ -1,14 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/|version|/phpunit.xsd"
-         displayDetailsOnTestsThatTriggerDeprecations="true"
-         displayDetailsOnTestsThatTriggerWarnings="true"
-         displayDetailsOnTestsThatTriggerErrors="true"
-         testdox="true"
-         >
+        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/|version|/phpunit.xsd"
+        displayDetailsOnTestsThatTriggerDeprecations="true"
+        displayDetailsOnTestsThatTriggerWarnings="true"
+        displayDetailsOnTestsThatTriggerErrors="true"
+        testdox="true"
+        colors="true"
+        columns="40"
+        stopOnDefect="true"
+        stopOnError="true"
+        stopOnFailure="true"
+        stopOnWarning="true"
+        stopOnRisky="true"
+        stopOnDeprecation="true"
+        stopOnNotice="true"
+        >
     <testsuites>
-        <testsuite name="omnisuite">
+        <!-- <testsuite name="omnisuite">
             <directory>tests</directory>
+        </testsuite> -->
+        <testsuite name="etymology">
+            <directory>tests/etymology</directory>
+        </testsuite>
+        <testsuite name="example">
+            <directory>tests/example</directory>
+        </testsuite>
+        <testsuite name="termparser">
+            <file>tests/TermParserTest.php</file>
         </testsuite>
     </testsuites>
 </phpunit>
