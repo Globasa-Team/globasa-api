@@ -7,7 +7,7 @@ use WorldlangDict\API\App_log;
 require_once(__DIR__ . "/../../models/Term_parser.php");
 require_once(__DIR__ . "/../../models/App_log.php");
 
-final class EtymologyDerivedTest extends TestCase
+final class EtymologyTest extends TestCase
 {
     var $csv_headers = [
         "Word",

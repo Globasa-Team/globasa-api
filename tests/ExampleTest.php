@@ -2,7 +2,6 @@
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-// use WorldlangDict\Examples;
 
 require_once(__DIR__ . "/../../src/example.php");
 require_once(__DIR__ . "/../../vendor/parsedown/Parsedown.php");
