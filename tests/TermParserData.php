@@ -83,10 +83,10 @@ class TermParserData
         'status' => true,
         'category' => 'root',
         'trans' => [
-            'eng' => [["ah (_denotes surprise or wonder_)"]],
+            'eng' => [["ah (<em>denotes surprise or wonder</em>)"]],
             'epo' => [["ha"]],
             'spa' => [["ah"]],
-            'deu' => [["ah (_Ausdruck der Überraschung oder der Verwunderung_)"]],
+            'deu' => [["ah (<em>Ausdruck der Überraschung oder der Verwunderung</em>)"]],
             'fra' => [["ah"]],
             'rus' => [["а"]],
             'zho' => [["啊"]],

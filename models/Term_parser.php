@@ -107,7 +107,6 @@ class Term_parser
      * Parser for terms in Google Sheets CSV.
      * 
      * @param array $fields list of fields from Google Docs CSV
-     * @param mixed $pd     ParseDown markdown parser
      */
     public function __construct(array $fields)
     {
