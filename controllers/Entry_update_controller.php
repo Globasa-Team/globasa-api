@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace WorldlangDict\API;
 
 use Exception;
@@ -200,9 +202,9 @@ class Entry_update_controller
                 }
 
                 // Copy derived term class to root
+                $dict[$root]["derived terms"][$term]['slug'] = $dict[$term]['slug'];
+                $dict[$root]["derived terms"][$term]['text'] = (empty($dict[$term]['slug_mod']) ? $dict[$term]['term'] : "{$dict[$term]['term']} ({$dict[$term]['slug_mod']})");
                 $dict[$root]["derived terms"][$term]['class'] = $dict[$term]['word class'];
-                $dict[$root]["derived terms"][$term]['term'] = $dict[$term]['term'];
-
                 // Copy derived term translation data to root
                 foreach ($dict[$term]['trans html'] as $lang => $translation) {
                     $dict[$root]['derived terms'][$term]['trans'][$lang] = $translation;

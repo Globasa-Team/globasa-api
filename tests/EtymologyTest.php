@@ -32,7 +32,7 @@ final class EtymologyTest extends TestCase
     public function testParseEtymology(array $csv_data, array $expected): void
     {
         [$ignore, $parsed] = $this->tp->parse_term($csv_data);
-        $this->assertEqualsCanonicalizing(
+        $this->assertEquals(
             $expected['etymology'],
             $parsed['etymology']
         );

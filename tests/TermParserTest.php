@@ -16,26 +16,6 @@ final class TermParserTest extends TestCase
 {
     private $tp;
 
-    var $csv_headers = [
-        "Word",
-        "Category",
-        "WordClass",
-        "OfficialWord",
-        "TranslationEng",
-        "SearchTermsEng",
-        "TranslationEpo",
-        "TranslationSpa",
-        "TranslationDeu",
-        "Synonyms",
-        "Antonyms",
-        "Example",
-        "Tags",
-        "LexiliAsel",
-        "TranslationFra",
-        "TranslationRus",
-        "TranslationZho"
-    ];
-
     public function setUp(): void
     {
         global $cfg;
@@ -44,7 +24,7 @@ final class TermParserTest extends TestCase
         $cfg['wl_code_short'] = 'wld';
         $cfg['log'] = new App_log($cfg);
         $cfg['parsedown'] = new Parsedown();
-        $this->tp = new Term_parser($this->csv_headers);
+        $this->tp = new Term_parser(TermParserData::$csv_headers);
     }
 
 
