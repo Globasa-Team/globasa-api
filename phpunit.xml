@@ -7,26 +7,26 @@
         testdox="true"
         colors="true"
         columns="40"
-        stopOnDefect="true"
-        stopOnError="true"
-        stopOnFailure="true"
-        stopOnWarning="true"
-        stopOnRisky="true"
-        stopOnDeprecation="true"
-        stopOnNotice="true"
+        stopOnDefect="false"
+        stopOnError="false"
+        stopOnFailure="false"
+        stopOnWarning="false"
+        stopOnRisky="false"
+        stopOnDeprecation="false"
+        stopOnNotice="false"
         >
     <testsuites>
         <!-- <testsuite name="omnisuite">
             <directory>tests</directory>
         </testsuite> -->
-        <testsuite name="etymology">
-            <directory>tests/etymology</directory>
-        </testsuite>
-        <testsuite name="example">
-            <directory>tests/example</directory>
-        </testsuite>
         <testsuite name="termparser">
             <file>tests/TermParserTest.php</file>
+        </testsuite>
+        <testsuite name="etymology">
+            <file>tests/EtymologyTest.php</file>
+        </testsuite>
+        <testsuite name="example">
+            <file>tests/ExampleTest.php</file>
         </testsuite>
     </testsuites>
 </phpunit>
