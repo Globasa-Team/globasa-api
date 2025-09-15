@@ -130,8 +130,6 @@ class Entry_update_controller
     {
         global $debug_mode;
 
-        if ($debug_mode) return;
-
         // Insert data that needed all entries to be loaded
         \pard\sec("Finalize entries");
         self::insert_derived_term_xref();
@@ -442,9 +440,6 @@ class Entry_update_controller
                 foreach ($entry['etymology']['am oko'] as $ref_slug => $data) {
                     if (isset($dict[$ref_slug])) {
                         $dict[$slug]['etymology']['am oko'][$ref_slug] = $dict[$ref_slug]['term_spec'];
-                        if (str_contains($slug, '_')) {
-                            \pard\m($entry['etymology']['am oko'], "etymology with _");
-                        }
                     } else {
                         \pard\m($slug, "missing entry");
                     }

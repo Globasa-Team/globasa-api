@@ -414,13 +414,11 @@ class Term_parser
 
             if ($stop) {
                 // Finished phrase!
-
-                // add to etymology result
-                $etymology_array[] = $phrase;
-                $etymology_array[] = $stop;
-
-                // Record for backlinking
                 $slug = slugify($phrase);
+
+                // add to etymology result & record backlink
+                $etymology_array[] = $slug;
+                $etymology_array[] = $stop;
                 $derived_data[$slug][] = $this->current_slug;
 
                 $phrase = '';
@@ -428,17 +426,14 @@ class Term_parser
             }
         }
 
-        // Add final $phrase if it's a leftover
-        // exactly as above else block
+        // Add final $phrase if leftover, just as above:
+        // add to etymology result & record backlink
         if (!empty($phrase)) {
-            // add to etymology result
-            $etymology_array[] = $phrase;
-
-            // Record backlink
             $slug = slugify($phrase);
+            $etymology_array[] = $slug;
             $derived_data[$slug][] = $this->current_slug;
         }
-
+        
         return $etymology_array;
     }
 
