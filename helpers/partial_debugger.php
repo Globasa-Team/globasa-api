@@ -178,16 +178,18 @@ function counter_start(string $msg = ""): void
 /**
  * End pard section
  */
-function end(): void
+function end(string|null $message=null): void
 {
     global $_pard_section, $_pard_status;
     if (!$_pard_status) return;
 
-    if ($_pard_section === null) {
-        $_pard_section = "";
+    if (!$message && !$_pard_section) {
+        $message = "";
+    } elseif (!$message && $_pard_section) {
+        $message = $_pard_section;
     }
     m(memory_get_peak_usage(), "Peak test");
-    echo ("┸ " . GRAY . $_pard_section . TEXT_RESET . PHP_EOL);
+    echo ("┸ " . GRAY . $message . TEXT_RESET . PHP_EOL);
 }
 
 function header(string $msg)
