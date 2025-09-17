@@ -14,6 +14,8 @@ declare(strict_types=1);
 
 namespace WorldlangDict\Examples;
 
+use function pard\m;
+
 mb_internal_encoding('UTF-8');
 mb_http_output('UTF-8');
 mb_regex_encoding('UTF-8');
@@ -70,6 +72,11 @@ define("CURATED_DOCS_PRIORITY", 3);
 define("AUXILARY_PRIORITY", 4);
 
 define("UNICODE_LDQOU", "\u{201C}");
+define("UNICODE_RDQOU", "\u{201D}");
+define("UNICODE_LSQOU", "\u{2018}");
+define("UNICODE_RSQOU", "\u{2019}");
+define("UNICODE_DQOU", "\u{0022}");
+define("UNICODE_SQOU", "\u{0027}");
 
 require_once("vendor/parsedown/Parsedown.php");
 
@@ -79,12 +86,13 @@ global $examples, $wld_index, $pd;
 /**
  * Take example and add it to all $terms.
  */
-function add_examples(string $e, array $terms, array $c, int $p)
+function add_example(string $e, array $terms, array $c, int $p)
 {
     global $examples, $wld_index, $pd;
 
-    $terms = array_unique($terms);
-    $e = $pd->line(mb_trim($e));
+    $terms = array_unique(array_map('strtolower', $terms));
+    $e = fix_quotes(mb_trim($e));
+    $e = $pd->line($e);
 
     foreach ($terms as $t) {
 
@@ -97,6 +105,91 @@ function add_examples(string $e, array $terms, array $c, int $p)
             'cite' => $c,
         ];
     }
+}
+
+
+
+/**
+ * fix_quotes
+ * 
+ * Analyzes the text string multibyte character by character, adding opening
+ * quotes to the `$quotes` stack, and popping quotes quotes off when finding
+ * a closing quote. Quotes within text (apostrophies) are ignored. Quotes
+ * surrounded by white space are ignored.
+ * 
+ * When an left quote is found, add it. When a closing double quote is
+ * found, pop the stack. When a basic ', " or left single quote is found,
+ * use whitespace to determine if it's an apostrophy, closing quote or
+ * opening quote.
+ * 
+ * If poping the stack returns a null, add an opening quote to the start,
+ * corresponding to the currently found closing quote.
+ * 
+ * If loop exits with items on the stack, put the corresponding closing quote
+ * on.
+ * 
+ */
+function fix_quotes(string $text): string
+{
+    $quotes = array();
+    $chars = mb_str_split($text);
+    $result = $text;
+
+    for ($i = 0; $i < count($chars); $i++) {
+        $c = $chars[$i];
+        $closing_quote = false;
+        $opening_quote = false;
+
+        if (
+                ctype_alpha($c) || $c === ' ' || $c === '.' || $c === '?'|| $c === ':' ||
+                $c === '!' || $c === ',' || $c === ';'
+            ) continue;
+
+        if ($c === UNICODE_RSQOU || $c === UNICODE_SQOU || $c === UNICODE_DQOU) {
+
+            if ($i == 0 || ctype_space($chars[$i - 1]))
+                $space_before = true;
+            else $space_before = false;
+
+            if (($i >= count($chars) - 1) || ctype_space($chars[$i + 1]))
+                $space_after = true;
+            else $space_after = false;
+
+            if (!$space_before && $space_after)
+                $closing_quote = true;
+            if ($space_before && !$space_after)
+                $opening_quote = true;
+        }
+
+        if ($c === UNICODE_LDQOU || $c === UNICODE_LSQOU || $opening_quote) {
+            array_push($quotes, $c);
+        }
+        if ($c === UNICODE_RDQOU || $closing_quote) {
+            $q = array_pop($quotes);
+            if ($q === null) {
+                if ($c === UNICODE_SQOU) {
+                    $result = UNICODE_SQOU . $result;
+                } elseif ($c === UNICODE_DQOU) {
+                    $result = UNICODE_DQOU . $result;
+                } elseif ($c === UNICODE_RSQOU) {
+                    $result = UNICODE_LSQOU . $result;
+                } elseif ($c === UNICODE_RDQOU) {
+                    $result = UNICODE_LDQOU . $result;
+                }
+            }
+        }
+    }
+
+    // Add missing right quotes
+    while (count($quotes)) {
+        $q = array_pop($quotes);
+        if ($q === UNICODE_SQOU) $result = $result . UNICODE_SQOU;
+        elseif ($q === UNICODE_DQOU) $result = $result . UNICODE_DQOU;
+        elseif ($q === UNICODE_LSQOU) $result = $result . UNICODE_RSQOU;
+        elseif ($q === UNICODE_LDQOU) $result = $result . UNICODE_RDQOU;
+    }
+
+    return $result;
 }
 
 
@@ -206,18 +299,18 @@ function parse_markdown_filestream($fp, array $c, int $p): void
 }
 
 
+
 /**
  * Break aparent $para by punctuation
  * 
  * Not semicolons
- */     
+ */
 function parse_paragraph(string $para, array $c, int $pri)
 {
     $split = preg_split('/([.?!].?)\s/u', $para, 0, PREG_SPLIT_DELIM_CAPTURE);
-    $itr=new \ArrayObject($split)->getIterator();
+    $itr = new \ArrayObject($split)->getIterator();
 
-    while( $itr->valid() )
-    {
+    while ($itr->valid()) {
         $sentence = $itr->current();
         $itr->next();
         if ($itr->valid()) {
@@ -238,7 +331,7 @@ function parse_passages(string $source, int $priority): void
 
     $data = yaml_parse_file($source);
     foreach ($data as $passage) {
-        add_examples($passage['text'], $passage['terms'], $passage['cite'], $priority);
+        add_example($passage['text'], $passage['terms'], $passage['cite'], $priority);
     }
 }
 
@@ -251,8 +344,8 @@ function parse_passages(string $source, int $priority): void
 function parse_sentence(string $s, array $c, int $p)
 {
     // Remove all punctuation
-    $data = explode(" ",mb_trim(preg_replace("/[[:punct:]]/u", "", $s)));
-    add_examples($s, $data, $c, $p);
+    $data = explode(" ", mb_trim(preg_replace("/[[:punct:]]/u", "", $s)));
+    add_example($s, $data, $c, $p);
 }
 
 
