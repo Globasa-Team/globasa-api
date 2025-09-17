@@ -33,10 +33,10 @@ try {
     require_once(__DIR__ . "/vendor/PHPMailer/src/Exception.php");
     require_once(__DIR__ . "/vendor/PHPMailer/src/PHPMailer.php");
     require_once(__DIR__ . "/vendor/PHPMailer/src/SMTP.php");
-    require_once(__DIR__ . "/helpers/fetch_files.php");
-    require_once(__DIR__ . "/helpers/load_csv.php");
-    require_once(__DIR__ . "/helpers/partial_debugger.php");
-    require_once(__DIR__ . "/helpers/slugify.php");
+    require_once(__DIR__ . "/src/fetch_files.php");
+    require_once(__DIR__ . "/src/load_csv.php");
+    require_once(__DIR__ . "/src/partial_debugger.php");
+    require_once(__DIR__ . "/src/slugify.php");
     require_once(__DIR__ . "/models/Dictionary_log.php");
     require_once(__DIR__ . "/models/Dictionary_comparison.php");
     require_once(__DIR__ . "/models/Term_parser.php");

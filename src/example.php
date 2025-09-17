@@ -28,7 +28,7 @@ ini_set('log_errors', 1);
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
-require_once("helpers/partial_debugger.php");
+require_once("src/partial_debugger.php");
 
 function customExceptionHandler(\Throwable $e)
 {

@@ -43,7 +43,7 @@ final class TermParserTest extends TestCase
     {
         [$ignore, $parsed] = $this->tp->parse_term(TermParserData::$csv_data);
         $this->assertEquals(
-            TermParserData::$expected_result,
+            TermParserData::$entries['a']['parsed'],
             $parsed
         );
     }
