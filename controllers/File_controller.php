@@ -165,7 +165,7 @@ class File_controller
         \pard\m("save_natlang_etymologies_files ");
 
         foreach ($natlang_etymologies as $lang => $terms) {
-            ksort($terms);
+            sort($terms);
 
             yaml_emit_file($cfg['api_path'] . "/etymologies/etymology_" . strtolower($lang) . ".yaml", $terms, YAML_UTF8_ENCODING);
             usleep(FULL_FILE_DELAY);
