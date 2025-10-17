@@ -232,6 +232,9 @@ class File_controller
         \pard\m("save_tag_file");
 
         ksort($tags);
+        foreach($tags as $group=>$data) {
+            sort($tags[$group]);
+        }
 
         yaml_emit_file($cfg['api_path'] . "/tags.yaml", $tags, YAML_UTF8_ENCODING);
 
