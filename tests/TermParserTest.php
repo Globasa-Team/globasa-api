@@ -10,7 +10,7 @@ require_once(__DIR__ . '/TermParserData.php');
 require_once(__DIR__ . '/../models/App_log.php');
 require_once(__DIR__ . '/../models/Term_parser.php');
 require_once(__DIR__ . '/../vendor/parsedown/Parsedown.php');
-require_once(__DIR__ . "/../helpers/slugify.php");
+require_once(__DIR__ . "/../src/slugify.php");
 
 final class TermParserTest extends TestCase
 {

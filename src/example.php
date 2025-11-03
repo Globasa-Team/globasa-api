@@ -14,11 +14,18 @@ declare(strict_types=1);
 
 namespace WorldlangDict\Examples;
 
+use IntlChar;
+
 use function pard\m;
 
 mb_internal_encoding('UTF-8');
 mb_http_output('UTF-8');
 mb_regex_encoding('UTF-8');
+
+enum Sentence_state {
+    case Word;
+    case Nonword;
+}
 
 /*************************************
  * Exceptional Error Handling
@@ -93,6 +100,7 @@ function add_example(string $e, array $terms, array $c, int $p)
     $terms = array_unique(array_map('strtolower', $terms));
     $e = fix_quotes(mb_trim($e));
     $e = $pd->line($e);
+    $translation_data = example_translation_data($e, $terms);
 
     foreach ($terms as $t) {
 
@@ -103,6 +111,7 @@ function add_example(string $e, array $terms, array $c, int $p)
         $examples[$t][$p][] = [
             'text' => $e,
             'cite' => $c,
+            // 'translation' => $translation_data,
         ];
     }
 }
@@ -459,4 +468,66 @@ function write_examples(): void
         \pard\progress_increment();
     }
     \pard\progress_end("Files written");
+}
+
+
+function example_translation_data(string $e, array $terms): array
+{
+    $ret = array();
+    var_dump($e);
+    return $ret;
+}
+
+
+/**
+ * Isolate words from non-words.
+ * 
+ * Builds the the sentence up by putting together segments. A segment
+ * is a run of either alpha or non-alpha characters. So:
+ * 
+ *  'blimey', 'yup'
+ * 
+ * is broken down to 4 segments:
+ *  '
+ *  blimey
+ *  ' '
+ *  yup
+ *  '
+ * 
+ * 
+ */
+function split_sentence(string $e): array
+{
+    $ret = array();
+
+    // find all characters/graphemes
+    $data = grapheme_str_split($e);
+    $count = count($data);
+
+    $cur = ""; // current segment run
+    $type = null; // segment type
+
+    for ($i = 0; $i < $count; $i++) {
+        // Determine if this is a letter or part of a word (like apos or rqou)
+        if (IntlChar::isalpha($data[$i]) || ($word_part && $i + 1 < $count && IntlChar::isalpha($data[$i+1]) ) ) {
+            $word_part = true;
+            if ($type == null) $type = Sentence_state::Word;
+        } else {
+            $word_part = false;
+            if ($type == null) $type = Sentence_state::Nonword;
+        }
+
+        if ( (!$word_part && $type == Sentence_state::Word) || ($word_part && $type == Sentence_state::Nonword) ) {
+            // This starts a new segment (quote or space or other)
+            $ret[] = $cur;
+            $cur = "";
+            $type = null;
+        }
+
+        $cur .= $data[$i];
+    }
+
+    if ($cur !== "") $ret[] = ['text'=>$cur];
+
+    return $ret;
 }

@@ -292,6 +292,7 @@ class Entry_update_controller
         global $tags;
         if (array_key_exists('tags', $parsed)) {
             foreach ($parsed['tags'] as $tag) {
+                $tag = mb_strtolower($tag);
                 $tags[$tag][] = $parsed['slug'];
             }
         }
