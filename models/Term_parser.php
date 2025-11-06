@@ -6,52 +6,7 @@ namespace WorldlangDict\API;
 
 use Exception;
 // Exceptions to the stress rules: one syllable words that have no stresses
-define('WORDS_TO_SKIP', [
-    "am",
-    "bax",
-    "cel",
-    "ci",
-    "cis",
-    "de",
-    "di",
-    "dur",
-    "e",
-    "el",
-    "em",
-    "ex",
-    "fal",
-    "fe",
-    "fol",
-    "ger",
-    "har",
-    "hoy",
-    "hu",
-    "in",
-    "ji",
-    "kam",
-    "ki",
-    "kom",
-    "ku",
-    "kwas",
-    "le",
-    "mas",
-    "na",
-    "nor",
-    "of",
-    "or",
-    "pas",
-    "per",
-    "por",
-    "pro",
-    "su",
-    "tas",
-    "tem",
-    "ton",
-    "tras",
-    "wey",
-    "xa",
-    "yon"
-]);
+define('WORDS_TO_SKIP', [ "am", "bax", "cel", "ci", "cis", "de", "di", "dur", "e", "el", "em", "ex", "fal", "fe", "fol", "ger", "har", "hoy", "hu", "in", "ji", "kam", "ki", "kom", "ku", "kwas", "le", "mas", "na", "nor", "of", "or", "pas", "per", "por", "pro", "su", "tas", "tem", "ton", "tras", "wey", "xa", "yon"]);
 
 define('REPLACE_GLB_REGEX', ['/c/', '/j/', '/r/', '/x/', '/y/', '/h/']);
 define('REPLACE_IPA',      ['t͡ʃ',  'd͡ʒ',   'ɾ',   'ʃ',   'j',   'x']);
@@ -90,8 +45,9 @@ define('COLUMN_MAP', array(
     'Example' => 'example',
     'Tags' => 'tags',
     'LexiliAsel' => 'etymology',
-    'See Also' => 'similar natlang',
-    'Similar Natlang' => 'similar natlang',
+    'See Also' => 'similar natlang', // depracated
+    'Similar Natlang' => 'similar natlang', // depracated
+    'Etymological support' => 'similar natlang',
     'TransXRef' => 'entry note', // depracated
     'LexiliEstatus' => 'etymology status', // depracated
 ));
