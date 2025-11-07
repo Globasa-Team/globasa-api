@@ -1,19 +1,14 @@
 <?php
-
+declare(strict_types=1);
 namespace WorldlangDict\API;
-
-use Exception;
-use Throwable;
 
 class I18n
 {
 
-    public static function update()
+    public static function update($api_path)
     {
-        global $cfg;
-
         $lang_resource = [];
-        $lang_resource_csv = fopen($cfg['api_path'] . DIRECTORY_SEPARATOR . I18N_CSV_FILENAME, 'r');
+        $lang_resource_csv = fopen($api_path . DIRECTORY_SEPARATOR . I18N_CSV_FILENAME, 'r');
         // $lang_resource_csv = fopen($c['i18n_url'], 'r');
         if ($lang_resource_csv === false) {
             die("Failed to open lang CSV");
@@ -33,6 +28,6 @@ class I18n
                 $lang_resource[$columnNames[$key]][$label_id] = $datum;
             }
         }
-        yaml_emit_file($cfg['api_path'] . DIRECTORY_SEPARATOR . I18N_YAML_FILENAME, $lang_resource);
+        yaml_emit_file($api_path . DIRECTORY_SEPARATOR . I18N_YAML_FILENAME, $lang_resource);
     }
 }

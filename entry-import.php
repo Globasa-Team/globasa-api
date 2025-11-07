@@ -132,10 +132,10 @@ try {
     // Update data files
     Entry_update_controller::update_entries(old_csv_filename: $data['previous'], current_csv_filename: $new_csv_filename);
 
-    \pard\sec("Other stuff");
+    // \pard\sec("Other stuff");
     // Update i18n
-    $cfg['log']->add("Updating I18n", 5);
-    I18n::update();
+    // $cfg['log']->add("Updating I18n", 5);
+    // I18n::update();
 
     // Finish up
     \pard\print_array_inline($import_report, "Parse report");
