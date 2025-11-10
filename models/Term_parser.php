@@ -660,6 +660,9 @@ class Term_parser
             $start = 0;
             $len = strlen($translations);
             $group_terms = [];
+            $group_terms_v2 = [];
+            $group_category = "";
+            $colon_pos = null;
 
             for ($pos = 0; $pos < $len; $pos++) {
 
@@ -672,39 +675,51 @@ class Term_parser
                     }
                 }
 
-                if ($translations[$pos] === '[') {
-                    // Skip to end of enclosure, $pos is ']'
-                    $pos = strpos($translations, ']', $pos);
-                    if ($pos === false) {
-                        $pos = $len;
-                        $this->log->add("ERROR: Term `" . $parsed['term'] . "` is missing a closing ']' in translation.");
+                // Save term if end of term
+                if ($translations[$pos] === ',' || $translations[$pos] === ';' || $pos + 1 >= $len) {
+                    // end of term, so save term to group
+                    if ($translations[$pos] === ',' || $translations[$pos] === ';')
+                        $segment_length = $pos - $start;
+                    else
+                        $segment_length = $len - $start;
+                    $term = trim(substr($translations, $start, $segment_length));
+                    if ($colon_pos === null) {
+                        $term_v2 = $term;
+                    } else {
+                        $term_v2 = trim(substr($translations, $colon_pos + 1, $pos - $colon_pos - 1));
+                        $colon_pos = null;
                     }
+                    if (!empty($term)) {
+                        $group_terms[] = $this->pd->line($term);
+                        $group_terms_v2[] = $this->pd->line($term_v2);
+                        self::set_natlang_term_from_translation(parsed: $parsed, lang: $lang, term: $term);
+                    }
+                    $start = $pos + 1;
                 }
 
-                if ($translations[$pos] === ',') {
-                    // save single term
-                    $term = trim(substr($translations, $start, $pos - $start));
-                    $group_terms[] = $this->pd->line($term);
-                    self::set_natlang_term_from_translation(parsed: $parsed, lang: $lang, term: $term);
+                // Check if end of group by semicolon or end of string.
+                if ($translations[$pos] === ';' || $pos + 1 >= $len) {
+                    
+                    // End of group but no group category defined assume this is a noun.
+                    // Will not assume if one group with no ending `;`.
+                    if (empty($group_category) && $translations[$pos] === ';') {
+                        $group_category = "noun";
+                    }
+                    
+                    // Save current group of terms.
+                    if (!empty($group_terms)) {
+                        $parsed['trans'][$lang][$group_category] = $group_terms;
+                        $parsed['trans_v2'][$lang][$group_category] = $group_terms_v2;
+                        $group_terms = [];
+                        $group_terms_v2 = [];
+                    }
                     $start = $pos + 1;
-                } elseif ($translations[$pos] === ';') {
-                    // end of group, save current group of terms
-                    // save single term
-                    $term = trim(substr($translations, $start, $pos - $start));
-                    $group_terms[] = $this->pd->line($term);
-                    $parsed['trans'][$lang][] = $group_terms;
-                    $group_terms = [];
-                    $start = $pos + 1;
-                    self::set_natlang_term_from_translation(parsed: $parsed, lang: $lang, term: $term);
-                } elseif ($pos >= $len - 1) {
-                    // end of translations, save current group of terms
-                    // save single term
-                    $term = trim(substr($translations, $start));
-                    $group_terms[] = $this->pd->line($term);
-                    $parsed['trans'][$lang][] = $group_terms;
-                    $group_terms = [];
-                    $start = $pos + 1;
-                    self::set_natlang_term_from_translation(parsed: $parsed, lang: $lang, term: $term);
+                    $group_category = "verb";
+                }
+                
+                if ($translations[$pos] === ':') {
+                    $group_category = trim(substr($translations, $start, $pos - $start));
+                    $colon_pos = $pos;
                 }
             }
         }
