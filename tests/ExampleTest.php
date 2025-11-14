@@ -69,7 +69,7 @@ final class ExampleData {
             'first'=> [
                 'e'=>"aaa! bbb!' ccc!?'",
                 'terms'=>['aaa','bbb','ccc'],
-                'expected'=>["aaa", "! ", "bbb", "!' ", "ccc", "!?'"],
+                'expected'=>["aaa", "! ", "bbb", "!' ", "ccc", ['text' => "!?'"]],
             ],
             ];
     }
