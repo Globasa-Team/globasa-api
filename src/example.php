@@ -87,7 +87,7 @@ define("UNICODE_SQOU", "\u{0027}");
 
 require_once("vendor/parsedown/Parsedown.php");
 
-global $examples, $wld_index, $pd;
+global $examples, $examples_v2, $wld_index, $pd;
 
 
 /**
@@ -210,7 +210,6 @@ function fix_quotes(string $text): string
 function import_example_sentences(): void
 {
     global $cfg;
-    global $examples;
 
     \pard\sec("Make example files");
     process_passage_sources($cfg['source_data']['override_passages'], OVERRIDE_PRIORITY);
@@ -317,14 +316,14 @@ function parse_markdown_filestream($fp, array $c, int $p): void
 function parse_paragraph(string $para, array $c, int $pri)
 {
     $split = preg_split('/([.?!].?)\s/u', $para, 0, PREG_SPLIT_DELIM_CAPTURE);
-    $itr = new \ArrayObject($split)->getIterator();
+    $sentence_itr = new \ArrayObject($split)->getIterator();
 
-    while ($itr->valid()) {
-        $sentence = $itr->current();
-        $itr->next();
-        if ($itr->valid()) {
-            $sentence .= $itr->current();
-            $itr->next();
+    while ($sentence_itr->valid()) {
+        $sentence = $sentence_itr->current();
+        $sentence_itr->next();
+        if ($sentence_itr->valid()) {
+            $sentence .= $sentence_itr->current();
+            $sentence_itr->next();
         }
         parse_sentence($sentence, $c, $pri);
     }
@@ -474,7 +473,7 @@ function write_examples(): void
 function example_translation_data(string $e, array $terms): array
 {
     $ret = array();
-    var_dump($e);
+    // var_dump($e);
     return $ret;
 }
 
