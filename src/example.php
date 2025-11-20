@@ -22,7 +22,14 @@ mb_internal_encoding('UTF-8');
 mb_http_output('UTF-8');
 mb_regex_encoding('UTF-8');
 
-enum Sentence_state {
+enum Markdown_type
+{
+    case grav;
+    case wld;
+}
+
+enum Sentence_state
+{
     case Word;
     case Nonword;
 }
@@ -68,9 +75,8 @@ register_shutdown_function(function () {
 });
 
 
-/*******************************
+/**
  * INIT
- * *****************************
  */
 
 define("OVERRIDE_PRIORITY", 1);
@@ -85,33 +91,36 @@ define("UNICODE_RSQOU", "\u{2019}");
 define("UNICODE_DQOU", "\u{0022}");
 define("UNICODE_SQOU", "\u{0027}");
 
+define("SLEEP_1SEC", 1000000);
+define("SLEEP_200MS", 200000);
+define("SLEEP_100MS", 100000);
+define("SLEEP_50MS",   50000);
+
+
 require_once("vendor/parsedown/Parsedown.php");
 
-global $examples, $examples_v2, $wld_index, $pd;
+global $examples, $wld_index, $pd;
+
 
 
 /**
  * Take example and add it to all $terms.
  */
-function add_example(string $e, array $terms, array $c, int $p)
+function add_example(string $e, array $c,)
 {
     global $examples, $wld_index, $pd;
-
-    $terms = array_unique(array_map('strtolower', $terms));
-    $e = fix_quotes(mb_trim($e));
+    [$segments, $terms] = break_apart_example($e);
+    $e = fix_sentence_quotes(mb_trim($e));
     $e = $pd->line($e);
-    $translation_data = example_translation_data($e, $terms);
 
     foreach ($terms as $t) {
-
-        $t = strtolower($t);
         if (!array_key_exists($t, $wld_index))
             continue;
 
-        $examples[$t][$p][] = [
+        $examples[$t][] = [
             'text' => $e,
             'cite' => $c,
-            // 'translation' => $translation_data,
+            'translations' => $segments,
         ];
     }
 }
@@ -119,8 +128,29 @@ function add_example(string $e, array $terms, array $c, int $p)
 
 
 /**
- * fix_quotes
- * 
+ * Split example sentence in to word/nonword segments.
+ * Find all terms. Return segments and terms.
+ */
+function break_apart_example(string $e): array
+{
+    global $wld_index;
+
+    $segments = split_sentence($e);
+    $terms = array();
+    foreach ($segments as $cur) {
+        $term = mb_strtolower($cur['text']);
+        if (key_exists($term, $wld_index)) {
+            $terms[] = $term;
+        }
+    }
+    $term = array_unique($terms);
+
+    return [$segments, $terms];
+}
+
+
+
+/**
  * Analyzes the text string multibyte character by character, adding opening
  * quotes to the `$quotes` stack, and popping quotes quotes off when finding
  * a closing quote. Quotes within text (apostrophies) are ignored. Quotes
@@ -138,7 +168,7 @@ function add_example(string $e, array $terms, array $c, int $p)
  * on.
  * 
  */
-function fix_quotes(string $text): string
+function fix_sentence_quotes(string $text): string
 {
     $quotes = array();
     $chars = mb_str_split($text);
@@ -150,12 +180,11 @@ function fix_quotes(string $text): string
         $opening_quote = false;
 
         if (
-                ctype_alpha($c) || $c === ' ' || $c === '.' || $c === '?'|| $c === ':' ||
-                $c === '!' || $c === ',' || $c === ';'
-            ) continue;
+            ctype_alpha($c) || $c === ' ' || $c === '.' || $c === '?' ||
+            $c === ':' || $c === '!' || $c === ',' || $c === ';'
+        ) continue;
 
         if ($c === UNICODE_RSQOU || $c === UNICODE_SQOU || $c === UNICODE_DQOU) {
-
             if ($i == 0 || ctype_space($chars[$i - 1]))
                 $space_before = true;
             else $space_before = false;
@@ -212,10 +241,18 @@ function import_example_sentences(): void
     global $cfg;
 
     \pard\sec("Make example files");
-    process_passage_sources($cfg['source_data']['override_passages'], OVERRIDE_PRIORITY);
-    process_passage_sources($cfg['source_data']['curated_passages'], CURATED_PASS_PRIORITY);
-    process_docs_sources($cfg['source_data']['curated_docs'], CURATED_DOCS_PRIORITY);
-    process_aux_sources($cfg['source_data']['auxilary_files'], "Doxo", AUXILARY_PRIORITY);
+    \pard\progress_start(count($cfg['source_files']), "Loading files");
+    foreach ($cfg['source_files'] as $source) {
+        if ($source['type'] === 'passage')
+            import_passages($source);
+        if ($source['type'] === 'doc_md')
+            import_md_document($source, Markdown_type::wld);
+        if ($source['type'] === 'aux_grav')
+            import_md_document($source, Markdown_type::grav);
+        \pard\progress_increment();
+        usleep(SLEEP_100MS);
+    }
+    \pard\progress_end("Files loaded");
     write_examples();
     \pard\end("Done");
 }
@@ -223,64 +260,56 @@ function import_example_sentences(): void
 
 
 /**
- * Scans auxilary markdown documents for worldlang terms, add to `$examples` global.
- * Assumes document formatted for Grav.
+ * Loads metadata from Markdown files with custome worldlang format metadata or
+ * grave metadata. Scans markdown document for worldlang terms, add to
+ * `$examples` global.
  */
-function parse_aux_source(array $source, string $title_prefix, int $priority): void
+function import_md_document(array $source, Markdown_type $type): void
 {
-    update_citations($source, $title_prefix);
-
-    // Load file to array, each paragraph it's own element
-    $first_lang = array_key_first($source['file']);
-    $fp = fopen($source['file'][$first_lang], 'r');
-    if (!$fp) {
-        \pard\m($source[$first_lang]['file'], "Open fail", true);
-        return;
+    if ($type === Markdown_type::wld) {
+        $fp = fopen($source['file'], 'r');
+        if (!$fp) {
+            \pard\m($source['file'], "Open fail", true);
+            return;
+        }
+        $meta = read_md_frontmatter($fp);
+        $source['cite'] = $meta['cite'];
+    } else if ($type === Markdown_type::grav) {
+        $first_lang = array_key_first($source['file']);
+        $fp = fopen($source['file'][$first_lang], 'r');
+        if (!$fp) {
+            \pard\m($source['file'], "Open fail", true);
+            return;
+        }
+        read_md_frontmatter($fp); // skip metadata
+        update_citations($source);
+        if (!key_exists('cite', $source) || !key_exists('text', $source['cite'])) {
+            m($source, "missing citation", true);
+        }
     }
-
-    // skip metadata
-    $in_metadata = 2;
-    while ($in_metadata && (($line = fgets($fp)) !== false)) {
-        $line = mb_trim($line);
-        if (strcmp($line, "---") === 0 || strcmp($line, "+++") === 0) $in_metadata--;
-    }
-
-    parse_markdown_filestream($fp, $source['cite'], $priority);
+    parse_markdown_filestream($fp, $source['cite']);
     fclose($fp);
 }
 
 
 
 /**
- * Scans curated markdown document for worldlang terms, add to `$examples` global.
+ * Process passages data.
  */
-function parse_document(string $source, int $p): void
+function import_passages(array $source): void
 {
-    $fp = fopen($source, 'r');
-    if (!$fp) {
-        \pard\m($source['file'], "Open fail", true);
-        return;
+    $data = yaml_parse_file($source['file']);
+    foreach ($data as $passage) {
+        parse_paragraph($passage['text'], $passage['cite']);
     }
-
-    // Scan thru metadata
-    $in_metadata = 2;
-    $meta = "";
-    while ($in_metadata && (($line = fgets($fp)) !== false)) {
-        if (strcmp($line, "---\r\n") === 0 || strcmp($line, "---\r\n") === 0) $in_metadata--;
-        else $meta .= $line;
-    }
-    $meta = yaml_parse($meta);
-
-    parse_markdown_filestream($fp, $meta['cite'], $p);
-    fclose($fp);
 }
 
 
 
-/*
+/**
  * Parses filestream line by line, isolating words and adding them.
  */
-function parse_markdown_filestream($fp, array $c, int $p): void
+function parse_markdown_filestream($fp, array $c): void
 {
     while (($line = fgets($fp)) !== false) {
         $line = mb_trim($line);
@@ -290,7 +319,7 @@ function parse_markdown_filestream($fp, array $c, int $p): void
         if (!\IntlChar::isalpha($first_char) && !in_array($first_char, ["'", '"', UNICODE_LDQOU, '>']))
             continue;
 
-        /* Strip out markdown quote formatting */
+        /* Strip out markdown block quote formatting */
         if (str_starts_with($line, '>')) {
             $line = mb_substr($line, 1);
         }
@@ -301,148 +330,125 @@ function parse_markdown_filestream($fp, array $c, int $p): void
             \pard\m($line, 'poetry? ');
             continue;
         }
-
-        parse_paragraph($line, $c, $p);
+        parse_paragraph($line, $c);
     }
 }
 
 
 
 /**
- * Break aparent $para by punctuation
+ * Break aparent $para by end of sentence punctuation not semicolons.
+ * End of sentence may be followed by quote.
  * 
- * Not semicolons
+ * Capture setence segment, and then end of sentence.
  */
-function parse_paragraph(string $para, array $c, int $pri)
+function parse_paragraph(string $para, array $c)
 {
     $split = preg_split('/([.?!].?)\s/u', $para, 0, PREG_SPLIT_DELIM_CAPTURE);
     $sentence_itr = new \ArrayObject($split)->getIterator();
 
     while ($sentence_itr->valid()) {
+        // Get sentence words
         $sentence = $sentence_itr->current();
         $sentence_itr->next();
+        // Get punctuation
         if ($sentence_itr->valid()) {
             $sentence .= $sentence_itr->current();
             $sentence_itr->next();
         }
-        parse_sentence($sentence, $c, $pri);
+        add_example($sentence, $c);
     }
 }
 
 
 
 /**
- * Process passages data.
+ * Scans through the frontmatter and returns it as an array.
  */
-function parse_passages(string $source, int $priority): void
+function read_md_frontmatter($fp): array
 {
-
-    $data = yaml_parse_file($source);
-    foreach ($data as $passage) {
-        add_example($passage['text'], $passage['terms'], $passage['cite'], $priority);
+    // Scan thru metadata, skipping opening metadata line
+    $first_line = fgets($fp);
+    // m($first_line, 'skipped line'); // DEBUG
+    $found_end = false;
+    $metadata = "";
+    while (!$found_end && (($line = fgets($fp)) !== false)) {
+        if ($line === "---\r\n" || $line === "+++\r\n" || $line === "---\n" || $line === "+++\n")
+            $found_end = true;
+        else $metadata .= $line;
     }
+    // m($found_end, "found end?"); // DEBUG
+    // m($metadata, 'metadata'); // DEBUG
+    return yaml_parse($metadata);
 }
 
 
 
 /**
- * Parses a worldlang sentence and adds the sentence as
- * and examples sentence for each term present.
+ * Isolate words from non-words.
+ * 
+ * Builds the the sentence up by putting together segments. A segment
+ * is a run of either alpha or non-alpha characters. So:
+ * 
+ *  'blimey', 'yup'
+ * 
+ * is broken down to 4 segments:
+ *  [`'`, `blimey`, `', '`, `yup`, `'`]
  */
-function parse_sentence(string $s, array $c, int $p)
+function split_sentence(string $e): array
 {
-    // Remove all punctuation
-    $data = explode(" ", mb_trim(preg_replace("/[[:punct:]]/u", "", $s)));
-    add_example($s, $data, $c, $p);
-}
+    $ret = array();
 
+    // find all characters/graphemes
+    $data = grapheme_str_split($e);
+    $count = count($data);
 
+    $cur = ""; // current segment run
+    $type = null; // segment type
+    $word_part = null;
 
-/**
- * Process markdown documents developed for Grav.
- */
-function process_aux_sources(string $aux_sources_file, string $title_prefix, int $priority): void
-{
-    $source_files = yaml_parse_file($aux_sources_file);
-    \pard\progress_start(count($source_files), "Loading aux files with priority {$priority}");
-    foreach ($source_files as $data) {
-        usleep(150000);
-        parse_aux_source($data, $title_prefix, $priority);
-        \pard\progress_increment();
+    for ($i = 0; $i < $count; $i++) {
+        // Determine if this is a letter or part of a word (like apos or rqou)
+        if (IntlChar::isalpha($data[$i]) || ($data[$i] !== ' ' && $word_part && $i + 1 < $count && IntlChar::isalpha($data[$i + 1]))) {
+            $word_part = true;
+            if ($type == null) $type = Sentence_state::Word;
+        } else {
+            $word_part = false;
+            if ($type == null) $type = Sentence_state::Nonword;
+        }
+
+        if ((!$word_part && $type == Sentence_state::Word) || ($word_part && $type == Sentence_state::Nonword)) {
+            // This starts a new segment (quote or space or other)
+            $ret[]['text'] = $cur;
+            $cur = "";
+            if ($type == Sentence_state::Word) $type = Sentence_state::Nonword;
+            else $type = Sentence_state::Word;
+        }
+
+        $cur .= $data[$i];
     }
-    \pard\progress_end("Files loaded");
+
+    if ($cur !== "") $ret[] = ['text' => $cur];
+
+    return $ret;
 }
 
 
 
 /**
- * Process document with proper citation.
+ * Adds citation data for each language to the provided sources array.
  */
-function process_docs_sources(string $corpus_sources_file, int $priority): void
+function update_citations(array &$source)
 {
-    $source_files = yaml_parse_file($corpus_sources_file);
-    \pard\progress_start(count($source_files), "Processing curated markdown documents");
-    foreach ($source_files as $data) {
-        usleep(150000);
-        parse_document($data, $priority);
-        \pard\progress_increment();
-    }
-    \pard\progress_end("Files loaded");
-}
-
-
-
-/**
- * Processes all sources in provided source file.
- */
-function process_passage_sources(string $source_data, int $priority)
-{
-    $source_files = yaml_parse_file($source_data);
-    \pard\progress_start(count($source_files), "Loading passages with priority {$priority}");
-    foreach ($source_files as $file) {
-        usleep(150000);
-        parse_passages($file, $priority);
-        \pard\progress_increment();
-    }
-    \pard\progress_end("Files loaded");
-}
-
-
-
-/**
- * Adds citation data to the provided sources array.
- */
-function update_citations(array &$sources, string $title_prefix)
-{
-    foreach ($sources['file'] as $lang => $filename) {
+    foreach ($source['file'] as $lang => $filename) {
         // Load file to array, each paragraph it's own element
         $fp = fopen($filename, 'r');
         if (!$fp) {
             \pard\m($filename, "Open fail", true);
-            return;
+            continue;
         }
-
-        // Scan thru metadata
-        $in_metadata = 2;
-        while ($in_metadata) {
-            $line = fgets($fp);
-            if ($line === false) break;
-            if (strcmp(trim($line), "---") === 0) $in_metadata--;
-            if (str_starts_with($line, 'title:')) {
-                $i = strpos($line, "'");
-                if ($i !== false) {
-                    // Cut out what is within quotes
-                    $i += 1;
-                    $j = strrpos($line, "'") - $i;
-                } else {
-                    // Remove identifier
-                    $i = 7;
-                    $j = null;
-                }
-                $sources['cite']['text'][$lang] = $title_prefix . ': ' . mb_trim(str_replace("''", "'", mb_substr($line, $i, $j)));
-                break;
-            }
-        }
+        $meta = read_md_frontmatter($fp);
+        $source['cite']['text'][$lang] = $source['title_prefix'] . ': ' . $meta['title'];
         fclose($fp);
     }
 }
@@ -455,78 +461,38 @@ function update_citations(array &$sources, string $title_prefix)
 function write_examples(): void
 {
     global $cfg, $examples;
-    \pard\progress_start(count($examples), 'Writing examples for each entry');
 
     if (!file_exists($cfg['examples_output'])) {
         mkdir($cfg['examples_output'], 0744);
     }
 
-    foreach ($examples as $slug => $data) {
-        usleep(20000);
-        yaml_emit_file($cfg['examples_output'] . "{$slug}.yaml", $data);
+    $dict = array();
+    \pard\progress_start(count($cfg['langs']), 'Loading dictionaries');
+    foreach ($cfg['langs'] as $lang) {
+        $dict[$lang] = yaml_parse_file($cfg['dict_template'] . $lang . '.yaml');
+        sleep(1);
         \pard\progress_increment();
     }
-    \pard\progress_end("Files written");
-}
+    \pard\progress_end("Loaded dictionaries");
 
+    \pard\progress_start(count($examples), 'Writing examples for each entry');
+    foreach ($examples as $slug => $entry_examples) {
 
-function example_translation_data(string $e, array $terms): array
-{
-    $ret = array();
-    // var_dump($e);
-    return $ret;
-}
-
-
-/**
- * Isolate words from non-words.
- * 
- * Builds the the sentence up by putting together segments. A segment
- * is a run of either alpha or non-alpha characters. So:
- * 
- *  'blimey', 'yup'
- * 
- * is broken down to 4 segments:
- *  '
- *  blimey
- *  ' '
- *  yup
- *  '
- * 
- * 
- */
-function split_sentence(string $e): array
-{
-    $ret = array();
-
-    // find all characters/graphemes
-    $data = grapheme_str_split($e);
-    $count = count($data);
-
-    $cur = ""; // current segment run
-    $type = null; // segment type
-
-    for ($i = 0; $i < $count; $i++) {
-        // Determine if this is a letter or part of a word (like apos or rqou)
-        if (IntlChar::isalpha($data[$i]) || ($word_part && $i + 1 < $count && IntlChar::isalpha($data[$i+1]) ) ) {
-            $word_part = true;
-            if ($type == null) $type = Sentence_state::Word;
-        } else {
-            $word_part = false;
-            if ($type == null) $type = Sentence_state::Nonword;
+        // Get translations for this entry's examples
+        foreach ($entry_examples as $e_key => $e_data) {
+            foreach ($e_data['translations'] as $segment_key => $segment_data) {
+                $term = mb_strtolower($segment_data['text']);
+                foreach ($cfg['langs'] as $lang) {
+                    if (array_key_exists($term, $dict[$lang])) {
+                        $entry_examples[$e_key]['translations'][$segment_key][$lang] = $dict[$lang][$term]['translation'];
+                    }
+                }
+            }
         }
 
-        if ( (!$word_part && $type == Sentence_state::Word) || ($word_part && $type == Sentence_state::Nonword) ) {
-            // This starts a new segment (quote or space or other)
-            $ret[] = $cur;
-            $cur = "";
-            $type = null;
-        }
-
-        $cur .= $data[$i];
+        yaml_emit_file($cfg['examples_output'] . "{$slug}.yaml", $entry_examples);
+        \pard\progress_increment();
+        usleep(SLEEP_100MS);
     }
-
-    if ($cur !== "") $ret[] = ['text'=>$cur];
-
-    return $ret;
+    \pard\progress_end("Files written");
 }
