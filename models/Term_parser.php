@@ -647,6 +647,7 @@ class Term_parser
 
             $parsed['trans html'][$lang] = "";
             $parsed['trans'][$lang] = [];
+            $parsed['trans_v2'][$lang] = [];
 
             if (empty($translations)) {
                 continue;
@@ -708,7 +709,7 @@ class Term_parser
                     
                     // Save current group of terms.
                     if (!empty($group_terms)) {
-                        $parsed['trans'][$lang][$group_category] = $group_terms;
+                        $parsed['trans'][$lang][] = $group_terms;
                         $parsed['trans_v2'][$lang][$group_category] = $group_terms_v2;
                         $group_terms = [];
                         $group_terms_v2 = [];

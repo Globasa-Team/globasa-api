@@ -270,6 +270,7 @@ class Entry_update_controller
         if (!isset($entry['word class'])) $entry['word class'] = "";
         if (!isset($entry['category'])) $entry['category'] = "";
         if (!isset($entry['trans'])) $entry['trans'] = "";
+        if (!isset($entry['trans_v2'])) $entry['trans_v2'] = "";
         if (!isset($entry['etymology'])) $entry['etymology'] = "";
 
         $standard_entries[$entry['slug']] = [
@@ -277,6 +278,7 @@ class Entry_update_controller
             'word class' => $entry['word class'],
             'category' => $entry['category'],
             'trans' => $entry['trans'],
+            'trans_v2' => $entry['trans_v2'],
             'etymology' => $entry['etymology']
         ];
     }
