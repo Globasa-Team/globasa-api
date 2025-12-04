@@ -22,6 +22,8 @@ mb_internal_encoding('UTF-8');
 mb_http_output('UTF-8');
 mb_regex_encoding('UTF-8');
 
+define('FIND_T_BRACKET_REGEX', '/<.*?>/');
+
 enum Markdown_type
 {
     case grav;
@@ -109,8 +111,9 @@ global $examples, $wld_index, $pd;
 function add_example(string $e, array $c,)
 {
     global $examples, $wld_index, $pd;
-    [$segments, $terms] = break_apart_example($e);
+
     $e = fix_sentence_quotes(mb_trim($e));
+    [$segments, $terms] = break_apart_example($e);
     $e = $pd->line($e);
 
     foreach ($terms as $t) {
@@ -484,7 +487,10 @@ function write_examples(): void
                 $term = mb_strtolower($segment_data['text']);
                 foreach ($cfg['langs'] as $lang) {
                     if (array_key_exists($term, $dict[$lang])) {
-                        $entry_examples[$e_key]['translations'][$segment_key][$lang] = $dict[$lang][$term]['translation'];
+                        $entry_examples[$e_key]['translations'][$segment_key][$lang]
+                            = preg_replace(
+                                FIND_T_BRACKET_REGEX, '',
+                                "{$term} ({$dict[$lang][$term]['class']}) {$dict[$lang][$term]['translation']}");
                     }
                 }
             }
