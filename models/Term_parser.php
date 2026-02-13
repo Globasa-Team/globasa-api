@@ -111,6 +111,7 @@ class Term_parser
 
         $this->set_globasa_terms($raw, $parsed);
         $this->current_slug = $parsed['slug'];
+        $this->parse_syllables($parsed);
         $this->create_ipa($raw, $parsed);
 
         $this->parse_basic_field('status', $raw, $parsed);
@@ -522,6 +523,17 @@ class Term_parser
         return $result;
     }
 
+
+
+    /**
+     * Parses term and create syllables.
+     * 
+     * @param array $parsed current parsed entry to use and add to.
+     */
+    private function parse_syllables(array &$parsed): void {
+        $parsed['syllables'] = Entry::get_syllables($parsed['term']);
+        $parsed['syllables_text'] = implode(entry::HYPH_POINT, $parsed['syllables']);
+    }
 
 
 

@@ -28,5 +28,8 @@
         <testsuite name="example">
             <file>tests/ExampleTest.php</file>
         </testsuite>
+        <testsuite name="entry">
+            <file>tests/EntryTest.php</file>
+        </testsuite>
     </testsuites>
 </phpunit>

@@ -31,6 +31,7 @@ try {
     require_once(__DIR__ . "/src/load_csv.php");
     require_once(__DIR__ . "/src/partial_debugger.php");
     require_once(__DIR__ . "/src/slugify.php");
+    require_once(__DIR__ . "/src/polyfill.php");
     require_once(__DIR__ . "/models/Dictionary_log.php");
     require_once(__DIR__ . "/models/Dictionary_comparison.php");
     require_once(__DIR__ . "/models/Term_parser.php");

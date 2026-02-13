@@ -8,7 +8,7 @@ use Exception;
 use Throwable;
 use TypeError;
 
-require_once("models/Word.php");
+require_once("models/Entry.php");
 
 class Entry_update_controller
 {
@@ -35,8 +35,8 @@ class Entry_update_controller
         ) return;
 
         // Fetch final morphemes
-        $entry_final_morpheme = Word::get_final_morpheme($entry_slug);
-        $rhyme_final_morpheme = Word::get_final_morpheme($rhyme_slug);
+        $entry_final_morpheme = Entry::get_final_morpheme($entry_slug);
+        $rhyme_final_morpheme = Entry::get_final_morpheme($rhyme_slug);
 
         /* Find possible suffix/root version of rhyme by removing or adding hyphen */
         if ($rhyme_final_morpheme[0] === '-') {
@@ -556,7 +556,7 @@ class Entry_update_controller
                 }
 
                 // Fetch entry final morpheme
-                $final_morpheme = Word::get_final_morpheme($cur_rhyme_slug);
+                $final_morpheme = Entry::get_final_morpheme($cur_rhyme_slug);
 
                 if ($final_morpheme[0] === '-') {
                     $alt = substr($final_morpheme, 1);
