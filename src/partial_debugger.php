@@ -34,7 +34,11 @@ define('CUR_HIDE', '25l');
 define('CUR_SHOW', '25h');
 
 define('PARD_LENGTH', 50);
+
+define('BYTES_PER_MEG', 1048576);
 // Eg. `C0.'5'.CUR_BACK` to go backward 5 characters.
+
+$_pard_mem = [];
 
 // https://blog.devgenius.io/writing-beautiful-cli-programs-6fc3e3728c8b
 // https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
@@ -129,14 +133,18 @@ function app_start(?bool $status = null): void
 
 function app_finished(): void
 {
-    global $_pard_status;
+    global $_pard_status, $_pard_mem;
     if (!$_pard_status) return;
     echo (TEXT_RESET . "\n\n");
 
-    $m_limit = ini_get("memory_limit");
-    $m_peak = round(memory_get_peak_usage() / 1048576);
-    $m_usage = round(memory_get_usage() / 1048576);
-    m("{$m_usage} (max {$m_limit})", "Memory usage");
+    $mem = memory_get_peak_usage() / BYTES_PER_MEG;
+    array_push($_pard_mem, $mem);
+    m($_pard_mem, "Memory usage per section");
+    
+    $m_limit = ini_get("memory_limit") / BYTES_PER_MEG;
+    $m_peak = round(memory_get_peak_usage() / BYTES_PER_MEG);
+    $m_usage = round(memory_get_usage() / BYTES_PER_MEG);
+    m("{$m_usage} M (max {$m_limit} m)", "Memory usage");
     m($m_peak . " M", "Peak memory usage");
 }
 
@@ -180,7 +188,7 @@ function counter_start(string $msg = ""): void
  */
 function end(string|null $message=null): void
 {
-    global $_pard_section, $_pard_status;
+    global $_pard_section, $_pard_status, $_pard_mem;
     if (!$_pard_status) return;
 
     if (!$message && !$_pard_section) {
@@ -188,7 +196,9 @@ function end(string|null $message=null): void
     } elseif (!$message && $_pard_section) {
         $message = $_pard_section;
     }
-    m(memory_get_peak_usage(), "Peak test");
+    $mem = memory_get_peak_usage() / BYTES_PER_MEG;
+    array_push($_pard_mem, $mem);
+    m($mem, "Peak test");
     echo ("┸ " . GRAY . $message . TEXT_RESET . PHP_EOL);
 }
 
@@ -305,6 +315,7 @@ function sec(string $name = ""): void
 
     $_pard_section = $name;
     echo (PHP_EOL . HLON . " " . $name . " " . TEXT_RESET . ' ' . PHP_EOL);
+    memory_reset_peak_usage();
 }
 
 
