@@ -281,7 +281,7 @@ function import_md_document(array $source, Markdown_type $type): void
         $first_lang = array_key_first($source['file']);
         $fp = fopen($source['file'][$first_lang], 'r');
         if (!$fp) {
-            \pard\m($source['file'], "Open fail", true);
+            \pard\m($source['file'][$first_lang], "Open fail", true);
             return;
         }
         read_md_frontmatter($fp); // skip metadata

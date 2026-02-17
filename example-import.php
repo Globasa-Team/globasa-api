@@ -16,17 +16,19 @@ namespace WorldlangDict\Examples;
 
 require_once('src/example.php');
 
-\pard\app_start(true);
 
 
 /*******************************
  * INIT
  * *****************************
- */
+*/
+$cfg = yaml_parse_file('config/config-example.yaml');
+if ($cfg['env'] == 'dev') {
+    \pard\app_start(true);
+}
+
 \pard\sec("Initiating script");
 $pd = new \Parsedown();
-\pard\m('Load configuration');
-$cfg = yaml_parse_file('config/config-example.yaml');
 \pard\m("load term index");
 $wld_index = yaml_parse_file($cfg['worldlang_index']);
 $examples = [];
