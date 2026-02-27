@@ -16,13 +16,23 @@ class Entry
     const VOWELS = ['a','e','o','u','i'];
     const HYPH_POINT = '&#x2027;'; // Alternative: &#xB7; / &centerdot;
 
-    private static function all_consonants(string $input):bool {
+    public static function all_consonants(string $input):bool {
         foreach(grapheme_str_split($input) as $char) {
             if (in_array($char, self::VOWELS)) {
                 return false;
             }
         }
         return true;
+    }
+
+
+
+    /**
+     * 
+     */
+    public static function ends_with_vowel(string $term):bool {
+        $final_letter = mb_substr($term, -1);
+        return in_array($final_letter, self::VOWELS);
     }
 
     /**
@@ -43,6 +53,19 @@ class Entry
             \pard\m("Tried to get final morpheme, but entry doesn't exist in dictionary word list.", 'Error', true);
         }
         return $morpheme;
+    }
+
+    public static function get_final_coda(array $entry): string
+    {
+        preg_match(FINAL_VOWEL_REGEX, $entry['term'], $match);
+        $pos = mb_strrpos($entry['term'], $match[0]);
+        return mb_substr($entry['term'], $pos);
+        
+    }
+
+    public static function get_final_vowel(array $entry): string
+    {
+
     }
 
     public static function get_syllables(string $term): array

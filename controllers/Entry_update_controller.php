@@ -63,6 +63,31 @@ class Entry_update_controller
 
 
 
+    private static function add_to_rhyme_group(array $entry): void
+    {
+        global $rhyme_data;
+
+        if ($entry['word class']==='l' || $entry['word class'] === 'p') {
+            // Skip conjunctions, prepositions
+            return;
+        } else if (count($entry['syllables']) == 1 && Entry::ends_with_vowel($entry['term'])) {
+            // one syllable words ending in a vowel
+            return;
+        }
+
+        if (!Entry::ends_with_vowel($entry['term'])) {
+            // ends with consonant
+            $group = Entry::get_final_vowel($entry).'-'.Entry::get_final_coda($entry);
+            $rhyme_data[$group][] = $entry['slug'];
+        } else {
+            // ends with vowel
+            $group = Entry::get_penult_vowel($entry).'-*-'.Entry::get_final_syllable($entry);
+            $group = Entry::get_penult_vowel($entry).'-'.Entry::get_penult_coda.'-'.Entry::get_final_vowel($entry);
+        }
+
+    }
+
+
     /**
      * Calculate stats from the dictionary entries.
      */

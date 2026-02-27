@@ -47,4 +47,9 @@ final class TermParserTest extends TestCase
             $parsed
         );
     }
+
+    public function testGetFinalVowel(): void
+    {
+        
+    }
 }
