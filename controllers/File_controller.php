@@ -55,23 +55,18 @@ class File_controller
     {
         global $cfg, $dict;
 
-        $first = "";
-        \pard\step_start("Saving entry files");
+        \pard\progress_start(count($dict), "Saving entry files");
         foreach ($dict as $key => $entry) {
-            if ($entry['slug'][0] !== $first) {
+            \pard\progress_increment();
 
-                if (!isset($entry['slug'])) {
-                    $cfg['log']->add(" - Entry key '{$key}' missing slug", 6);
-                    continue;
-                }
-
-                $first = $entry['slug'][0];
-                \pard\step($first);
+            if (!isset($entry['slug'])) {
+                $cfg['log']->add(" - Entry key '{$key}' missing slug", 6);
+                continue;
             }
 
             self::save_entry_file($entry);
         }
-        \pard\step_end();
+        \pard\progress_end();
     }
 
     private static function save_entry_file(array &$parsed)

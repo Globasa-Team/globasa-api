@@ -141,7 +141,7 @@ function app_finished(): void
     array_push($_pard_mem, $mem);
     m($_pard_mem, "Memory usage per section");
     
-    $m_limit = ini_get("memory_limit") / BYTES_PER_MEG;
+    $m_limit = ini_get("memory_limit");
     $m_peak = round(memory_get_peak_usage() / BYTES_PER_MEG);
     $m_usage = round(memory_get_usage() / BYTES_PER_MEG);
     m("{$m_usage} M (max {$m_limit} m)", "Memory usage");

@@ -215,12 +215,21 @@ class Entry_update_controller
 
         foreach ($derived_data as $root => $terms) {
             // For each root, find all derived terms
+            
+            // Skip if word doesn't exist
+            if (!array_key_exists($root, $dict)) {
+                $derived = implode(", ", $terms);
+                $cfg['log']->add("Attempted to link root entry `{$root}` to derived entries `{$derived}`, but root entry doesn't exist.");
+                $import_report[] = ['term' => $root, 'msg' => "Root term missing. Was linking from `{$derived}`."];
+                continue;
+            }
+
             foreach ($terms as $term) {
 
                 // Skip if word doesn't exist
-                if (!array_key_exists($root, $dict)) {
-                    $cfg['log']->add("Attempted to link entry `{$root}` to `{$term}`, but it doesn't exist.");
-                    $import_report[] = ['term' => $root, 'msg' => "Term missing. Was linking from `{$term}`."];
+                if (!array_key_exists($term, $dict)) {
+                    $cfg['log']->add("Attempted to link root entry `{$root}` to derived entry `{$term}`, but derived entry doesn't exist.");
+                    $import_report[] = ['term' => $root, 'msg' => "Derived term missing. Was linking to `{$term}`."];
                     continue;
                 }
 

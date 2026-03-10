@@ -654,9 +654,7 @@ class Term_parser
      */
     private function parse_translations(array &$raw, array &$parsed)
     {
-
         foreach ($raw['trans'] as $lang => $translations) {
-
             $parsed['trans html'][$lang] = "";
             $parsed['trans'][$lang] = [];
             $parsed['trans_v2'][$lang] = [];
@@ -678,7 +676,6 @@ class Term_parser
             $colon_pos = null;
 
             for ($pos = 0; $pos < $len; $pos++) {
-
                 if ($translations[$pos] === '(') {
                     // Skip to end of enclosure, $pos is ')'
                     $pos = strpos($translations, ')', $pos);
@@ -690,22 +687,27 @@ class Term_parser
 
                 // Save term if end of term
                 if ($translations[$pos] === ',' || $translations[$pos] === ';' || $pos + 1 >= $len) {
+
                     // end of term, so save term to group
                     if ($translations[$pos] === ',' || $translations[$pos] === ';')
                         $segment_length = $pos - $start;
                     else
                         $segment_length = $len - $start;
                     $term = trim(substr($translations, $start, $segment_length));
+
+                    // Remove word class and column
                     if ($colon_pos === null) {
                         $term_v2 = $term;
                     } else {
-                        $term_v2 = trim(substr($translations, $colon_pos + 1, $pos - $colon_pos - 1));
+                        $term_v2 = trim(substr($translations, $colon_pos + 1, $pos - $colon_pos));
                         $colon_pos = null;
                     }
+
+                    // Add current translation to search term index
                     if (!empty($term)) {
                         $group_terms[] = $this->pd->line($term);
                         $group_terms_v2[] = $this->pd->line($term_v2);
-                        self::set_natlang_term_from_translation(parsed: $parsed, lang: $lang, term: $term);
+                        self::set_natlang_term_from_translation(parsed: $parsed, lang: $lang, term: $term_v2);
                     }
                     $start = $pos + 1;
                 }
@@ -821,9 +823,9 @@ class Term_parser
     private function set_natlang_terms_from_translation(array $parsed, array &$search_terms)
     {
 
-        if (!isset($parsed['trans'])) return;
+        if (!isset($parsed['trans_v2'])) return;
 
-        foreach ($parsed['trans'] as $lang => $lang_trans) {
+        foreach ($parsed['trans_v2'] as $lang => $lang_trans) {
             foreach ($lang_trans as $trans_group) {
                 foreach ($trans_group as $trans) {
                     // Remove notes
