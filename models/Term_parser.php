@@ -692,15 +692,24 @@ class Term_parser
                     if ($translations[$pos] === ',' || $translations[$pos] === ';')
                         $segment_length = $pos - $start;
                     else
-                        $segment_length = $len - $start;
+                        // $segment_length = $len - $start;
+                        $segment_length = null;
                     $term = trim(substr($translations, $start, $segment_length));
+                    if ($raw['term']==='exjeksi') var_dump($term);
 
                     // Remove word class and column
                     if ($colon_pos === null) {
                         $term_v2 = $term;
+                        if ($raw['term']==='exjeksi') \pard\m($term_v2, 'No colon');
+
                     } else {
-                        $term_v2 = trim(substr($translations, $colon_pos + 1, $pos - $colon_pos - 1));
+                        $end_shift = 0;
+                        if ($translations[$pos] === ',' || $translations[$pos] === ';' ) {
+                            $end_shift = -1; // stop before comma or semicolon
+                        }
+                        $term_v2 = trim(substr($translations, $colon_pos + 1, $pos - $colon_pos + $end_shift));
                         $colon_pos = null;
+                        if ($raw['term']==='exjeksi') \pard\m($term_v2, 'Yes colon');
                     }
 
                     // Add current translation to search term index
