@@ -699,7 +699,7 @@ class Term_parser
                     if ($colon_pos === null) {
                         $term_v2 = $term;
                     } else {
-                        $term_v2 = trim(substr($translations, $colon_pos + 1, $pos - $colon_pos));
+                        $term_v2 = trim(substr($translations, $colon_pos + 1, $pos - $colon_pos - 1));
                         $colon_pos = null;
                     }
 
