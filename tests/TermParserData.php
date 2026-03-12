@@ -165,13 +165,13 @@ class TermParserData
                 'status' => true,
                 'category' => 'root',
                 'trans' => [
-                    'eng' => [''=>["ah (<em>denotes surprise or wonder</em>)"]],
-                    'epo' => [''=>["ha"]],
-                    'spa' => [''=>["ah"]],
-                    'deu' => [''=>["ah (<em>Ausdruck der Überraschung oder der Verwunderung</em>)"]],
-                    'fra' => [''=>["ah"]],
-                    'rus' => [''=>["а"]],
-                    'zho' => [''=>["啊"]],
+                    'eng' => [0=>["ah (<em>denotes surprise or wonder</em>)"]],
+                    'epo' => [0=>["ha"]],
+                    'spa' => [0=>["ah"]],
+                    'deu' => [0=>["ah (<em>Ausdruck der Überraschung oder der Verwunderung</em>)"]],
+                    'fra' => [0=>["ah"]],
+                    'rus' => [0=>["а"]],
+                    'zho' => [0=>["啊"]],
                 ],
                 'trans_v2'=> [
                     'eng' => [''=>["ah (<em>denotes surprise or wonder</em>)"]],
@@ -182,6 +182,8 @@ class TermParserData
                     'rus' => [''=>["а"]],
                     'zho' => [''=>["啊"]],
                 ],
+                'syllables'=>['a'],
+                'syllables_text'=>'a',
             ]
         ],
         // devtest_2

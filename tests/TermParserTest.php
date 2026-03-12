@@ -48,8 +48,4 @@ final class TermParserTest extends TestCase
         );
     }
 
-    public function testGetFinalVowel(): void
-    {
-        
-    }
 }
