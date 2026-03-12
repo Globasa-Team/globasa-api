@@ -82,7 +82,7 @@ class Entry_update_controller
         } else {
             // ends with vowel
             $group = Entry::get_penult_vowel($entry).'-*-'.Entry::get_final_syllable($entry);
-            $group = Entry::get_penult_vowel($entry).'-'.Entry::get_penult_coda.'-'.Entry::get_final_vowel($entry);
+            $group = Entry::get_penult_vowel($entry).'-'.Entry::get_penult_coda($entry).'-'.Entry::get_final_vowel($entry);
         }
 
     }

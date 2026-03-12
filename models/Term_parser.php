@@ -531,7 +531,7 @@ class Term_parser
      * @param array $parsed current parsed entry to use and add to.
      */
     private function parse_syllables(array &$parsed): void {
-        $parsed['syllables'] = Entry::get_syllables($parsed['term']);
+        $parsed['syllables'] = Entry::get_syllables($parsed);
         $parsed['syllables_text'] = implode(entry::HYPH_POINT, $parsed['syllables']);
     }
 
