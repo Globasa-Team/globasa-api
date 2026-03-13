@@ -70,21 +70,26 @@ class Entry_update_controller
         if ($entry['word class']==='l' || $entry['word class'] === 'p') {
             // Skip conjunctions, prepositions
             return;
-        } else if (count($entry['syllables']) == 1 && Entry::ends_with_vowel($entry['term'])) {
+        } else if (count($entry['syllables']) == 1 && Entry::ends_with_vowel($entry)) {
             // one syllable words ending in a vowel
             return;
         }
 
-        if (!Entry::ends_with_vowel($entry['term'])) {
+        if (!Entry::ends_with_vowel($entry)) {
             // ends with consonant
             $group = Entry::get_final_vowel($entry).'-'.Entry::get_final_coda($entry);
             $rhyme_data[$group][] = $entry['slug'];
         } else {
             // ends with vowel
+            // penult vowel + final syllable
             $group = Entry::get_penult_vowel($entry).'-*-'.Entry::get_final_syllable($entry);
-            $group = Entry::get_penult_vowel($entry).'-'.Entry::get_penult_coda($entry).'-'.Entry::get_final_vowel($entry);
-        }
+            $rhyme_data[$group][] = $entry['slug'];
 
+            // penult vowel + penult coda + final vowel
+            $group = Entry::get_penult_vowel($entry).'-'.Entry::get_penult_coda($entry).'-'.Entry::get_final_vowel($entry);
+            $rhyme_data[$group][] = $entry['slug'];
+        }
+        return;
     }
 
 
@@ -410,6 +415,8 @@ class Entry_update_controller
                 self::insert_examples($entry);
                 self::validate_and_count_category($entry['category'], $entry['term']);
                 self::update_rhyme_data($entry);
+                // self::add_to_rhyme_group($entry);
+
 
                 self::validate_entry($entry);
 
@@ -582,14 +589,14 @@ class Entry_update_controller
                     self::add_entry_rhyme_xref($cur_rhyme_slug, $rhyme_partner_slug);
                 }
 
-                // Generate the alt form (root slug)
+                // Generate the alt form (root slug) for exclusions
                 if ($cur_rhyme_slug[0] === '-') {
                     $alt = substr($cur_rhyme_slug, 1);
                 } else {
                     $alt = '-' . $cur_rhyme_slug;
                 }
 
-                // Fetch entry final morpheme
+                // Fetch entry final morpheme for exclusions
                 $final_morpheme = Entry::get_final_morpheme($cur_rhyme_slug);
 
                 if ($final_morpheme[0] === '-') {

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Entry model
  * 
@@ -25,7 +26,7 @@ class Entry
     ];
 
     /** @var array List of vowels */
-    const VOWELS = ['a','e','o','u','i'];
+    const VOWELS = ['a', 'e', 'o', 'u', 'i'];
     const HYPH_POINT = '&#x2027;'; // Alternative: &#xB7; / &centerdot;
 
 
@@ -36,9 +37,9 @@ class Entry
      * 
      * @return bool if the string is all consonants.
      */
-    public static function all_consonants(string $text):bool
+    public static function all_consonants(string $text): bool
     {
-        foreach(grapheme_str_split($text) as $char) {
+        foreach (grapheme_str_split($text) as $char) {
             if (in_array($char, self::VOWELS)) {
                 return false;
             }
@@ -54,7 +55,7 @@ class Entry
      * 
      * @return bool if entry term ends with a vowel.
      */
-    public static function ends_with_vowel(array $entry):bool
+    public static function ends_with_vowel(array $entry): bool
     {
         $final_letter = mb_substr($entry['term'], -1);
         return in_array($final_letter, self::VOWELS);
@@ -71,7 +72,7 @@ class Entry
     {
         preg_match(FINAL_VOWEL_REGEX, array_last($entry['syllables']), $match);
         $pos = mb_strrpos(array_last($entry['syllables']), $match[0]);
-        return mb_substr(array_last($entry['syllables']), $pos+1);
+        return mb_substr(array_last($entry['syllables']), $pos + 1);
     }
 
 
@@ -80,7 +81,7 @@ class Entry
      * 
      * @param string $entry_slug to parse.
      * 
-     * @return the final part of derived etymology
+     * @return string the final part of derived etymology
      * @return string the term, if not derived
      * @return string slug, otherwise
      */
@@ -90,9 +91,7 @@ class Entry
         global $dict;
 
         if (isset($dict[$entry_slug]['etymology']['derived'])) {
-            return $dict[$entry_slug]['etymology']['derived'][
-                array_key_last($dict[$entry_slug]['etymology']['derived'])
-            ];
+            return $dict[$entry_slug]['etymology']['derived'][array_key_last($dict[$entry_slug]['etymology']['derived'])];
         } elseif (isset($dict[$entry_slug]['term'])) {
             return mb_strtolower($dict[$entry_slug]['term']);
         } else {
@@ -114,7 +113,7 @@ class Entry
     {
         return array_last($entry['syllables']);
     }
-    
+
 
     /**
      * Get the final syllable's vowel.
@@ -141,11 +140,11 @@ class Entry
     {
         if (count($entry['syllables']) <= 1) return '';
 
-        $penult = array_slice($entry['syllables'], -2, 1);    
+        $penult = array_slice($entry['syllables'], -2, 1);
         preg_match(FINAL_VOWEL_REGEX, $penult[0], $match);
         $pos = mb_strrpos($penult[0], $match[0]);
 
-        return mb_substr($penult[0], $pos+1);
+        return mb_substr($penult[0], $pos + 1);
     }
 
 
@@ -180,19 +179,19 @@ class Entry
 
         // divide into parts by vowels
         $current_syllable = '';
-        foreach(grapheme_str_split($entry['term']) as $char) {
+        foreach (grapheme_str_split($entry['term']) as $char) {
             $current_syllable .= $char;
-            if (in_array($char, self::VOWELS)){
+            if (in_array($char, self::VOWELS)) {
                 $syllables[] = $current_syllable;
                 $current_syllable = '';
             }
         }
-        
+
         // Add current syllable if not empty
         if ($current_syllable) {
             $syllables[] = $current_syllable;
         }
-        
+
         // append last coda if any
         if (self::all_consonants(array_last($syllables))) {
             $coda = array_pop($syllables);
@@ -201,31 +200,30 @@ class Entry
 
         // Occasionally the array loses it's numbering and needs to be re-indexed
         $syllables = array_values($syllables);
-        
+
         // break CCC into C-CC
-        for ($i=1; $i < count($syllables); $i++) {
+        for ($i = 1; $i < count($syllables); $i++) {
             if (
                 mb_strlen($syllables[$i]) > 3 &&
                 self::all_consonants(mb_substr($syllables[$i], 0, 3))
             ) {
-                $syllables[$i-1] .= $syllables[$i][0]; // copy first letter
+                $syllables[$i - 1] .= $syllables[$i][0]; // copy first letter
                 $syllables[$i] = substr($syllables[$i], 1); // remove first letter
             }
         }
-        
+
         // break CCV into C-CV if CC is not allowed onset
-        for ($i=1; $i < count($syllables); $i++) {
+        for ($i = 1; $i < count($syllables); $i++) {
             if (
                 mb_strlen($syllables[$i]) > 2 &&
                 self::all_consonants(substr($syllables[$i], 0, 2)) &&
                 !in_array(substr($syllables[$i], 0, 2), self::$possible_onsets)
             ) {
-                $syllables[$i-1] .= $syllables[$i][0]; // copy first letter
+                $syllables[$i - 1] .= $syllables[$i][0]; // copy first letter
                 $syllables[$i] = substr($syllables[$i], 1); // remove first letter
             }
         }
-        
+
         return $syllables;
     }
-    
 }
