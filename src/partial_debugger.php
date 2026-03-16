@@ -100,16 +100,15 @@ function m(mixed $msg, string $label = "", bool $error = false): void
             break;
         case 'array':
             echo ("┠─┬" . $label . GRAY . "(array)" . TEXT_RESET . PHP_EOL);
-            print_array($msg);
+            print_data($msg);
             break;
         case 'Error':
         case 'Exception':
             echo ("┠─┬" . $label . GRAY . '(' . gettype($msg) . ')' . TEXT_RESET . PHP_EOL);
-            print_array($msg);
-            m("TEST END");
+            print_data($msg);
         case 'object':
             echo ("┠─┬" . $label . GRAY . "(object " . get_debug_type($msg) . ")" . TEXT_RESET . PHP_EOL);
-            print_object($msg);
+            print_data($msg);
             break;
         default:
             echo "┠─ " . $label . GRAY . "other type: " . gettype($msg) . TEXT_RESET . PHP_EOL;
@@ -136,15 +135,16 @@ function app_finished(): void
     global $_pard_status, $_pard_mem;
     if (!$_pard_status) return;
     echo (TEXT_RESET . "\n\n");
+    echo (PHP_EOL . HLON . " Finished " . TEXT_RESET . ' ' . PHP_EOL);
 
-    $mem = memory_get_peak_usage() / BYTES_PER_MEG;
+    $mem = round(memory_get_peak_usage() / BYTES_PER_MEG);
     array_push($_pard_mem, $mem);
     m($_pard_mem, "Memory usage per section");
     
     $m_limit = ini_get("memory_limit");
     $m_peak = round(memory_get_peak_usage() / BYTES_PER_MEG);
     $m_usage = round(memory_get_usage() / BYTES_PER_MEG);
-    m("{$m_usage} M (max {$m_limit} m)", "Memory usage");
+    m("{$m_usage} M (max {$m_limit})", "Memory usage");
     m($m_peak . " M", "Peak memory usage");
 }
 
@@ -160,7 +160,7 @@ function counter_end(): void
     global $_pard_status;
     if (!$_pard_status) return;
 
-    echo ("\r" . C0 . '3' . CUR_FOR . TEXT_RESET . '[DONE]' . TEXT_RESET . PHP_EOL . C0 . CUR_SHOW);
+    echo ("\r" . C0 . '3' . CUR_FOR . TEXT_RESET . ' [DONE] ' . TEXT_RESET . PHP_EOL . C0 . CUR_SHOW);
 }
 
 function counter_next(): void
@@ -168,8 +168,8 @@ function counter_next(): void
     global $_pard_status, $_pard_counter;
     if (!$_pard_status) return;
     $_pard_counter += 1;
-    if (!($_pard_counter % 10 === 0)) return;
-    echo ("\r" . C0 . '3' . CUR_FOR . sprintf("[%4d]", $_pard_counter));
+    if (!($_pard_counter % 11 === 0)) return;
+    echo ("\r" . C0 . '3' . CUR_FOR . sprintf("[%6d]", $_pard_counter));
 }
 
 function counter_start(string $msg = ""): void
@@ -179,7 +179,7 @@ function counter_start(string $msg = ""): void
 
     global $_pard_counter;
     $_pard_counter = 0;
-    echo "┠─ [0000] " . $msg . C0 . CUR_HIDE;
+    echo "┠─ [000000] " . $msg . C0 . CUR_HIDE;
 }
 
 
@@ -196,9 +196,9 @@ function end(string|null $message=null): void
     } elseif (!$message && $_pard_section) {
         $message = $_pard_section;
     }
-    $mem = memory_get_peak_usage() / BYTES_PER_MEG;
-    array_push($_pard_mem, $mem);
-    m($mem, "Peak test");
+    $mem_peak = round(memory_get_peak_usage() / BYTES_PER_MEG);
+    array_push($_pard_mem, $mem_peak);
+    m($mem_peak.'m', "Peak memory");
     echo ("┸ " . GRAY . $message . TEXT_RESET . PHP_EOL);
 }
 
@@ -217,43 +217,61 @@ function pause(string $msg = ''): void
     m("] GO!" . PHP_EOL);
 }
 
-function print_array(array $arr, int $i = 1): void
+function print_data(array|object $item, int $i = 1): void
 {
     global $_pard_status;
     if (!$_pard_status) return;
 
-    foreach ($arr as $key => $data) {
-        if (is_array($data)) {
+    foreach ($item as $key => $data) {
+        if (is_array($data) || is_object($data)) {
             echo ("┃ " . str_repeat("┊ ", $i) . $key . ":" . PHP_EOL);
-            print_array($data, $i + 1);
+            print_data($data, $i + 1);
         } else {
             echo ("┃ " . str_repeat("┊ ", $i) . $key . ": " . $data . PHP_EOL);
         }
     }
-    if (!count($arr)) {
-        echo ("┃ " . str_repeat("┊ ", $i) . "(empty array)" . PHP_EOL);
+    if (empty($item)) {
+        echo ("┃ " . str_repeat("┊ ", $i) . "(empty)" . PHP_EOL);
     }
 }
 
-function print_array_inline(array $arr, string $msg): void
-{
-    global $_pard_status;
-    if (!$_pard_status) return;
-    print("┠─ " . GRAY . $msg . ': ' . TEXT_RESET . PHP_EOL);
-    foreach ($arr as $item) {
-        if (is_array($item)) {
-            print("┃ ┊ ");
-            foreach ($item as $key => $datum)
-                print("[{$key}:{$datum}]");
-            print(PHP_EOL);
-        } else {
-            print("┃ ┊ " . $item . PHP_EOL);
-        }
-    }
-    if (!count($arr)) {
-        print("┃ ┊ (empty array)" . PHP_EOL);
-    }
-}
+// function print_array(array $arr, int $i = 1): void
+// {
+//     global $_pard_status;
+//     if (!$_pard_status) return;
+
+//     foreach ($arr as $key => $data) {
+//         if (is_array($data)) {
+//             echo ("┃ " . str_repeat("┊ ", $i) . $key . ":" . PHP_EOL);
+//             print_array($data, $i + 1);
+//         } else {
+//             echo ("┃ " . str_repeat("┊ ", $i) . $key . ": " . $data . PHP_EOL);
+//         }
+//     }
+//     if (!count($arr)) {
+//         echo ("┃ " . str_repeat("┊ ", $i) . "(empty array)" . PHP_EOL);
+//     }
+// }
+
+// function print_array_inline(array $arr, string $msg): void
+// {
+//     global $_pard_status;
+//     if (!$_pard_status) return;
+//     print("┠─ " . GRAY . $msg . ': ' . TEXT_RESET . PHP_EOL);
+//     foreach ($arr as $item) {
+//         if (is_array($item)) {
+//             print("┃ ┊ ");
+//             foreach ($item as $key => $datum)
+//                 print("[{$key}:{$datum}]");
+//             print(PHP_EOL);
+//         } else {
+//             print("┃ ┊ " . $item . PHP_EOL);
+//         }
+//     }
+//     if (!count($arr)) {
+//         print("┃ ┊ (empty array)" . PHP_EOL);
+//     }
+// }
 
 function print_object(object $obj, int $i = 0)
 {
@@ -268,7 +286,7 @@ function print_throwable(\Throwable $t)
     echo ("┃ ┊ Line " . $t->getLine() . ": " . substr($t->getFile(), $path_skip) . "\n");
     echo ("┃ ┊ Message: " . $t->getMessage() . "\n");
     echo ("┃ ┊ Stack trace:\n");
-    print_array($t->getTrace(), 2);
+    print_data($t->getTrace(), 2);
 }
 
 function progress_end(string $msg = ""): void
