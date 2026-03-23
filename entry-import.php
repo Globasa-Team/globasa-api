@@ -138,9 +138,9 @@ try {
     // I18n::update();
 
     // Finish up
-    \pard\print_array_inline($import_report, "Parse report");
+    \pard\m($import_report, "Parse report");
     $cfg['log']->add_report($import_report, "Import Report");
-    \pard\print_array_inline($dev_report, "Developer report");
+    \pard\m($dev_report, "Developer report");
     $cfg['log']->add_report($dev_report, "Developer Report");
     $cfg['log']->add("Script complete", 5);
     $cfg['log']->email_log($cfg);
