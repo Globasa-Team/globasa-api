@@ -171,7 +171,26 @@ class Term_parser
 
 
     /**
+     * Valid entry notes:
      * 
+     * If more than one note, must be seperated by a `;`.
+     * 
+     * Valid note keywords:
+     * 
+     *  Boolean:
+     *  - am oko tabellexi
+     * 
+     *  Entry cross reference:
+     *  - am oko:
+     *  - kurto lexi:
+     *  - kompara:
+     * 
+     *  Free form notes:
+     *  - nota:
+     *  - gramati:
+     * 
+     * Invalid keywords will saved in 'nota' if unused, and
+     * the error will be logged.
      */
     private function parse_entry_note(array &$entry, array &$data)
     {
@@ -179,25 +198,21 @@ class Term_parser
 
         if (empty($data['entry note'])) return;
 
-        $entry['entry note beta'] = $data['entry note'];
-
-        $notes = explode('.', $data['entry note']);
+        $notes = explode(';', $data['entry note']);
 
         foreach ($notes as $note) {
-
-            if ($note === 'Am oko tabellexi') {
-                $entry['entry notes'][$note] = true;
-                continue;
-            } elseif (!str_contains($note, ':')) {
-                $import_report[] = ['term' => $entry['slug'], 'msg' => 'Entry note error, content=' . $note];
-                $entry['entry notes']['Nota'] = $this->pd->line($note);
-                continue;
-            }
 
             [$keyword, $content] = explode(':', $note);
             $content = trim($content);
 
             switch ($keyword) {
+
+                // case boolean data
+                case 'am oko tabellexi':
+                    $entry['entry notes'][$keyword] = true;
+                    break;
+                
+                // case entry cross references
                 case 'am oko':
                 case 'kurto lexi':
                 case 'kompara':
@@ -205,15 +220,18 @@ class Term_parser
                         $entry['entry notes'][$keyword][slugify($slug)] = null;
                     }
                     break;
-                case 'Nota':
+                
+                // case freeform notes
+                case 'nota':
+                case 'gramati':
                     $entry['entry notes'][$keyword] = $this->pd->line($content);
                     break;
-                case 'gramati':
-                    $entry['entry notes'][$keyword] = $content;
-                    break;
+                
                 default:
-                    $import_report[] = ['term' => $entry['slug'], 'msg' => 'Entry note error, type=' . $keyword];
-                    $entry['entry notes']['Nota'] = $this->pd->line($keyword . ': ' . $content);
+                    $import_report[] = ['term' => $entry['slug'], 'msg' => 'Entry note error, type=' . $keyword . ', content='.$content];
+                    if (empty($entry['entry notes']['Nota'])) {
+                        $entry['entry notes']['Nota'] = $this->pd->line($keyword . ': ' . $content);
+                    }
             }
         }
     }
