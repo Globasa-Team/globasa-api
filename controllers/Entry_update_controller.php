@@ -538,7 +538,7 @@ class Entry_update_controller
     private static function insert_entry_notes_xref()
     {
         /* TODO: Determine if this is still in use */
-        global $dict;
+        global $dict, $cfg;
 
         foreach ($dict as $term => $entry) {
             if (!isset($entry['entry notes'])) continue;
@@ -549,7 +549,11 @@ class Entry_update_controller
                     $keyword === 'kompara'
                 ) {
                     foreach ($data as $reference => $null_data) {
-                        $dict[$term]['entry notes'][$keyword][$reference] = $dict[$reference]['term'];
+                        if (isset($dict[$reference]['term'])) {
+                            $dict[$term]['entry notes'][$keyword][$reference] = $dict[$reference]['term'];
+                        } else {
+                            $cfg['log']->add("Entry Notes Xref Error: `$term` note `$keyword` references non-existent entry `$reference`.");
+                        }
                     }
                 }
             }
