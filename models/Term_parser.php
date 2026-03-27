@@ -19,7 +19,7 @@ define('CODA_CONSONANTS', ['c', 'x', 'j', 'l', 'm', 'n', 'r', 's', 'w', 'x', 'y'
 define('FINAL_VOWEL_REGEX', "/[aeiou](?!.*[aeiou])/i");
 define('GLOBAL_VOWEL_REGEX', "/[aeiou]/i");
 
-define('WORD_CHARS_REGEX', '/[^A-Za-z0-9 \-]/');
+define('NOT_WORD_CHARS_REGEX', '/[^A-Za-z0-9 \-]/');
 define('PAREN_UNDERSCORE_MARKDOWN_REGEX', '/[\[{\(_].*[\]}\)_]/U');
 
 // Map spreadsheet column to internal fields
@@ -939,7 +939,7 @@ class Term_parser
         // Also, add these alt forms to the alt form list.
         if (strpos($index, "(") !== false) {
             // Add the full term without brackets
-            $cur = trim(preg_replace(WORD_CHARS_REGEX, '', $index));
+            $cur = trim(preg_replace(NOT_WORD_CHARS_REGEX, '', $index));
             $search_terms[] = $cur;
             $parsed['alt forms'][] = $cur;
             // Adds shortened term, removing bracketed text
