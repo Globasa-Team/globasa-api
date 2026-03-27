@@ -216,8 +216,10 @@ class Term_parser
                 case 'am oko':
                 case 'kurto lexi':
                 case 'kompara':
-                    foreach (explode(', ', $content) as $slug) {
-                        $entry['entry notes'][$keyword][slugify($slug)] = null;
+                    // TODO: $term should be a slug, but isn't for kurto lexi
+                    foreach (explode(',', $content) as $term) {
+                        $slug = slugify(mb_trim($term));
+                        $entry['entry notes'][$keyword][$slug] = $term;
                     }
                     break;
                 
