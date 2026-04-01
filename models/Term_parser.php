@@ -115,8 +115,8 @@ class Term_parser
         $this->create_ipa($raw, $parsed);
 
         $this->parse_basic_field('status', $raw, $parsed);
-        $this->parse_basic_field('category', $raw, $parsed, true);
-        $this->parse_basic_field('word class', $raw, $parsed, true);
+        $this->parse_basic_field('category', $raw, $parsed);
+        $this->parse_basic_field('word class', $raw, $parsed);
 
         $this->parse_translations($raw, $parsed);
         $this->parse_entry_note(data: $raw, entry: $parsed);
@@ -124,8 +124,8 @@ class Term_parser
 
         $this->parse_etymology($raw, $parsed);
         $this->parse_list_field('tags', $raw, $parsed);
-        $this->parse_list_field('synonyms', $raw, $parsed);
-        $this->parse_list_field('antonyms', $raw, $parsed);
+        $this->parse_list_field('synonyms', $raw, $parsed, true);
+        $this->parse_list_field('antonyms', $raw, $parsed, true);
         if (!empty($raw['example'])) {
             if (!isset($parsed['examples'])) {
                 $parsed['examples'] = [];
@@ -158,7 +158,7 @@ class Term_parser
      * @param array   $raw     raw data
      * @param array   $parsed  parsed data
      */
-    private function parse_basic_field($field, $raw, &$entry, $log_empty = false)
+    private function parse_basic_field($field, $raw, &$entry, $sluggify = false)
     {
         if (!isset($raw[$field])) {
             $entry[$field] = "";
@@ -641,12 +641,16 @@ class Term_parser
      * @param array  $raw     raw entry
      * @param array  $parsed  parsed entry
      */
-    private function parse_list_field(string $field, $raw, &$parsed)
+    private function parse_list_field(string $field, $raw, &$parsed, bool $slugify = false)
     {
         if (empty($raw[$field])) return;
 
         foreach (explode(',', $raw[$field]) as $datum) {
-            $parsed[$field][] = trim($datum);
+            if (!$slugify)
+                $parsed[$field][] = trim($datum);
+            else {
+                $parsed[$field][] = slugify(trim($datum));
+            }
         }
     }
 
