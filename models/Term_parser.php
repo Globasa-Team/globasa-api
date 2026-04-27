@@ -37,6 +37,8 @@ define('COLUMN_MAP', array(
     'TranslationRus' => 'trans rus',
     'TranslationZho' => 'trans zho',
     'TranslationDeu' => 'trans deu',
+    'TranslationHin' => 'trans hin',
+    'TranslationAra' => 'trans ara',
     'TransNote' => 'entry note',
     'SearchTermsEng' => 'search terms eng',
     'StatusEng' => 'status eng',
